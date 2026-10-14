@@ -1,0 +1,16 @@
+{
+  "name": "mira-jewelry",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "scr/client",
+    "scr/server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm --workspace scr/server run dev\" \"npm --workspace scr/client run dev\"",
+    "build": "npm --workspace scr/server run build && npm --workspace scr/client run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

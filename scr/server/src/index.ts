@@ -1,0 +1,10 @@
+import 'dotenv/config';
+import express from 'express'; import cors from 'cors'; import mongoose from 'mongoose';
+import authRoutes from './routes/auth.js'; import productRoutes from './routes/products.js'; import orderRoutes from './routes/orders.js'; import behaviorRoutes from './routes/behaviors.js'; import recommendationRoutes from './routes/recommendations.js'; import diamondRoutes from './routes/diamonds.js'; import advisorRoutes from './routes/advisor.js'; import paymentRoutes from './routes/payments.js'; import analyticsRoutes from './routes/analytics.js'; import auditRoutes from './routes/audit.js'; import assistantRoutes from './routes/assistant.js';
+const app=express(); app.use(cors({origin:(process.env.CLIENT_URL||'http://localhost:8080,http://localhost:5173').split(',')})); app.use(express.json());
+app.get('/api/health',(_q,res)=>res.json({ok:true,name:'MIRA API',database:mongoose.connection.readyState===1?'mongodb':'demo'}));
+app.use('/api/auth',authRoutes); app.use('/api/products',productRoutes); app.use('/api/orders',orderRoutes); app.use('/api/behaviors',behaviorRoutes); app.use('/api/recommendations',recommendationRoutes); app.use('/api/diamonds',diamondRoutes); app.use('/api/advisor',advisorRoutes); app.use('/api/assistant',assistantRoutes); app.use('/api/payments',paymentRoutes); app.use('/api/analytics',analyticsRoutes); app.use('/api/audit',auditRoutes);
+app.use((err:any,_q:any,res:any,_n:any)=>{console.error(err);res.status(500).json({message:'Lỗi máy chủ'})});
+const port=Number(process.env.PORT||5000); const uri=process.env.MONGO_URI||''; const hasRealMongo=uri.startsWith('mongodb')&&!uri.includes('CLUSTER.mongodb.net')&&!uri.includes('<');
+app.listen(port,'0.0.0.0',()=>{console.log(`MIRA API :${port}`);if(!hasRealMongo)console.log('DEMO MODE: 16 sản phẩm có sẵn, chưa cần MongoDB Atlas');});
+if(hasRealMongo) mongoose.connect(uri).then(()=>console.log('MongoDB Atlas connected')).catch(e=>console.error('MongoDB lỗi - tiếp tục DEMO MODE:',e.message));

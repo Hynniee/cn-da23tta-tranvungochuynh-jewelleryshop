@@ -1,0 +1,51 @@
+import 'dotenv/config';
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import Product from '../models/Product.js';
+import User from '../models/User.js';
+import Diamond from '../models/Diamond.js';
+
+if (!process.env.MONGO_URI) throw new Error('Thiếu MONGO_URI trong server/.env');
+
+const demoProducts = [
+  { name:'Solitaire Étoile Diamond Ring', slug:'solitaire-etoile-diamond-ring', category:'Nhẫn', material:'Platinum 950', style:'Tối giản', price:148500000, rating:4.9, featured:true, sizes:['8','9','10','11','12','13','14','15'], occasion:['Cầu hôn','Kỷ niệm'], image:'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Nhẫn Celeste', slug:'nhan-celeste', category:'Nhẫn', material:'Vàng Trắng 18K', style:'Tối giản', price:14900000, rating:4.7, featured:true, sizes:['8','9','10','11','12','13'], occasion:['Hằng ngày','Quà tặng'], image:'https://images.unsplash.com/photo-1603561596112-db1d314f3079?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Nhẫn Amour Rosé', slug:'nhan-amour-rose', category:'Nhẫn', material:'Vàng Hồng 18K', style:'Lãng mạn', price:28900000, rating:4.8, featured:true, sizes:['8','9','10','11','12','13','14'], occasion:['Cầu hôn','Kỷ niệm'], image:'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Nhẫn Lumière Halo', slug:'nhan-lumiere-halo', category:'Nhẫn', material:'Vàng Trắng 18K', style:'Sang trọng', price:46500000, rating:4.9, featured:false, sizes:['9','10','11','12','13','14'], occasion:['Cầu hôn','Tiệc'], image:'https://images.unsplash.com/photo-1598560917505-59a3ad559071?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Nhẫn Éternité Pavé', slug:'nhan-eternite-pave', category:'Nhẫn', material:'Vàng Vàng 18K', style:'Cổ điển', price:35800000, rating:4.8, featured:false, sizes:['8','9','10','11','12','13'], occasion:['Kỷ niệm','Cưới'], image:'https://images.unsplash.com/photo-1627293509201-cd0c780043e6?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Dây chuyền Luna', slug:'day-chuyen-luna', category:'Dây chuyền', material:'Vàng Trắng 18K', style:'Thanh lịch', price:18600000, rating:4.7, featured:true, sizes:['40cm','45cm','50cm'], occasion:['Hằng ngày','Quà tặng'], image:'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Dây chuyền Sol', slug:'day-chuyen-sol', category:'Dây chuyền', material:'Vàng Vàng 18K', style:'Tối giản', price:25800000, rating:4.6, featured:false, sizes:['40cm','45cm','50cm'], occasion:['Hằng ngày','Sinh nhật'], image:'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Dây chuyền Étoile', slug:'day-chuyen-etoile', category:'Dây chuyền', material:'Vàng Trắng 18K', style:'Sang trọng', price:42900000, rating:4.9, featured:true, sizes:['40cm','45cm'], occasion:['Tiệc','Kỷ niệm'], image:'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Dây chuyền Coeur', slug:'day-chuyen-coeur', category:'Dây chuyền', material:'Vàng Hồng 18K', style:'Lãng mạn', price:21900000, rating:4.7, featured:false, sizes:['40cm','45cm'], occasion:['Valentine','Quà tặng'], image:'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Vòng tay Élan', slug:'vong-tay-elan', category:'Vòng tay', material:'Vàng Hồng 18K', style:'Hiện đại', price:22500000, rating:4.7, featured:true, sizes:['15cm','16cm','17cm','18cm'], occasion:['Hằng ngày','Quà tặng'], image:'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Vòng tay Rivière', slug:'vong-tay-riviere', category:'Vòng tay', material:'Vàng Trắng 18K', style:'Sang trọng', price:68900000, rating:4.9, featured:false, sizes:['16cm','17cm','18cm'], occasion:['Tiệc','Kỷ niệm'], image:'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Vòng tay Harmonie', slug:'vong-tay-harmonie', category:'Vòng tay', material:'Vàng Vàng 18K', style:'Cổ điển', price:31700000, rating:4.8, featured:false, sizes:['15cm','16cm','17cm','18cm'], occasion:['Hằng ngày','Quà tặng'], image:'https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Bông tai Pearl', slug:'bong-tai-pearl', category:'Bông tai', material:'Vàng Trắng 18K', style:'Cổ điển', price:12400000, rating:4.6, featured:true, sizes:['Tiêu chuẩn'], occasion:['Hằng ngày','Quà tặng'], image:'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Bông tai Aurora', slug:'bong-tai-aurora', category:'Bông tai', material:'Vàng Hồng 18K', style:'Hiện đại', price:19800000, rating:4.7, featured:false, sizes:['Tiêu chuẩn'], occasion:['Hằng ngày','Tiệc'], image:'https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Bông tai Lumière Drop', slug:'bong-tai-lumiere-drop', category:'Bông tai', material:'Vàng Trắng 18K', style:'Sang trọng', price:38500000, rating:4.9, featured:false, sizes:['Tiêu chuẩn'], occasion:['Tiệc','Kỷ niệm'], image:'https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=85' },
+  { name:'Bông tai Soleil', slug:'bong-tai-soleil', category:'Bông tai', material:'Vàng Vàng 18K', style:'Tối giản', price:16500000, rating:4.6, featured:false, sizes:['Tiêu chuẩn'], occasion:['Hằng ngày','Sinh nhật'], image:'https://images.unsplash.com/photo-1629224316810-9d8805b95e76?auto=format&fit=crop&w=1000&q=85' },
+];
+
+await mongoose.connect(process.env.MONGO_URI);
+await Product.deleteMany({});
+await Product.insertMany(demoProducts.map((p, i) => ({
+  ...p,
+  images: [p.image],
+  stock: 8 + (i % 7) * 3,
+  description: `${p.name} thuộc bộ sưu tập MIRA, chế tác từ ${p.material}. Thiết kế ${p.style.toLowerCase()}, phù hợp cho ${p.occasion.join(', ').toLowerCase()}.`,
+})));
+
+await Diamond.deleteMany({});
+await Diamond.insertMany([
+  {code:'GIA-MIRA-001',carat:.7,cut:'Excellent',color:'F',clarity:'VS1',price:32000000,giaReport:'GIA-001'},
+  {code:'GIA-MIRA-002',carat:1,cut:'Excellent',color:'E',clarity:'VVS2',price:62000000,giaReport:'GIA-002'},
+  {code:'GIA-MIRA-003',carat:1.2,cut:'Very Good',color:'G',clarity:'VS1',price:68000000,giaReport:'GIA-003'},
+  {code:'GIA-MIRA-004',carat:1.5,cut:'Excellent',color:'E',clarity:'VVS1',price:118000000,giaReport:'GIA-004'},
+  {code:'GIA-MIRA-005',carat:.9,cut:'Excellent',color:'D',clarity:'VS2',price:54000000,giaReport:'GIA-005'},
+  {code:'GIA-MIRA-006',carat:2,cut:'Excellent',color:'F',clarity:'VVS2',price:176000000,giaReport:'GIA-006'},
+]);
+
+await User.deleteMany({email:'admin@mira.vn'});
+await User.create({name:'MIRA Admin',email:'admin@mira.vn',password:await bcrypt.hash('Admin@123',10),role:'admin'});
+console.log(`Seed hoàn tất: ${demoProducts.length} sản phẩm, 6 kim cương, 1 admin`);
+await mongoose.disconnect();

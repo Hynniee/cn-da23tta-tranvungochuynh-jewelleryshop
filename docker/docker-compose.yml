@@ -1,0 +1,18 @@
+services:
+  server:
+    build:
+      context: ../scr/server
+    env_file:
+      - path: ../scr/server/.env
+        required: false
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+  web:
+    build:
+      context: ../scr/client
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+    restart: unless-stopped

@@ -1,0 +1,3 @@
+import {Router} from 'express';import {auth,AuthRequest} from '../middleware/auth.js';import {rebuildPreference} from '../services/preference.service.js';import {recommend} from '../services/recommendation.service.js';import RecommendationLog from '../models/RecommendationLog.js';const r=Router();
+r.get('/',auth,async(req:AuthRequest,res)=>{await rebuildPreference(req.user!.id);const products=await recommend(req.user!.id,Number(req.query.limit||8));const log=await RecommendationLog.create({user:req.user!.id,productIds:products.map((p:any)=>p._id)});res.json({recommendationId:log._id,products})});
+r.post('/:id/feedback',auth,async(req,res)=>{await RecommendationLog.findByIdAndUpdate(req.params.id,req.body);res.json({ok:true})});export default r;

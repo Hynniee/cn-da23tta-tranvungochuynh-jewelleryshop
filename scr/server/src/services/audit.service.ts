@@ -1,0 +1,1 @@
+import AuditLog from '../models/AuditLog.js'; export async function audit(actor:string|undefined,action:string,entity:string,entityId:string,before:any,after:any,ip?:string){await AuditLog.create({actor,action,entity,entityId,before,after,ip}).catch(()=>undefined)}
