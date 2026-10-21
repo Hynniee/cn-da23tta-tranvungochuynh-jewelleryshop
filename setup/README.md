@@ -1,4 +1,6 @@
 # Cài đặt MIRA Jewelry
+
+Đặt lịch Private Salon và gửi email Gmail: xem [private-salon.md](private-salon.md).
 Yêu cầu: Docker Desktop có Docker Compose hoặc Node.js 20+.
 
 ## Chạy demo không cần MongoDB

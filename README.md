@@ -61,6 +61,8 @@ Không đưa file `.env`, mật khẩu hoặc API key lên GitHub.
 ## Chức năng
 E-commerce, MIRA AI Chat, Recommendation Engine, Diamond DSS 4Cs, quản trị và dữ liệu demo.
 
+Private Salon: `/appointments` cho phép đặt lịch, xem trang xác nhận và nhận email qua Gmail SMTP. Xem [cấu hình email](setup/private-salon.md).
+
 ## Học máy + DSS
 
 ML Logistic Regression hỗ trợ dự đoán mức độ quan tâm; DSS giữ vai trò chấm điểm đa tiêu chí. Khi chưa huấn luyện, ứng dụng tự động quay về DSS. Xem `scr/ml/README.md` để huấn luyện bằng dữ liệu có nhãn và kiểm tra API demo.

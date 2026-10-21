@@ -3,6 +3,7 @@ import { readStoredObject } from "../lib/storage";
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { request, token } from "../lib/api";
+import AccountGuest from "../components/AccountGuest";
 
 type User = {
   _id?: string;
@@ -62,16 +63,7 @@ export default function Account() {
       .catch((e) => setMessage(e.message));
   }, []);
 
-  if (!token())
-    return (
-      <section className="empty">
-        <h2>Bạn chưa đăng nhập</h2>
-        <p>Đăng nhập để quản lý hồ sơ và đơn hàng MIRA.</p>
-        <Link className="btn" to="/login">
-          Đăng nhập
-        </Link>
-      </section>
-    );
+  if (!token()) return <AccountGuest />;
 
   const initials = (form.name || "MIRA")
     .split(" ")

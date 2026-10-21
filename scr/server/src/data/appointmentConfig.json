@@ -1,0 +1,36 @@
+{
+  "timeZone": "Asia/Ho_Chi_Minh",
+  "utcOffset": "+07:00",
+  "maxDaysAhead": 90,
+  "emailPattern": "^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z]{2,63}$",
+  "salons": [
+    { "id": "hcm", "name": "MIRA Private Salon · TP. Hồ Chí Minh" },
+    { "id": "hanoi", "name": "MIRA Private Salon · Hà Nội" }
+  ],
+  "times": [
+    "09:00",
+    "10:00",
+    "11:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00"
+  ],
+  "interests": [
+    "Trang sức cưới",
+    "Kim cương",
+    "Trang sức vàng",
+    "Trang sức bạc",
+    "Ngọc trai & đá màu",
+    "Chưa xác định"
+  ],
+  "budgets": [
+    "Chưa xác định",
+    "Dưới 5 triệu",
+    "5 – 20 triệu",
+    "20 – 50 triệu",
+    "Trên 50 triệu"
+  ]
+}

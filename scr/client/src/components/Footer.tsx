@@ -1,4 +1,5 @@
 import { Headphones, LockKeyhole, ShieldCheck, Gem } from "lucide-react";
+import { Link } from "react-router-dom";
 export default function Footer() {
   return (
     <>
@@ -20,14 +21,14 @@ export default function Footer() {
           </div>
         </div>
         <div className="salon-consultation">
-          <h3>Chuẩn bị cho buổi tư vấn</h3>
+          <h3>Buổi hẹn dành riêng cho bạn</h3>
           <p>
-            Chia sẻ ngân sách và phong cách với MIRA AI để tìm lựa chọn phù hợp
-            trước khi đến Salon.
+            Chọn Salon, thời gian và chia sẻ mong muốn của bạn. MIRA sẽ chuẩn bị
+            buổi tư vấn và gửi thông tin lịch hẹn qua email.
           </p>
-          <a href="/advisor" className="gold-btn">
-            BẮT ĐẦU TƯ VẤN
-          </a>
+          <Link to="/appointments" className="gold-btn">
+            ĐẶT LỊCH TƯ VẤN
+          </Link>
         </div>
       </section>
       <footer className="lux-footer">
@@ -59,7 +60,7 @@ export default function Footer() {
           <span>Dịch Vụ Chế Tác Bespoke</span>
           <span>Bảo Dưỡng Trang Sức</span>
           <span>Chính Sách Thu Đổi</span>
-          <span>Private Concierge</span>
+          <Link to="/appointments">Đặt Lịch Private Salon</Link>
         </div>
         <div>
           <b>PRIVATE PREVIEW</b>

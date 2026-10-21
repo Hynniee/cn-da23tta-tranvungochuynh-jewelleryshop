@@ -11,6 +11,7 @@
     "build": "npm --workspace scr/server run build && npm --workspace scr/client run build",
     "test": "node scr/test-data/test.mjs",
     "test:cart": "node --import tsx --test scr/test-data/cart-model.test.ts",
+    "test:appointments": "node --test scr/test-data/appointments.test.mjs",
     "format": "prettier --write \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",
     "format:check": "prettier --check \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",
     "dev:full": "node setup/scripts/dev-full.mjs",
@@ -20,6 +21,7 @@
     "@playwright/test": "^1.64.1",
     "concurrently": "^9.0.0",
     "mongodb-memory-server": "^11.3.0",
-    "prettier": "^3.9.10"
+    "prettier": "^3.9.10",
+    "smtp-server": "^3.20.2"
   }
 }

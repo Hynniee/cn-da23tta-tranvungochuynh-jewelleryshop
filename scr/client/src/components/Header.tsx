@@ -26,9 +26,9 @@ export default function Header() {
         <span>
           <Gem size={13} /> Vàng · Bạc 925 · Ngọc trai · Đá quý
         </span>
-        <span>
+        <Link to="/appointments" className="salon-booking-link">
           <CalendarDays size={13} /> Đặt lịch hẹn tư vấn riêng Private Salon
-        </span>
+        </Link>
       </div>
       <header className="lux-header">
         <Link className="lux-logo" to="/">

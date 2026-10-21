@@ -12,6 +12,8 @@ import Admin from "./pages/Admin";
 import Advisor from "./pages/Advisor";
 import Recommendations from "./pages/Recommendations";
 import DiamondDSS from "./pages/DiamondDSS";
+import Appointment from "./pages/Appointment";
+import AppointmentConfirmation from "./pages/AppointmentConfirmation";
 import { About, Wishlist } from "./pages/Simple";
 const router = createBrowserRouter([
   {
@@ -29,6 +31,8 @@ const router = createBrowserRouter([
       { path: "/wishlist", element: <Wishlist /> },
       { path: "/about", element: <About /> },
       { path: "/advisor", element: <Advisor /> },
+      { path: "/appointments", element: <Appointment /> },
+      { path: "/appointments/:code", element: <AppointmentConfirmation /> },
       { path: "/for-you", element: <Recommendations /> },
       { path: "/diamond-dss", element: <DiamondDSS /> },
       {

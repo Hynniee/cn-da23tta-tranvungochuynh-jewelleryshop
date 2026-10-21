@@ -7,11 +7,13 @@ Chạy từ thư mục gốc repository sau `npm ci`:
 ```bash
 npm run build
 npm run test:cart
+npm run test:appointments
 npm test
 ```
 
 - `test.mjs`: kiểm thử API demo, MongoDB tạm và giao diện Chrome/Edge.
 - `cart-model.test.ts`: quy tắc số lượng, tồn kho giữa các biến thể và phí vận chuyển.
+- `appointments.test.mjs`: đặt lịch Private Salon, email qua SMTP giả lập và giao diện xác nhận desktop/mobile.
 - `results/`: ảnh và `summary.json` được tạo khi chạy, không đưa vào Git.
 
 Điều kiện chạy và dữ liệu tái lập: [setup/README.md](../../setup/README.md), [demo-data](../../setup/demo-data/README.md).

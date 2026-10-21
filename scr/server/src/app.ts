@@ -13,6 +13,7 @@ import paymentRoutes from "./routes/payments.js";
 import analyticsRoutes from "./routes/analytics.js";
 import auditRoutes from "./routes/audit.js";
 import assistantRoutes from "./routes/assistant.js";
+import appointmentRoutes from "./routes/appointments.js";
 const app = express();
 mongoose.set("bufferCommands", false);
 app.use(
@@ -43,6 +44,7 @@ app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/diamonds", diamondRoutes);
 app.use("/api/advisor", advisorRoutes);
 app.use("/api/assistant", assistantRoutes);
+app.use("/api/appointments", appointmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/audit", auditRoutes);
