@@ -1,4 +1,12 @@
-import {Router} from 'express';import crypto from 'crypto';import Payment from '../models/Payment.js';import Order from '../models/Order.js';import {auth,AuthRequest} from '../middleware/auth.js';const r=Router();
-r.post('/create/:orderId',auth,async(req:AuthRequest,res)=>{const order:any=await Order.findOne({_id:req.params.orderId,user:req.user!.id});if(!order)return res.status(404).json({message:'Không tìm thấy đơn'});order.paymentStatus='PENDING';order.status='pending_payment';await order.save();const payment=await Payment.findOneAndUpdate({order:order._id},{order:order._id,orderCode:order.orderCode,amountExpected:order.total,paymentMethod:'BANK_QR',status:'PENDING'},{upsert:true,new:true});const template=process.env.QR_TEMPLATE||'';const qrUrl=template.replace('{amount}',String(order.total)).replace('{content}',encodeURIComponent(order.orderCode));res.json({payment,qrUrl,transferContent:order.orderCode,amount:order.total,bankName:process.env.BANK_NAME||'',accountNo:process.env.BANK_ACCOUNT_NO||'',accountName:process.env.BANK_ACCOUNT_NAME||''})});
-r.get('/order/:orderId',auth,async(req:AuthRequest,res)=>{const order=await Order.findOne({_id:req.params.orderId,user:req.user!.id});if(!order)return res.status(404).json({message:'Không tìm thấy đơn'});res.json({orderCode:order.orderCode,paymentStatus:order.paymentStatus,status:order.status})});
-r.post('/webhook',async(req,res)=>{const secret=process.env.PAYMENT_WEBHOOK_SECRET||'';if(secret){const sig=String(req.headers['x-webhook-signature']||'');const expected=crypto.createHmac('sha256',secret).update(JSON.stringify(req.body)).digest('hex');if(sig!==expected)return res.status(401).json({message:'Sai chữ ký webhook'})}const {transactionId,amount,content,bankCode}=req.body;if(!transactionId)return res.status(400).json({message:'Thiếu transactionId'});if(await Payment.exists({transactionId}))return res.json({ok:true,duplicate:true});const order:any=await Order.findOne({orderCode:String(content||'').trim()});if(!order)return res.status(202).json({ok:false,reason:'ORDER_NOT_FOUND'});const exact=Number(amount)===Number(order.total);await Payment.findOneAndUpdate({order:order._id},{transactionId,amountReceived:Number(amount),bankCode,transferContent:content,status:exact?'PAID':'MISMATCH',paidAt:exact?new Date():undefined,rawWebhook:req.body},{upsert:true,new:true});order.paymentStatus=exact?'PAID':'MISMATCH';if(exact)order.status='confirmed';await order.save();res.json({ok:true,matched:exact})});export default r;
+import { Router } from "express";
+import { auth } from "../middleware/auth.js";
+import { requireDatabase } from "../middleware/database.js";
+import * as controller from "../controllers/payments.controller.js";
+
+const r = Router();
+r.get("/options", controller.getPaymentOptions);
+r.use(requireDatabase);
+r.post("/create/:orderId", auth, controller.createPayment);
+r.get("/order/:orderId", auth, controller.getOrderPayment);
+r.post("/webhook", controller.handleWebhook);
+export default r;

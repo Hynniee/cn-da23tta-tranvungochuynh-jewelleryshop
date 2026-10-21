@@ -1,7 +1,8 @@
 services:
   server:
     build:
-      context: ../scr/server
+      context: ..
+      dockerfile: docker/server.Dockerfile
     env_file:
       - path: ../scr/server/.env
         required: false
@@ -10,7 +11,8 @@ services:
     restart: unless-stopped
   web:
     build:
-      context: ../scr/client
+      context: ..
+      dockerfile: docker/client.Dockerfile
     ports:
       - "8080:80"
     depends_on:

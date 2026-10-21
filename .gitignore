@@ -8,3 +8,9 @@ server/.env
 **/.env
 **/node_modules/
 **/dist/
+
+*.tsbuildinfo
+scr/test-data/results/
+playwright-report/
+
+.local-data/

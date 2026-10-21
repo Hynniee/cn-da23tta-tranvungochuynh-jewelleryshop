@@ -1,102 +1,151 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import ProductReviews from "../components/ProductReviews";
+import Image from "../components/Image";
+import ProductCard from "../components/ProductCard";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { request } from "../lib/api";
+import { freeShippingFrom } from "../lib/commerce";
 import { addCart } from "../store/cart";
 import { demoProducts } from "../data/demoProducts";
 
 type Product = {
   _id: string;
   name: string;
-  material?: string;
+  category?: string;
+  material: string;
+  stone?: string;
+  description?: string;
+  rating?: number;
+  stock: number;
   price: number;
   salePrice?: number;
   images?: string[];
   sizes?: string[];
+  engravingAllowed?: boolean;
+  slug: string;
 };
-
-type Material = {
-  name: string;
-  tone: "platinum" | "white" | "yellow" | "rose";
-  extraPrice: number;
-};
-
-const MATERIALS: Material[] = [
-  { name: "Platinum 950", tone: "platinum", extraPrice: 0 },
-  { name: "Vàng Trắng 18K", tone: "white", extraPrice: 6_000_000 },
-  { name: "Vàng Vàng 18K", tone: "yellow", extraPrice: 6_000_000 },
-  { name: "Vàng Hồng 18K", tone: "rose", extraPrice: 6_000_000 },
-];
-
-const CARATS = [
-  { value: "1.0", diameter: "6.5 mm" },
-  { value: "1.2", diameter: "6.9 mm" },
-  { value: "1.5", diameter: "7.35 mm", recommended: true },
-  { value: "2.0", diameter: "8.2 mm" },
-];
-
-const DEFAULT_SIZES = ["8", "9", "10", "11", "12", "13", "14", "15", "16"];
-
 const money = (value: number) => `${value.toLocaleString("vi-VN")}₫`;
-
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-
   const [product, setProduct] = useState<Product | null>(null);
+  const [related, setRelated] = useState<Product[]>([]);
+  const [error, setError] = useState("");
   const [activeImage, setActiveImage] = useState(0);
-  const [size, setSize] = useState("12");
-  const [material, setMaterial] = useState(MATERIALS[0]);
-  const [carat, setCarat] = useState(CARATS[2]);
+  const [size, setSize] = useState("");
   const [engraving, setEngraving] = useState("");
-
+  const [notice, setNotice] = useState("");
   useEffect(() => {
-    if (!slug) return;
-
-    request(`/products/${slug}`).then((data: Product) => {
-      setProduct(data); setSize(data.sizes?.[0] || "12");
-      setMaterial(MATERIALS.find((item) => item.name === data.material) || MATERIALS[0]);
-      if (!String(data._id).startsWith("demo-")) request("/behaviors",{method:"POST",body:JSON.stringify({type:"VIEW",product:data._id})}).catch(()=>undefined);
-    }).catch(() => {
-      const demo = demoProducts.find((item) => item.slug === slug);
-      if (demo) { setProduct(demo as Product); setSize(demo.sizes?.[0] || "12"); setMaterial(MATERIALS.find((item) => item.name === demo.material) || MATERIALS[0]); }
-    });
+    let active = true;
+    setProduct(null);
+    setError("");
+    setNotice("");
+    setEngraving("");
+    setActiveImage(0);
+    const show = (data: Product) => {
+      if (active) {
+        setProduct(data);
+        setSize(data.sizes?.[0] || "Tiêu chuẩn");
+      }
+    };
+    request(`/products/${encodeURIComponent(slug || "")}`)
+      .then((data: Product) => {
+        show(data);
+        if (!data._id.startsWith("demo-"))
+          request("/behaviors", {
+            method: "POST",
+            body: JSON.stringify({ type: "VIEW", product: data._id }),
+          }).catch(() => undefined);
+      })
+      .catch((error) => {
+        if (!active) return;
+        const fallback =
+          error.status !== 404
+            ? demoProducts.find((p) => p.slug === slug)
+            : undefined;
+        if (fallback) show(fallback);
+        else
+          setError(
+            error.status === 404
+              ? "Không tìm thấy sản phẩm."
+              : "Không tải được sản phẩm. Vui lòng thử lại.",
+          );
+      });
+    request("/products")
+      .then((data) => {
+        if (active) setRelated(data);
+      })
+      .catch(() => {
+        if (active) setRelated(demoProducts);
+      });
+    return () => {
+      active = false;
+    };
   }, [slug]);
-
-  const images = useMemo(
-    () => (product?.images?.length ? product.images : ["/placeholder.jpg"]),
-    [product]
-  );
-
-  if (!product) return <div className="pd-loading">Đang tải tuyệt tác...</div>;
-
-  const sizes = product.sizes?.length ? product.sizes : DEFAULT_SIZES;
-  const basePrice = Number(product.salePrice || product.price);
-  const finalPrice = basePrice + material.extraPrice;
-
-  const addSelectionToCart = () => {
-    addCart({
+  if (error)
+    return (
+      <section className="lux-empty" role="alert">
+        <h2>{error}</h2>
+        <Link to="/shop">Về bộ sưu tập</Link>
+      </section>
+    );
+  if (!product)
+    return (
+      <div className="pd-loading" role="status">
+        Đang tải sản phẩm...
+      </div>
+    );
+  const images = product.images?.length ? product.images : ["/placeholder.svg"];
+  const sizes = product.sizes?.length ? product.sizes : ["Tiêu chuẩn"];
+  const price = product.salePrice ?? product.price;
+  const soldOut = product.stock <= 0;
+  const matches = related
+    .filter(
+      (p) =>
+        p._id !== product._id &&
+        (p.category === product.category || p.stone === product.stone),
+    )
+    .slice(0, 4);
+  function add(buyNow = false) {
+    if (!product || soldOut) return;
+    const added = addCart({
       _id: product._id,
+      slug: product.slug,
       name: product.name,
-      price: finalPrice,
+      price,
       image: images[activeImage],
       size,
       quantity: 1,
+      material: product.material,
+      stone: product.stone,
+      engraving: product.engravingAllowed ? engraving.trim() : "",
+      stock: product.stock,
     });
-  };
-
-  const handleAddToCart = () => {
-    addSelectionToCart();
-    if (!String(product._id).startsWith("demo-")) request("/behaviors",{method:"POST",body:JSON.stringify({type:"ADD_CART",product:product._id})}).catch(()=>undefined);
-    window.alert("Đã thêm tuyệt tác vào giỏ hàng");
-  };
-
-  const handleBuyNow = () => {
-    addSelectionToCart();
-    navigate("/cart");
-  };
-
+    if (!added) {
+      setNotice("Số lượng trong giỏ đã đạt tồn kho hiện tại.");
+      return;
+    }
+    setNotice("Đã thêm sản phẩm vào giỏ hàng.");
+    if (!product._id.startsWith("demo-"))
+      request("/behaviors", {
+        method: "POST",
+        body: JSON.stringify({ type: "ADD_CART", product: product._id }),
+      }).catch(() => undefined);
+    if (buyNow) navigate("/cart");
+  }
   return (
     <main className="pd-page">
+      <div className="product-breadcrumb">
+        <Link to="/shop">Bộ sưu tập</Link>
+        <span>/</span>
+        <Link
+          to={`/shop?category=${encodeURIComponent(product.category || "")}`}
+        >
+          {product.category}
+        </Link>
+        <span>/</span>
+        <span>{product.name}</span>
+      </div>
       <section className="pd-product">
         <ProductGallery
           name={product.name}
@@ -104,104 +153,152 @@ export default function ProductDetail() {
           activeImage={activeImage}
           onSelect={setActiveImage}
         />
-
         <div className="pd-config">
           <div className="pd-meta">
-            <span>COLLECTION · L'AMOUR ÉTERNEL</span>
+            <span>
+              {product.category} · {product.stone || "Không đính đá"}
+            </span>
             <span>SKU: MIRA-{product._id.slice(-6).toUpperCase()}</span>
           </div>
-
           <h1>{product.name}</h1>
-
-          <div className="pd-rating">
-            <span className="pd-stars">★★★★★</span>
-            <strong>4.9 / 5.0</strong>
-            <span>86 đánh giá thượng khách</span>
-          </div>
-
           <div className="pd-price-box">
-            <h2>{money(finalPrice)}</h2>
-            <p>Đã bao gồm VAT & bộ hồ sơ kim cương GIA quốc tế.</p>
-            <span className="pd-ship">MIỄN PHÍ SHIP HỎA TỐC BẢO MẬT</span>
-            <div>Trả góp 0% từ <b>{money(Math.round(finalPrice / 12))}/tháng</b></div>
+            <h2>{money(price)}</h2>
+            {product.salePrice !== undefined &&
+              product.salePrice < product.price && (
+                <del>{money(product.price)}</del>
+              )}
+            <p>Giá theo chất liệu và kích cỡ sản phẩm đã chọn.</p>
+            <span className="pd-ship">
+              MIỄN PHÍ VẬN CHUYỂN TỪ {money(freeShippingFrom)}
+            </span>
           </div>
-
-          <OptionTitle title="CHẤT LIỆU KIM LOẠI QUÝ" value={material.name} />
-          <div className="pd-materials">
-            {MATERIALS.map((item) => (
-              <button
-                key={item.name}
-                className={material.name === item.name ? "active" : ""}
-                onClick={() => setMaterial(item)}
-              >
-                <i className={`pd-metal ${item.tone}`} />
-                <b>{item.name}</b>
-                <small>{item.extraPrice ? `+${money(item.extraPrice)}` : "Tiêu chuẩn"}</small>
-              </button>
-            ))}
-          </div>
-
-          <OptionTitle title="TRỌNG LƯỢNG KIM CƯƠNG CHỦ" value={`Đường kính ~ ${carat.diameter}`} />
-          <div className="pd-carats">
-            {CARATS.map((item) => (
-              <button
-                key={item.value}
-                className={carat.value === item.value ? "active" : ""}
-                onClick={() => setCarat(item)}
-              >
-                <b>{item.value} ct</b>
-                <small>{item.recommended ? "Khuyên dùng" : item.diameter}</small>
-              </button>
-            ))}
-          </div>
-
-          <OptionTitle title="KÍCH CỠ NHẪN (CHUẨN VN / QUỐC TẾ)" value="Hướng dẫn đo size tại nhà" />
+          <dl className="product-specs">
+            <div>
+              <dt>Chất liệu</dt>
+              <dd>{product.material}</dd>
+            </div>
+            <div>
+              <dt>Loại đá / điểm nhấn</dt>
+              <dd>{product.stone || "Không đính đá"}</dd>
+            </div>
+            <div>
+              <dt>Tình trạng</dt>
+              <dd>
+                {soldOut ? "Tạm hết hàng" : `Còn ${product.stock} sản phẩm`}
+              </dd>
+            </div>
+          </dl>
+          <OptionTitle
+            title="KÍCH CỠ / CHIỀU DÀI"
+            value={
+              product.category === "Nhẫn"
+                ? "Chọn theo kích cỡ nhẫn của bạn"
+                : "Chọn kích thước phù hợp"
+            }
+          />
           <div className="pd-sizes">
-            {sizes.map((item) => (
+            {sizes.map((value) => (
               <button
-                key={item}
-                className={size === item ? "active" : ""}
-                onClick={() => setSize(item)}
+                key={value}
+                aria-pressed={size === value}
+                className={size === value ? "active" : ""}
+                onClick={() => {
+                  setSize(value);
+                  setNotice("");
+                }}
               >
-                {item}
+                {value}
               </button>
             ))}
           </div>
-          <p className="pd-size-note">Miễn phí đổi/thu size 1 lần trong 90 ngày sau khi nhận tác phẩm.</p>
-
-          <div className="pd-engraving">
-            <div><b>KHẮC LASER CÁ NHÂN HÓA</b><span>TẶNG KÈM MIỄN PHÍ</span></div>
-            <input
-              maxLength={16}
-              value={engraving}
-              placeholder="Ví dụ: Forever Yours · ∞"
-              onChange={(event) => setEngraving(event.target.value)}
-            />
-            <small><i>Xem trước: “{engraving || "Forever Yours"}”</i><span>{engraving.length}/16</span></small>
-          </div>
-
+          <p className="pd-size-note">
+            {product.category === "Nhẫn"
+              ? "Chưa rõ size? Liên hệ tư vấn trước khi đặt hàng."
+              : product.category === "Bông tai"
+                ? "Bông tai được bán theo đôi."
+                : product.category === "Charm"
+                  ? "Charm được bán riêng; chưa bao gồm dây hoặc vòng."
+                  : "Kiểm tra chiều dài và kích cỡ trước khi đặt hàng."}
+          </p>
+          {product.engravingAllowed && (
+            <div className="pd-engraving">
+              <div>
+                <b>KHẮC TÊN CÁ NHÂN HÓA</b>
+                <span>TÙY CHỌN</span>
+              </div>
+              <input
+                aria-label="Nội dung khắc"
+                maxLength={16}
+                value={engraving}
+                placeholder="Ví dụ: Forever Yours"
+                onChange={(e) => setEngraving(e.target.value)}
+              />
+              <small>
+                <i>Xem trước: “{engraving || "Tên hoặc lời nhắn của bạn"}”</i>
+                <span>{engraving.length}/16</span>
+              </small>
+            </div>
+          )}
           <div className="pd-actions">
-            <button className="pd-add" onClick={handleAddToCart}>THÊM VÀO GIỎ HÀNG</button>
-            <button className="pd-buy" onClick={handleBuyNow}>MUA NGAY BẰNG 1 CHẠM</button>
+            <button className="pd-add" disabled={soldOut} onClick={() => add()}>
+              {soldOut ? "TẠM HẾT HÀNG" : "THÊM VÀO GIỎ HÀNG"}
+            </button>
+            <button
+              className="pd-buy"
+              disabled={soldOut}
+              onClick={() => add(true)}
+            >
+              MUA NGAY BẰNG 1 CHẠM
+            </button>
           </div>
-
-          <button className="pd-salon">ĐẶT LỊCH CHIÊM NGƯỠNG RIÊNG TẠI PRIVATE SALON</button>
-
+          {notice && (
+            <p role="status" className="cart-notice">
+              {notice} <Link to="/cart">Xem giỏ hàng →</Link>
+            </p>
+          )}
+          <button className="pd-salon" onClick={() => navigate("/advisor")}>
+            TƯ VẤN CHẤT LIỆU & KÍCH CỠ
+          </button>
           <div className="pd-trust">
-            <Trust icon="▣" title="Bảo Mật Tuyệt Đối" text="Vận chuyển bảo mật" />
-            <Trust icon="◇" title="GIA Laser Report" text="Mã số cạnh kim cương" />
-            <Trust icon="↻" title="Thu Đổi Minh Bạch" text="Cam kết rõ ràng" />
+            <Trust
+              icon="◇"
+              title="Chất Liệu Rõ Ràng"
+              text="Vàng · Bạc · Ngọc trai · Đá quý"
+            />
+            <Trust
+              icon="▣"
+              title="Giao Hàng Cẩn Thận"
+              text="Đóng gói bảo vệ sản phẩm"
+            />
+            <Trust
+              icon="↻"
+              title="Hỗ Trợ Sau Mua"
+              text="Tư vấn chăm sóc trang sức"
+            />
           </div>
         </div>
       </section>
-
-      <GiaSection carat={carat.value} />
+      {product.description && (
+        <section className="pd-services">
+          <h2>Thông tin sản phẩm</h2>
+          <p>{product.description}</p>
+        </section>
+      )}
+      <ProductReviews key={product._id} slug={product.slug} />
       <ServiceSection />
-      <ReviewSection images={images} />
+      {!!matches.length && (
+        <section className="related-products">
+          <h2>Có Thể Bạn Cũng Thích</h2>
+          <div className="shop-grid">
+            {matches.map((p) => (
+              <ProductCard key={p._id} p={p} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
-
 function ProductGallery({
   name,
   images,
@@ -216,112 +313,97 @@ function ProductGallery({
   return (
     <div className="pd-gallery">
       <div className="pd-main-image">
-        <div className="pd-badges"><span>GIA CERTIFIED</span><span>PIÈCE UNIQUE</span></div>
-        <img src={images[activeImage]} alt={name} />
-        <span className="pd-360">360° & ÁNH SÁNG</span>
+        <div className="pd-badges">
+          <span>MIRA JEWELRY</span>
+          <span>MIRA COLLECTION</span>
+        </div>
+        <Image src={images[activeImage]} alt={name} />
+        <span className="pd-360">ẢNH MINH HỌA SẢN PHẨM</span>
       </div>
 
       <div className="pd-thumbs">
         {images.slice(0, 4).map((image, index) => (
-          <button key={`${image}-${index}`} className={activeImage === index ? "active" : ""} onClick={() => onSelect(index)}>
-            <img src={image} alt={`${name} - ảnh ${index + 1}`} />
+          <button
+            key={`${image}-${index}`}
+            className={activeImage === index ? "active" : ""}
+            onClick={() => onSelect(index)}
+          >
+            <Image src={image} alt={`${name} - ảnh ${index + 1}`} />
           </button>
         ))}
       </div>
 
       <div className="pd-insurance">
         <div>
-          <b>BẢO HIỂM KIM HOÀN TOÀN DIỆN NĂM ĐẦU</b>
-          <p>Bảo hộ đá chủ, kèm vệ sinh và đánh bóng trọn đời tại MIRA Salon.</p>
+          <b>ĐÓNG GÓI & CHĂM SÓC TRANG SỨC</b>
+          <p>
+            Sản phẩm được đóng gói cẩn thận, kèm hướng dẫn bảo quản theo chất
+            liệu.
+          </p>
         </div>
-        <span>HẠNG VIP</span>
+        <span>MIRA CARE</span>
       </div>
     </div>
   );
 }
 
 function OptionTitle({ title, value }: { title: string; value: string }) {
-  return <div className="pd-option-title"><b>{title}</b><span>{value}</span></div>;
-}
-
-function Trust({ icon, title, text }: { icon: string; title: string; text: string }) {
-  return <div><span>{icon}</span><b>{title}</b><small>{text}</small></div>;
-}
-
-function GiaSection({ carat }: { carat: string }) {
-  const specs = [
-    ["01.", "TRỌNG LƯỢNG", `${carat} Carat`, "Tỷ lệ kích thước tuyển chọn để viên đá nổi bật khi lên tay."],
-    ["02.", "NƯỚC MÀU", "Grade E", "Nhóm gần như không màu, cho ánh sáng trắng trong và tinh khiết."],
-    ["03.", "ĐỘ TINH KHIẾT", "VVS1", "Tạp chất cực vi mô, rất khó quan sát dưới độ phóng đại chuyên dụng."],
-    ["04.", "GIÁC CẮT", "3X Excellent", "Cut, Polish và Symmetry cùng đạt Excellent để tối ưu độ lửa."],
-  ];
-
   return (
-    <section className="pd-gia">
-      <div className="pd-section-head">
-        <div><p className="pd-eyebrow">TIÊU CHUẨN GIÁM ĐỊNH TOÀN CẦU</p><h2>Hồ Sơ 4Cs & Chứng Thư GIA Của Viên Đá Chủ</h2></div>
-        <button>GIA REPORT #2487901244</button>
-      </div>
+    <div className="pd-option-title">
+      <b>{title}</b>
+      <span>{value}</span>
+    </div>
+  );
+}
 
-      <div className="pd-4cs">
-        {specs.map(([number, label, value, text]) => (
-          <article key={label}>
-            <span>{number} {label}</span><h3>{value}</h3><p>{text}</p><i />
-          </article>
-        ))}
-      </div>
-
-      <div className="pd-laser">
-        <div>
-          <p className="pd-eyebrow">KHẮC CẠNH KÍNH HIỂN VI</p>
-          <h3>Mã Số GIA Laser Micro-Inscription</h3>
-          <p>Mã GIA được khắc vi điểm trên cạnh viên đá để đối chiếu trực tiếp với giấy chứng nhận trước khi bàn giao.</p>
-          <b>✓ Không ảnh hưởng phản quang &nbsp;&nbsp; ✓ Nhận diện độc bản</b>
-        </div>
-        <div className="pd-gia-number">GIA 2487901244</div>
-      </div>
-    </section>
+function Trust({
+  icon,
+  title,
+  text,
+}: {
+  icon: string;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div>
+      <span>{icon}</span>
+      <b>{title}</b>
+      <small>{text}</small>
+    </div>
   );
 }
 
 function ServiceSection() {
   const services = [
-    ["◇", "Hộp Da Nệm Nhung Đèn LED", "Hộp trình bày cao cấp làm nổi bật ánh lửa của viên đá."],
-    ["⌕", "Khăn Lau Microfiber & Loupe", "Bộ chăm sóc và kiểm tra mã GIA chuyên dụng."],
-    ["♢", "Bảo Hiểm Kim Cương 1 Năm", "Quyền lợi bảo hộ năm đầu dành cho tác phẩm MIRA."],
-    ["∞", "Spa & Chỉnh Size Trọn Đời", "Vệ sinh, đánh bóng và hỗ trợ chỉnh size tại MIRA Salon."],
+    [
+      "◇",
+      "Hộp Đựng Trang Sức",
+      "Đóng gói bảo vệ sản phẩm khi vận chuyển và bảo quản.",
+    ],
+    ["⌕", "Hướng Dẫn Làm Sạch", "Bộ chăm sóc phù hợp với chất liệu trang sức."],
+    [
+      "♢",
+      "Tư Vấn Chăm Sóc Trang Sức",
+      "Hướng dẫn bảo quản vàng, bạc, ngọc trai và đá quý.",
+    ],
+    [
+      "∞",
+      "Hỗ Trợ Sau Mua",
+      "Vệ sinh, đánh bóng và hỗ trợ chỉnh size tại MIRA Salon.",
+    ],
   ];
 
   return (
     <section className="pd-services">
       <p className="pd-eyebrow">ĐẶC QUYỀN KHÁCH HÀNG MIRA</p>
-      <h2>Nghi Thức Bàn Giao & Dịch Vụ Vĩnh Cửu</h2>
+      <h2>Đóng Gói & Chăm Sóc Sau Mua</h2>
       <div className="pd-service-grid">
-        {services.map(([icon, title, text]) => <article key={title}><span>{icon}</span><h3>{title}</h3><p>{text}</p></article>)}
-      </div>
-    </section>
-  );
-}
-
-function ReviewSection({ images }: { images: string[] }) {
-  const reviews = [
-    ["Trần Hoàng Long", "Hà Nội"],
-    ["Mai Anh & Quốc Đạt", "TP. HCM"],
-    ["Vũ Khang", "Đà Nẵng"],
-  ];
-
-  return (
-    <section className="pd-reviews">
-      <div className="pd-review-head">
-        <div><p className="pd-eyebrow">CHIA SẺ THỰC TẾ</p><h2>Đánh Giá & Khoảnh Khắc Cầu Hôn</h2></div>
-        <div><b>4.9 / 5.0</b><small>Dựa trên 86 đơn hàng xác thực</small></div>
-      </div>
-      <div className="pd-review-grid">
-        {reviews.map(([name, location], index) => (
-          <article key={name}>
-            <header><span>{name[0]}</span><div><b>{name}</b><small>Đã mua hàng · {location}</small></div><strong>★★★★★</strong></header>
-            <p>“Tác phẩm hoàn thiện rất đẹp. Chuyên viên tư vấn kỹ từng thông số và cho kiểm tra chứng nhận GIA trước khi nhận nhẫn.”</p>
-            <img src={images[Math.min(index + 1, images.length - 1)]} alt={name} />
+        {services.map(([icon, title, text]) => (
+          <article key={title}>
+            <span>{icon}</span>
+            <h3>{title}</h3>
+            <p>{text}</p>
           </article>
         ))}
       </div>

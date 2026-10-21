@@ -1,1 +1,9 @@
-import {Router} from 'express';import AuditLog from '../models/AuditLog.js';import {auth,allow} from '../middleware/auth.js';const r=Router();r.get('/',auth,allow('admin','manager'),async(_q,res)=>res.json(await AuditLog.find().populate('actor','name email').sort({createdAt:-1}).limit(200)));export default r;
+import { requireDatabase } from "../middleware/database.js";
+import { Router } from "express";
+import { auth, allow } from "../middleware/auth.js";
+import * as controller from "../controllers/audit.controller.js";
+
+const r = Router();
+r.use(requireDatabase);
+r.get("/", auth, allow("admin", "manager"), controller.listAuditLogs);
+export default r;

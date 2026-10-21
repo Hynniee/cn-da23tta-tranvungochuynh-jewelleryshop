@@ -1,1 +1,7 @@
-import {Router} from 'express';import Diamond from '../models/Diamond.js';import {rankDiamonds} from '../services/diamond.service.js';const r=Router();r.get('/',async(_q,res)=>res.json(await Diamond.find().sort({price:1})));r.post('/rank',async(req,res)=>res.json(await rankDiamonds(req.body)));export default r;
+import { Router } from "express";
+import * as controller from "../controllers/diamonds.controller.js";
+
+const r = Router();
+r.get("/", controller.listDiamonds);
+r.post("/rank", controller.rankDiamondsForRequest);
+export default r;

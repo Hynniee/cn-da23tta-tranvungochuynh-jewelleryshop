@@ -4,15 +4,16 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('fs');if(fs.existsSync('src/ml/model.json')){fs.mkdirSync('dist/ml',{recursive:true});fs.copyFileSync('src/ml/model.json','dist/ml/model.json')}\"",
     "start": "node dist/index.js",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "seed:catalog": "tsx src/scripts/seed-catalog.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.1",
+    "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.1"
   },

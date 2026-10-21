@@ -1,2 +1,72 @@
-import {FormEvent,useState} from 'react';import {Link} from 'react-router-dom';import {Bot,Sparkles} from 'lucide-react';import {request} from '../lib/api';
-export default function Advisor(){const [message,setMessage]=useState('Tôi cần nhẫn cầu hôn khoảng 30 triệu, phong cách tối giản, vàng trắng');const [data,setData]=useState<any>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{setData(await request('/advisor',{method:'POST',body:JSON.stringify({message})}))}catch(e:any){setError(e.message)}finally{setBusy(false)}}return <main className="smart-page"><header><Bot/><span>MIRA AI JEWELRY ADVISOR</span><h1>Tư vấn trang sức bằng ngôn ngữ tự nhiên</h1><p>AI hiểu nhu cầu, còn dữ liệu thật và thuật toán MIRA quyết định sản phẩm được xếp hạng.</p></header><form className="advisor-box" onSubmit={submit}><textarea value={message} onChange={e=>setMessage(e.target.value)} rows={4}/><button disabled={busy}><Sparkles size={16}/>{busy?'ĐANG PHÂN TÍCH...':'TƯ VẤN CHO TÔI'}</button>{error&&<p>{error}</p>}</form>{data&&<section className="smart-result"><h2>Phân tích nhu cầu</h2><pre>{JSON.stringify(data.intent,null,2)}</pre><p>{data.answer}</p><div className="smart-products">{data.products?.map((p:any)=><Link to={`/product/${p.slug}`} key={p._id}><img src={p.images?.[0]}/><b>{p.name}</b><span>{Number(p.price).toLocaleString('vi-VN')}₫</span><strong>Phù hợp {p.score}%</strong></Link>)}</div></section>}</main>}
+import Image from "../components/Image";
+import { FormEvent, useState } from "react";
+import { Link } from "react-router-dom";
+import { Bot, Sparkles } from "lucide-react";
+import { request } from "../lib/api";
+export default function Advisor() {
+  const [message, setMessage] = useState(
+    "Tôi cần nhẫn cầu hôn khoảng 30 triệu, phong cách tối giản, vàng trắng",
+  );
+  const [data, setData] = useState<any>(null),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      setData(
+        await request("/assistant", {
+          method: "POST",
+          body: JSON.stringify({ message }),
+        }),
+      );
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <main className="smart-page">
+      <header>
+        <Bot />
+        <span>MIRA AI JEWELRY ADVISOR</span>
+        <h1>Tư vấn trang sức bằng ngôn ngữ tự nhiên</h1>
+        <p>
+          AI hiểu nhu cầu, còn dữ liệu thật và thuật toán MIRA quyết định sản
+          phẩm được xếp hạng.
+        </p>
+      </header>
+      <form className="advisor-box" onSubmit={submit}>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={4}
+        />
+        <button disabled={busy}>
+          <Sparkles size={16} />
+          {busy ? "ĐANG PHÂN TÍCH..." : "TƯ VẤN CHO TÔI"}
+        </button>
+        {error && <p>{error}</p>}
+      </form>
+      {data && (
+        <section className="smart-result">
+          <h2>Phân tích nhu cầu</h2>
+          <pre>{JSON.stringify(data.intent, null, 2)}</pre>
+          <p>{data.answer}</p>
+          <div className="smart-products">
+            {data.products?.map((p: any) => (
+              <Link to={`/product/${p.slug}`} key={p._id}>
+                <Image src={p.images?.[0] || "/placeholder.svg"} />
+                <b>{p.name}</b>
+                <span>{Number(p.price).toLocaleString("vi-VN")}₫</span>
+                <strong>Phù hợp {p.score}%</strong>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}

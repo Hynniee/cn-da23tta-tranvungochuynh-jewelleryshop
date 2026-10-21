@@ -1,0 +1,19 @@
+{
+  "type": "logistic-regression",
+  "features": [
+    "categoryMatch",
+    "materialMatch",
+    "styleMatch",
+    "priceFit",
+    "rating"
+  ],
+  "coefficients": [
+    0.9329441980197671,
+    0.5177557079104188,
+    0.59685042485826,
+    1.0029358628073892,
+    0.5131212271018101
+  ],
+  "intercept": -2.1901908193736648,
+  "trainingSamples": 800
+}

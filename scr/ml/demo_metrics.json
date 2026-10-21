@@ -1,0 +1,19 @@
+{
+  "dataset": "SYNTHETIC DEMO ONLY",
+  "train_samples": 800,
+  "test_samples": 200,
+  "test_positive": 69,
+  "test_negative": 131,
+  "accuracy": 0.69,
+  "precision": 0.5686,
+  "recall": 0.4203,
+  "f1": 0.4833,
+  "majority_baseline_accuracy": 0.655,
+  "confusion_matrix": {
+    "TP": 29,
+    "FP": 22,
+    "FN": 40,
+    "TN": 109
+  },
+  "note": "Synthetic data cannot establish real-world recommendation performance or Precision@3."
+}

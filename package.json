@@ -8,9 +8,18 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm --workspace scr/server run dev\" \"npm --workspace scr/client run dev\"",
-    "build": "npm --workspace scr/server run build && npm --workspace scr/client run build"
+    "build": "npm --workspace scr/server run build && npm --workspace scr/client run build",
+    "test": "node scr/test-data/test.mjs",
+    "test:cart": "node --import tsx --test scr/test-data/cart-model.test.ts",
+    "format": "prettier --write \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",
+    "format:check": "prettier --check \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",
+    "dev:full": "node setup/scripts/dev-full.mjs",
+    "catalog:import": "npm --workspace scr/server run seed:catalog"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "@playwright/test": "^1.64.1",
+    "concurrently": "^9.0.0",
+    "mongodb-memory-server": "^11.3.0",
+    "prettier": "^3.9.10"
   }
 }

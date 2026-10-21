@@ -1,0 +1,29 @@
+{
+  "categories": [
+    "Nhẫn",
+    "Dây chuyền",
+    "Vòng tay",
+    "Bông tai",
+    "Lắc chân",
+    "Charm",
+    "Bộ trang sức"
+  ],
+  "shippingFee": 30000,
+  "freeShippingFrom": 2000000,
+  "orderTransitions": {
+    "pending_payment": ["cancelled"],
+    "pending": ["confirmed", "cancelled"],
+    "confirmed": ["shipping", "cancelled"],
+    "shipping": ["completed"],
+    "completed": [],
+    "cancelled": []
+  },
+  "orderLabels": {
+    "pending_payment": "Chờ thanh toán",
+    "pending": "Chờ xác nhận",
+    "confirmed": "Đã xác nhận",
+    "shipping": "Đang giao",
+    "completed": "Hoàn tất",
+    "cancelled": "Đã hủy"
+  }
+}
