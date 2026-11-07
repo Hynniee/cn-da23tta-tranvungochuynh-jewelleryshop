@@ -1,16 +1,15 @@
 import CatalogFilters from "../components/CatalogFilters";
 import { MAX_BUDGET } from "../lib/catalogFilters";
 import Image from "../components/Image";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Heart, Search, SlidersHorizontal } from "lucide-react";
 import { request } from "../lib/api";
-import { demoProducts } from "../data/demoProducts";
+import type { Product } from "../types/product";
 import { categories, normalizeSearch } from "../lib/commerce";
 import { getWishlist, toggleWishlist } from "../store/wishlist";
 
-type Product = (typeof demoProducts)[number];
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 9;
 const price = (p: Product) => Number(p.salePrice ?? p.price);
 
 export default function Shop({
@@ -69,8 +68,10 @@ export default function Shop({
       })
       .catch(() => {
         if (active) {
-          setProducts(demoProducts);
-          setNotice("API chưa sẵn sàng. Đang hiển thị bộ sưu tập demo.");
+          setProducts([]);
+          setNotice(
+            "Không tải được sản phẩm từ cửa hàng. Vui lòng thử lại sau.",
+          );
         }
       })
       .finally(() => {
@@ -85,13 +86,16 @@ export default function Shop({
   }, []);
 
   function change(key: string, value: string) {
-    setParams((current) => {
-      const next = new URLSearchParams(current);
-      if (value) next.set(key, value);
-      else next.delete(key);
-      if (key !== "page") next.delete("page");
-      return next;
-    });
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        if (key !== "page") next.delete("page");
+        return next;
+      },
+      { preventScrollReset: key === "page" },
+    );
   }
   function toggle(key: string, value: string) {
     setParams((current) => {
@@ -146,6 +150,17 @@ export default function Shop({
     currentPage * PAGE_SIZE,
   );
 
+  const pageStart = Math.max(1, Math.min(currentPage - 1, pages - 2));
+  const visiblePages = Array.from({ length: pages }, (_, i) => i + 1).filter(
+    (n) => n === 1 || n === pages || (n >= pageStart && n <= pageStart + 2),
+  );
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const previousPage = useRef(currentPage);
+  useEffect(() => {
+    if (previousPage.current === currentPage) return;
+    previousPage.current = currentPage;
+    resultsRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [currentPage]);
   return (
     <main className="shop-page">
       <div className="shop-breadcrumb">
@@ -216,7 +231,7 @@ export default function Shop({
             reset={() => setParams({})}
           />
         </aside>
-        <div className="catalog-main">
+        <div className="catalog-main" ref={resultsRef}>
           <div className="catalog-search">
             <Search size={15} />
             <input
@@ -326,14 +341,19 @@ export default function Shop({
               >
                 ‹
               </button>
-              {Array.from({ length: pages }, (_, i) => (
-                <button
-                  key={i}
-                  className={currentPage === i + 1 ? "active" : ""}
-                  onClick={() => change("page", String(i + 1))}
-                >
-                  {i + 1}
-                </button>
+              {visiblePages.map((number, index) => (
+                <Fragment key={number}>
+                  {index > 0 && number > visiblePages[index - 1] + 1 && (
+                    <span aria-hidden="true">…</span>
+                  )}
+                  <button
+                    className={currentPage === number ? "active" : ""}
+                    aria-current={currentPage === number ? "page" : undefined}
+                    onClick={() => change("page", String(number))}
+                  >
+                    {number}
+                  </button>
+                </Fragment>
               ))}
               <button
                 disabled={currentPage === pages}

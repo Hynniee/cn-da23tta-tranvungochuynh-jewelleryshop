@@ -11,7 +11,6 @@ import {
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { request } from "../lib/api";
-import { demoProducts } from "../data/demoProducts";
 import ProductCard from "../components/ProductCard";
 const cats = [
   [
@@ -40,7 +39,7 @@ export default function Home() {
   useEffect(() => {
     request("/products")
       .then(setProducts)
-      .catch(() => setProducts(demoProducts));
+      .catch(() => setProducts([]));
   }, []);
   const featured = products.filter((p) => p.featured);
   const curatedSlugs = [
@@ -83,20 +82,17 @@ export default function Home() {
         <div className="hero-values">
           <span>
             <Diamond />
-            VÀNG · BẠC · ĐÁ QUÝ
-            <br />
+            <b>VÀNG · BẠC · ĐÁ QUÝ</b>
             <small>Chất liệu rõ ràng</small>
           </span>
           <span>
             <ShieldCheck />
-            BẢO CHỨNG TRỌN ĐỜI
-            <br />
+            <b>BẢO CHỨNG TRỌN ĐỜI</b>
             <small>Thu đổi minh bạch</small>
           </span>
           <span>
             <Sparkles />
-            CHẾ TÁC THỦ CÔNG
-            <br />
+            <b>CHẾ TÁC THỦ CÔNG</b>
             <small>Hoàn thiện bởi nghệ nhân</small>
           </span>
         </div>
@@ -209,7 +205,7 @@ export default function Home() {
           </a>
         </div>
       </section>
-      <section className="tools-section">
+      <section className="tools-section" id="personal-tools">
         <div className="center-title">
           <span>PERSONALIZED EXPERIENCE</span>
           <h2>Công Cụ Dành Riêng Cho Bạn</h2>
@@ -223,11 +219,11 @@ export default function Home() {
               Ước tính kích thước nhẫn bằng hướng dẫn trực quan, sau đó đặt lịch
               để chuyên viên MIRA xác nhận chính xác.
             </p>
-            <div className="fake-slider">
-              <i />
-              <b>12</b>
+            <div className="tool-preview">
+              <Ruler size={20} />
+              <span>Chu vi ngón tay · Đường kính lòng nhẫn</span>
             </div>
-            <Link className="gold-btn" to="/advisor">
+            <Link className="gold-btn" to="/ring-sizer">
               TƯ VẤN SIZE NHẪN
             </Link>
           </div>
@@ -236,15 +232,15 @@ export default function Home() {
             <span>JEWELRY CONCIERGE</span>
             <h3>Trang Sức Dành Cho Bạn</h3>
             <p>
-              Trả lời vài câu hỏi về ngân sách, phong cách và khoảnh khắc để
-              nhận gợi ý trang sức phù hợp.
+              Trả lời vài câu hỏi về ngân sách, chất liệu và dịp sử dụng để nhận
+              gợi ý trang sức phù hợp.
             </p>
             <div className="quiz-tags">
-              <b>ĐÍNH HÔN</b>
-              <b>KỶ NIỆM</b>
-              <b>QUÀ TẶNG</b>
+              <Link to="/jewelry-quiz?occasion=Cầu%20hôn">CẦU HÔN</Link>
+              <Link to="/jewelry-quiz?occasion=Kỷ%20niệm">KỶ NIỆM</Link>
+              <Link to="/jewelry-quiz?occasion=Quà%20tặng">QUÀ TẶNG</Link>
             </div>
-            <Link className="gold-btn" to="/advisor">
+            <Link className="gold-btn" to="/jewelry-quiz">
               BẮT ĐẦU TƯ VẤN
             </Link>
           </div>

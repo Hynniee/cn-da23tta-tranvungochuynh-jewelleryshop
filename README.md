@@ -3,7 +3,7 @@
 **Đề tài:** Xây dựng hệ thống thương mại điện tử bán trang sức ứng dụng mô hình ngôn ngữ lớn và hệ hỗ trợ ra quyết định.
 
 **Sinh viên:** Trần Vũ Ngọc Huỳnh  
-**Email:** tranvungochuynh136@gmail.com  
+**Email:** 110123012@st.tvu.edu.vn 
 **Điện thoại:** 0328779845
 
 ## Cấu trúc repository
@@ -47,7 +47,7 @@ Hướng dẫn cho người chấm: [cài đặt](setup/README.md) → [dữ li�
 
 Backend tách `routes` → `controllers` → `models/services`; React đảm nhiệm View. Trang giỏ hàng tách Model tính toán, Controller hook và View JSX. Xem [hướng dẫn MVC](setup/MVC.md) để biết trách nhiệm từng lớp và cách thêm chức năng.
 
-## Chạy nhanh (demo không cần MongoDB)
+## Chạy nhanh với MongoDB hiện có
 ```bash
 docker compose -f docker/docker-compose.yml up --build -d
 ```
@@ -55,7 +55,7 @@ docker compose -f docker/docker-compose.yml up --build -d
 - API: http://localhost:5000/api/products
 - Product Detail: http://localhost:8080/product/solitaire-etoile-diamond-ring
 
-Nếu muốn dùng MongoDB/Gemini, xem `setup/README.md` và `scr/server/.env.example`.
+Cấu hình `MONGO_URI` trong `scr/server/.env` trỏ đúng tên database trước khi chạy. Website chỉ đọc dữ liệu từ MongoDB; không hiển thị danh mục mẫu khi mất kết nối. Xem `setup/README.md` và `scr/server/.env.example`.
 Không đưa file `.env`, mật khẩu hoặc API key lên GitHub.
 
 ## Chức năng
@@ -74,12 +74,16 @@ npm ci
 npm run dev
 ```
 
-Website: http://localhost:5173. Chạy `npm run build`, sau đó `npm test` để kiểm tra API demo, MongoDB tạm và Chrome. `npm run format` định dạng source; `npm run format:check` kiểm tra định dạng. Xem `setup/README.md` khi cổng 5000 đã được Docker sử dụng.
+Website: http://localhost:5173. Chạy `npm run build`, sau đó `npm test` để kiểm tra xử lý mất kết nối, API trên MongoDB kiểm thử riêng và Chrome. `npm run format` định dạng source; `npm run format:check` kiểm tra định dạng. Xem `setup/README.md` khi cổng 5000 đã được Docker sử dụng.
 
 ## Trang sức đa dạng và chạy đầy đủ
 
-Catalog hiện có 36 sản phẩm vàng, bạc 925, ngọc trai, đá màu và kim cương, gồm cả lắc chân, charm và bộ trang sức. Dữ liệu demo được dùng chung tại `scr/server/src/data/catalog.json`.
+Catalog của website lấy từ database trong `MONGO_URI`. Các bản ghi có `metals`, `gemstone` hoặc thiếu `slug` được chuyển đổi khi đọc để tương thích với bộ lọc và đường dẫn sản phẩm; không sửa dữ liệu gốc. `scr/server/src/data/catalog.json` chỉ còn dùng cho các script tạo dữ liệu kiểm thử.
 
-Chạy `npm run dev:full` để dùng MongoDB local có lưu dữ liệu và thử đầy đủ luồng đăng ký → mua hàng → quản lý đơn. Để chỉ bổ sung mẫu vào database đã cấu hình và giữ nguyên dữ liệu hiện có, dùng `npm run catalog:import`. Xem `setup/README.md` cho cấu hình chi tiết.
+Chạy `npm run dev:full` để mở API và website với MongoDB đã cấu hình. Lệnh này không tạo MongoDB local và không tự nạp sản phẩm mẫu. URI Atlas cần có tên database, ví dụ `/mira_jewelry`. Nếu DNS không phân giải được Atlas, có thể đặt `MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8` trong `.env`. Các lệnh seed/catalog import chỉ dành cho database thử nghiệm.
 
 Trang sản phẩm chung: `/products`, có mục **SẢN PHẨM** trên menu. Trang này mở toàn bộ trang sức và dùng bốn nhóm lọc: danh mục, chất liệu kim loại, loại đá / điểm nhấn và ngân sách tối đa.
+
+Địa chỉ giao hàng dùng danh mục hai cấp sau sáp nhập: tỉnh/thành → xã/phường/đặc khu, kèm số nhà/tên đường. Nguồn [Province Open API v2](https://provinces.open-api.vn/), bản tải ngày 07/11/2026 lưu tại `scr/server/src/data/administrative-units.json` (34 tỉnh/thành, 3.321 đơn vị cấp xã). Server kiểm tra quan hệ tỉnh–xã và lưu cả mã hành chính lẫn địa chỉ đầy đủ trong đơn hàng; không tự chuyển đổi địa chỉ cũ.
+
+Hai công cụ trên trang chủ có luồng riêng: `/ring-sizer` đổi chu vi/đường kính (mm) sang size tham khảo theo bảng DOJI, không tự chọn size mua hàng; `/jewelry-quiz` chọn dịp, ngân sách và tiêu chí từ danh mục MongoDB, hiển thị lý do gợi ý và tình trạng hàng, không tạo dữ liệu mẫu. Chạy `npm run test:tools` để kiểm tra quy đổi, giới hạn số đo và lọc sản phẩm.

@@ -31,12 +31,7 @@ export default function Advisor() {
     <main className="smart-page">
       <header>
         <Bot />
-        <span>MIRA AI JEWELRY ADVISOR</span>
-        <h1>Tư vấn trang sức bằng ngôn ngữ tự nhiên</h1>
-        <p>
-          AI hiểu nhu cầu, còn dữ liệu thật và thuật toán MIRA quyết định sản
-          phẩm được xếp hạng.
-        </p>
+        <h3>MIRA AI JEWELRY ADVISOR</h3>
       </header>
       <form className="advisor-box" onSubmit={submit}>
         <textarea

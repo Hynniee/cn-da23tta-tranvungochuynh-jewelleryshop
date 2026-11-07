@@ -1,21 +1,16 @@
 import type { RequestHandler } from "express";
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
+import {
+  catalogProduct,
+  productLookup,
+} from "../services/product-data.service.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { audit } from "../services/audit.service.js";
-import { demoProducts } from "../data/demoProducts.js";
 
 const param = (v: string | string[]) => (Array.isArray(v) ? v[0] : v);
 
 const db = () => mongoose.connection.readyState === 1;
-
-const demos = () =>
-  demoProducts.map((p: any, i: number) => ({
-    ...p,
-    _id: `demo-${i + 1}`,
-    images: [p.image],
-    stock: p.stock,
-  }));
 
 const normalize = (value: string) =>
   value
@@ -26,39 +21,33 @@ const normalize = (value: string) =>
     .trim();
 
 export const listProducts: RequestHandler = async (req, res) => {
-  const products = db()
-    ? await Product.find({}).sort({ createdAt: -1 }).lean()
-    : demos();
+  const products = await Product.find({}).sort({ createdAt: -1 }).lean();
   const search = normalize(String(req.query.search || ""));
   const category = String(req.query.category || "");
   const material = String(req.query.material || "");
   const stone = String(req.query.stone || "");
   res.json(
-    products.filter(
-      (p) =>
-        (!category || p.category === category) &&
-        (!material || p.material === material) &&
-        (!stone || p.stone === stone) &&
-        (!search ||
-          normalize(
-            `${p.name} ${p.description || ""} ${p.material} ${p.stone || ""} ${p.category}`,
-          ).includes(search)),
-    ),
+    products
+      .map(catalogProduct)
+      .filter(
+        (p) =>
+          (!category || p.category === category) &&
+          (!material || p.material === material) &&
+          (!stone || p.stone === stone) &&
+          (!search ||
+            normalize(
+              `${p.name} ${p.description || ""} ${p.material} ${p.stone || ""} ${p.category}`,
+            ).includes(search)),
+      ),
   );
 };
 
 export const getProduct: RequestHandler = async (req, res, next) => {
   try {
     const slug = param(req.params.slug);
-    if (!db()) {
-      const p = demos().find((x) => x.slug === slug);
-      return p
-        ? res.json(p)
-        : res.status(404).json({ message: "Không tìm thấy sản phẩm demo" });
-    }
-    const p = await Product.findOne({ slug });
+    const p = await Product.findOne(productLookup(slug)).lean();
     return p
-      ? res.json(p)
+      ? res.json(catalogProduct(p))
       : res.status(404).json({ message: "Không tìm thấy sản phẩm" });
   } catch (e) {
     next(e);
@@ -86,6 +75,8 @@ export const updateProduct: RequestHandler = async (req: AuthRequest, res) => {
     return res.status(503).json({ message: "Quản trị cần MongoDB Atlas" });
   const id = param(req.params.id);
   const before = await Product.findById(id).lean();
+  if (!before)
+    return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
   const after = await Product.findByIdAndUpdate(id, req.body, {
     new: true,
     runValidators: true,
@@ -101,7 +92,7 @@ export const updateProduct: RequestHandler = async (req: AuthRequest, res) => {
   );
   if (!after)
     return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
-  res.json(after);
+  res.json(catalogProduct(after.toObject()));
 };
 
 export const deleteProduct: RequestHandler = async (req: AuthRequest, res) => {

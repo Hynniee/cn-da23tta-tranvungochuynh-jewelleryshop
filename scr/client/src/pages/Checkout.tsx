@@ -1,5 +1,8 @@
 import { shippingFee } from "../lib/commerce";
 import Image from "../components/Image";
+import ShippingAddressFields, {
+  ShippingAddressValue,
+} from "../components/ShippingAddressFields";
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Check, CreditCard, LockKeyhole, Truck } from "lucide-react";
@@ -20,8 +23,12 @@ export default function Checkout() {
     name: "",
     phone: "",
     email: "",
-    address: "",
     note: "",
+  });
+  const [delivery, setDelivery] = useState<ShippingAddressValue>({
+    provinceCode: "",
+    wardCode: "",
+    addressLine: "",
   });
   const [payment, setPayment] = useState("COD");
   const [bankAvailable, setBankAvailable] = useState(false);
@@ -48,7 +55,6 @@ export default function Checkout() {
           name: current.name || user.name || "",
           email: current.email || user.email || "",
           phone: current.phone || user.phone || "",
-          address: current.address || user.address || "",
         })),
       )
       .catch(() => undefined);
@@ -118,13 +124,21 @@ export default function Checkout() {
       !cartHasStock(cart)
     )
       return;
+    if (
+      !delivery.provinceCode ||
+      !delivery.wardCode ||
+      !delivery.addressLine.trim()
+    ) {
+      setError("Vui lòng chọn tỉnh/thành, phường/xã và nhập địa chỉ cụ thể.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
       const order = await request("/orders", {
         method: "POST",
         body: JSON.stringify({
-          customer: form,
+          customer: { ...form, ...delivery },
           items: cart.map((item) => ({
             product: item._id,
             name: item.name,
@@ -144,15 +158,10 @@ export default function Checkout() {
       });
       saveCart([]);
       if (payment === "BANK_QR") {
-        setQr({
-          amount: order.total,
-          transferContent: order.orderCode,
-          payment: { orderCode: order.orderCode },
+        setLoadingPayment(true);
+        navigate(`/checkout?order=${encodeURIComponent(order._id)}`, {
+          replace: true,
         });
-        const info = await request(`/payments/create/${order._id}`, {
-          method: "POST",
-        });
-        setQr({ ...info, orderId: order._id });
         return;
       }
       navigate("/account");
@@ -180,19 +189,25 @@ export default function Checkout() {
     return (
       <main className="smart-page">
         <header>
-          <span>PAYMENT RECONCILIATION</span>
+          <span>THANH TOÁN QR</span>
           <h1>Thanh toán đơn {qr.payment?.orderCode}</h1>
           <p>
-            Chuyển đúng số tiền và nội dung. Hệ thống sẽ xác nhận qua webhook
-            của nhà cung cấp thanh toán.
+            Quét mã bằng ứng dụng ngân hàng. Số tiền và nội dung chuyển khoản đã
+            được điền sẵn theo đơn hàng.
           </p>
         </header>
         <section className="smart-result">
           {error && <p role="alert">Đơn đã được tạo. {error}</p>}
           {qr.qrUrl && (
-            <Image
+            <img
               src={qr.qrUrl}
-              style={{ maxWidth: 320, display: "block", margin: "auto" }}
+              alt={`QR Sacombank thanh toán đơn ${qr.transferContent}`}
+              style={{
+                width: "100%",
+                maxWidth: 320,
+                display: "block",
+                margin: "auto",
+              }}
             />
           )}
           <h2>{money(qr.amount)}</h2>
@@ -213,6 +228,12 @@ export default function Checkout() {
           <p>
             Nội dung: <b>{qr.transferContent}</b>
           </p>
+          {qr.accountName && (
+            <p>
+              Chủ tài khoản: <b>{qr.accountName}</b>
+            </p>
+          )}
+          <p>Đơn hàng đang chờ xác nhận thanh toán.</p>
           <button className="place-order" onClick={() => navigate("/account")}>
             XEM TRẠNG THÁI ĐƠN
           </button>
@@ -280,15 +301,7 @@ export default function Checkout() {
               placeholder="email@example.com"
             />
           </label>
-          <label>
-            ĐỊA CHỈ BÀN GIAO
-            <textarea
-              required
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
-            />
-          </label>
+          <ShippingAddressFields value={delivery} onChange={setDelivery} />
           <label>
             LỜI NHẮN CHO MIRA
             <textarea
@@ -315,10 +328,10 @@ export default function Checkout() {
               onClick={() => setPayment("BANK_QR")}
             >
               <CreditCard />
-              <b>Chuyển khoản ngân hàng</b>
+              <b>Chuyển khoản QR</b>
               <span>
                 {bankAvailable
-                  ? "Chuyển đúng mã đơn và số tiền"
+                  ? "QR tự hiện sau khi xác nhận đơn, có sẵn số tiền và nội dung"
                   : "Chưa sẵn sàng · Vui lòng chọn thanh toán khi nhận"}
               </span>
             </button>

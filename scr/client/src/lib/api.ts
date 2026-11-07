@@ -6,11 +6,43 @@ export async function request(path: string, options: RequestInit = {}) {
   if (options.body) headers.set("Content-Type", "application/json");
   const accessToken = token();
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
-  const response = await fetch(API + path, {
-    ...options,
-    headers,
-    signal: options.signal ?? AbortSignal.timeout(30_000),
-  });
+  const signal = options.signal ?? AbortSignal.timeout(30_000);
+  const readOnly = (options.method || "GET").toUpperCase() === "GET";
+  let response: Response;
+  // Atlas may still be connecting when the page first opens. Only retry reads;
+  // submitting an order or editing stock must never be repeated automatically.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      response = await fetch(API + path, { ...options, headers, signal });
+      if (
+        !readOnly ||
+        ![502, 503, 504].includes(response.status) ||
+        attempt >= 5
+      )
+        break;
+      await response.body?.cancel();
+    } catch (error) {
+      if (
+        !readOnly ||
+        !(error instanceof TypeError) ||
+        signal.aborted ||
+        attempt >= 5
+      )
+        throw error;
+    }
+    await new Promise<void>((resolve, reject) => {
+      const abort = () => {
+        clearTimeout(timer);
+        reject(signal.reason);
+      };
+      const timer = setTimeout(() => {
+        signal.removeEventListener("abort", abort);
+        resolve();
+      }, [1000, 2000, 4000, 6000, 8000][attempt]);
+      signal.addEventListener("abort", abort, { once: true });
+      if (signal.aborted) abort();
+    });
+  }
   if (!response.ok) {
     const error = await response.json().catch(() => null);
     if (response.status === 401) {

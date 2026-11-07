@@ -15,7 +15,8 @@
     "format": "prettier --write \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",
     "format:check": "prettier --check \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",
     "dev:full": "node setup/scripts/dev-full.mjs",
-    "catalog:import": "npm --workspace scr/server run seed:catalog"
+    "catalog:import": "npm --workspace scr/server run seed:catalog",
+    "test:tools": "node --import tsx --test scr/test-data/personal-tools.test.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

@@ -1,7 +1,14 @@
 import { categories, orderTransitions } from "../lib/commerce";
 import Image from "../components/Image";
 import { readStoredObject } from "../lib/storage";
-import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart3,
@@ -19,6 +26,11 @@ import {
   X,
 } from "lucide-react";
 import { request, token } from "../lib/api";
+import {
+  productForm,
+  productChanges,
+  type ProductForm,
+} from "../lib/product-editor";
 
 type Tab = "overview" | "products" | "orders" | "analytics";
 type Product = {
@@ -44,20 +56,6 @@ type Order = {
   customer?: { name?: string; email?: string };
   items?: unknown[];
 };
-type ProductForm = {
-  stone: string;
-  sizes: string;
-  description: string;
-  engravingAllowed: boolean;
-  name: string;
-  slug: string;
-  category: string;
-  material: string;
-  price: string;
-  stock: string;
-  image: string;
-};
-
 const EMPTY_PRODUCT: ProductForm = {
   stone: "Không đính đá",
   sizes: "Tiêu chuẩn",
@@ -108,18 +106,61 @@ export default function Admin() {
   const [form, setForm] = useState<ProductForm>(EMPTY_PRODUCT);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [analytics, setAnalytics] = useState<any>(null);
+  const productFormRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (!showForm) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    document.body.style.overflow = "hidden";
+    productFormRef.current
+      ?.querySelector<HTMLInputElement>("input")
+      ?.focus({ preventScroll: true });
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setShowForm(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const controls = Array.from(
+        productFormRef.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]",
+        ) || [],
+      ).filter((element) => element.getClientRects().length);
+      const first = controls[0],
+        last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previousFocus?.isConnected)
+        previousFocus.focus({ preventScroll: true });
+    };
+  }, [showForm]);
 
   async function loadData() {
-    const [productData, orderData] = await Promise.all([
-      request("/products"),
-      request("/orders"),
+    const results = await Promise.allSettled([
+      request("/products").then(setProducts),
+      request("/orders").then(setOrders),
     ]);
-    setProducts(productData);
-    setOrders(orderData);
     request("/analytics")
       .then(setAnalytics)
       .catch(() => undefined);
+    const failure = results.find((result) => result.status === "rejected");
+    if (failure?.status === "rejected") throw failure.reason;
   }
 
   useEffect(() => {
@@ -153,27 +194,26 @@ export default function Admin() {
     setBusy(true);
     setError("");
     try {
+      const existing = editingId
+        ? products.find((product) => product._id === editingId)
+        : undefined;
+      const changes = productChanges(
+        form,
+        existing ? productForm(existing) : undefined,
+      );
+      if (editingId && !Object.keys(changes).length) {
+        setShowForm(false);
+        return;
+      }
       await request(editingId ? `/products/${editingId}` : "/products", {
         method: editingId ? "PUT" : "POST",
-        body: JSON.stringify({
-          name: form.name,
-          slug: form.slug,
-          category: form.category,
-          material: form.material,
-          stone: form.stone,
-          sizes: form.sizes
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          engravingAllowed: form.engravingAllowed,
-          price: Number(form.price),
-          stock: Number(form.stock),
-          images: form.image ? [form.image] : [],
-          description:
-            form.description.trim() ||
-            `${form.name} — trang sức MIRA từ ${form.material}.`,
-        }),
+        body: JSON.stringify(changes),
       });
+      setNotice(
+        editingId
+          ? `Đã cập nhật sản phẩm. Tồn kho: ${Number(form.stock)}.`
+          : "Đã thêm sản phẩm.",
+      );
       setForm(EMPTY_PRODUCT);
       setEditingId(null);
       setShowForm(false);
@@ -266,6 +306,11 @@ export default function Admin() {
       </aside>
 
       <section className="admin-content">
+        {notice && (
+          <p role="status" className="admin-notice">
+            {notice}
+          </p>
+        )}
         {error && (
           <p role="alert" className="auth-error">
             {error}
@@ -374,6 +419,8 @@ export default function Admin() {
                 onClick={() => {
                   setEditingId(null);
                   setForm(EMPTY_PRODUCT);
+                  setError("");
+                  setNotice("");
                   setShowForm(true);
                 }}
               >
@@ -407,19 +454,9 @@ export default function Admin() {
                     <button
                       onClick={() => {
                         setEditingId(p._id);
-                        setForm({
-                          name: p.name,
-                          slug: p.slug,
-                          category: p.category,
-                          material: p.material,
-                          price: String(p.price),
-                          stock: String(p.stock),
-                          image: p.images?.[0] || "",
-                          stone: p.stone || "Không đính đá",
-                          sizes: p.sizes?.join(", ") || "Tiêu chuẩn",
-                          description: p.description || "",
-                          engravingAllowed: Boolean(p.engravingAllowed),
-                        });
+                        setForm(productForm(p));
+                        setError("");
+                        setNotice("");
                         setShowForm(true);
                       }}
                     >
@@ -475,14 +512,25 @@ export default function Admin() {
       </section>
 
       {showForm && (
-        <div className="admin-modal">
-          <form onSubmit={createProduct}>
+        <div
+          className="admin-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="product-form-title"
+        >
+          <form ref={productFormRef} onSubmit={createProduct}>
             <div className="modal-title">
               <div>
                 <span>MIRA CATALOG</span>
-                <h2>{editingId ? "Cập Nhật Sản Phẩm" : "Thêm Sản Phẩm Mới"}</h2>
+                <h2 id="product-form-title">
+                  {editingId ? "Cập Nhật Sản Phẩm" : "Thêm Sản Phẩm Mới"}
+                </h2>
               </div>
-              <button type="button" onClick={() => setShowForm(false)}>
+              <button
+                type="button"
+                aria-label="Đóng form sản phẩm"
+                onClick={() => setShowForm(false)}
+              >
                 <X />
               </button>
             </div>
@@ -517,6 +565,7 @@ export default function Admin() {
               <label>
                 Danh mục
                 <select
+                  aria-label="Danh mục"
                   value={form.category}
                   onChange={(e) =>
                     setForm({ ...form, category: e.target.value })
@@ -553,6 +602,7 @@ export default function Admin() {
                   required
                   type="number"
                   min="0"
+                  step="1"
                   value={form.stock}
                   onChange={(e) => setForm({ ...form, stock: e.target.value })}
                 />
@@ -560,18 +610,23 @@ export default function Admin() {
               <label>
                 Loại đá / điểm nhấn
                 <select
+                  aria-label="Loại đá / điểm nhấn"
                   value={form.stone}
                   onChange={(e) => setForm({ ...form, stone: e.target.value })}
                 >
                   {[
-                    "Không đính đá",
-                    "Kim cương",
-                    "Ngọc trai",
-                    "Ruby",
-                    "Sapphire",
-                    "Emerald",
-                    "Thạch anh tím",
-                    "Zircon",
+                    ...new Set([
+                      form.stone,
+                      "Không đính đá",
+                      "Kim cương",
+                      "Đá CZ",
+                      "Ngọc trai",
+                      "Ruby",
+                      "Sapphire",
+                      "Emerald",
+                      "Thạch anh tím",
+                      "Zircon",
+                    ]),
                   ].map((value) => (
                     <option key={value}>{value}</option>
                   ))}
@@ -616,9 +671,26 @@ export default function Admin() {
                 />
               </label>
             </div>
-            <button className="admin-primary modal-submit" disabled={busy}>
-              {busy ? "ĐANG LƯU..." : "LƯU SẢN PHẨM"}
-            </button>
+            <div className="modal-footer">
+              {error && (
+                <p className="modal-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="admin-secondary"
+                  disabled={busy}
+                  onClick={() => setShowForm(false)}
+                >
+                  HỦY
+                </button>
+                <button className="admin-primary modal-submit" disabled={busy}>
+                  {busy ? "ĐANG LƯU..." : "LƯU SẢN PHẨM"}
+                </button>
+              </div>
+            </div>
           </form>
         </div>
       )}

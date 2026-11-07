@@ -1,5 +1,3 @@
-import mongoose from "mongoose";
-import { demoDiamonds } from "../data/demoDiamonds.js";
 import Diamond from "../models/Diamond.js";
 const CUT = ["Fair", "Good", "Very Good", "Excellent"];
 const COLOR = [
@@ -50,10 +48,6 @@ export async function rankDiamonds(input: any) {
     clarity: Number(input.weights?.clarity ?? 0.1),
   };
   const max = Number(input.budgetMax ?? Number.MAX_SAFE_INTEGER);
-  const ds =
-    mongoose.connection.readyState === 1
-      ? await Diamond.find({ price: { $lte: max }, stock: { $gt: 0 } }).lean()
-      : demoDiamonds.filter((d) => d.price <= max);
   const target = Number(input.targetCarat ?? 1);
   const sum = Object.values(w).reduce((a, b) => a + b, 0);
   if (
@@ -65,6 +59,10 @@ export async function rankDiamonds(input: any) {
     sum <= 0
   )
     throw Object.assign(new Error("Invalid ranking criteria"), { status: 400 });
+  const ds = await Diamond.find({
+    price: { $lte: max },
+    stock: { $gt: 0 },
+  }).lean();
   return ds
     .map((d: any) => {
       const carat = Math.max(

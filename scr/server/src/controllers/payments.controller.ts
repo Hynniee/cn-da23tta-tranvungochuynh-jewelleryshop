@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import { bankTransferAvailable } from "../config.js";
+import { paymentQrUrl } from "../services/payment-qr.service.js";
 import crypto from "node:crypto";
 import Payment from "../models/Payment.js";
 import Order from "../models/Order.js";
@@ -41,9 +42,7 @@ export const createPayment: RequestHandler = async (req: AuthRequest, res) => {
     },
     { upsert: true, new: true },
   );
-  const qrUrl = (process.env.QR_TEMPLATE || "")
-    .replace("{amount}", String(order.total))
-    .replace("{content}", encodeURIComponent(order.orderCode!));
+  const qrUrl = paymentQrUrl(order.total!, order.orderCode!);
   res.json({
     payment,
     qrUrl,

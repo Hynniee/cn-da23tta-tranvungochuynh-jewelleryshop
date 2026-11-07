@@ -8,7 +8,7 @@ import RecommendationLog from "../models/RecommendationLog.js";
 
 export const getMLStatus: RequestHandler = (_req, res) => res.json(mlStatus());
 
-export const getDemoRecommendations: RequestHandler = async (
+export const getPublicRecommendations: RequestHandler = async (
   req,
   res,
   next,
@@ -22,7 +22,7 @@ export const getDemoRecommendations: RequestHandler = async (
       style: String(req.query.style || ""),
     };
     res.json({
-      products: await recommend("demo", Number(req.query.limit || 3), criteria),
+      products: await recommend("", Number(req.query.limit || 3), criteria),
       ...mlStatus(),
     });
   } catch (e) {

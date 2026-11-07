@@ -36,32 +36,15 @@ export default function Header() {
           <span>FINE JEWELRY · ATELIER</span>
         </Link>
         <nav className="lux-nav">
+          <Link to="/">TRANG CHỦ</Link>
           <Link to="/products">SẢN PHẨM</Link>
           <Link to="/shop?category=Nhẫn">NHẪN</Link>
-          <Link to="/shop?category=Dây chuyền">
-            DÂY CHUYỀN
-            <br />& MẶT DÂY
-          </Link>
+          <Link to="/shop?category=Dây chuyền">DÂY CHUYỀN & MẶT DÂY</Link>
           <Link to="/shop?category=Bông tai">BÔNG TAI</Link>
-          <Link to="/shop?category=Vòng tay">
-            LẮC &<br />
-            VÒNG TAY
-          </Link>
-          <Link to="/shop?collection=bac">
-            TRANG SỨC
-            <br />
-            BẠC 925
-          </Link>
-          <Link to="/shop?collection=ngoc-trai">
-            NGỌC
-            <br />
-            TRAI
-          </Link>
-          <Link to="/about">
-            BESPOKE
-            <br />
-            ATELIER
-          </Link>
+          <Link to="/shop?category=Vòng tay">LẮC & VÒNG TAY</Link>
+          <Link to="/shop?collection=bac">TRANG SỨC BẠC 925</Link>
+          <Link to="/shop?collection=ngoc-trai">NGỌC TRAI</Link>
+          <Link to="/about">BESPOKE ATELIER</Link>
         </nav>
         <div className="lux-actions">
           <Link className="lux-search" to="/products">

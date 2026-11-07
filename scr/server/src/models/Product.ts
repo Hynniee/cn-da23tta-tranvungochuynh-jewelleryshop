@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const schema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, required: true, unique: true, sparse: true },
     description: String,
     category: {
       type: String,
@@ -11,7 +11,10 @@ const schema = new mongoose.Schema(
       required: true,
     },
     material: { type: String, required: true },
-    stone: { type: String, default: "Không đính đá" },
+    stone: String,
+    metals: [String],
+    gemstone: String,
+    imageUrl: String,
     shape: {
       type: String,
       enum: [
@@ -42,8 +45,16 @@ const schema = new mongoose.Schema(
     sizes: [String],
     price: { type: Number, required: true, min: 0 },
     salePrice: { type: Number, min: 0 },
-    rating: { type: Number, default: 4.5 },
-    stock: { type: Number, default: 0, min: 0 },
+    rating: { type: Number, default: 0 },
+    stock: {
+      type: Number,
+      default: 0,
+      min: 0,
+      validate: {
+        validator: Number.isSafeInteger,
+        message: "Tồn kho phải là số nguyên không âm",
+      },
+    },
     images: [String],
     featured: { type: Boolean, default: false },
   },

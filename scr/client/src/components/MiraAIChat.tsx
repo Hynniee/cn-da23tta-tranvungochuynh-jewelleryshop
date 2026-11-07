@@ -47,11 +47,12 @@ export default function MiraAIChat() {
       text: "Xin chào, mình là MIRA AI ✨ Hãy nói ngân sách, loại trang sức, chất liệu hoặc dịp tặng. Mình sẽ phân tích nhu cầu, xếp hạng sản phẩm MIRA và hỗ trợ chọn kim cương theo 4Cs.",
     },
   ]);
-  const bottom = useRef<HTMLDivElement>(null);
-  useEffect(
-    () => bottom.current?.scrollIntoView({ behavior: "smooth" }),
-    [messages, busy],
-  );
+  const messageList = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const list = messageList.current;
+    if (open && list)
+      list.scrollTo({ top: list.scrollHeight, behavior: "instant" });
+  }, [messages, busy, open]);
   async function send(text = input) {
     const q = text.trim();
     if (!q || busy) return;
@@ -106,7 +107,7 @@ export default function MiraAIChat() {
             <span>Dành cho bạn</span>
             <span>4Cs DSS</span>
           </div>
-          <div className="mira-ai-messages">
+          <div className="mira-ai-messages" ref={messageList}>
             {messages.map((m, i) => (
               <div key={i} className={`mira-msg ${m.from}`}>
                 <div className="mira-bubble">{m.text}</div>
@@ -171,12 +172,11 @@ export default function MiraAIChat() {
                 <Bot size={16} /> MIRA đang phân tích...
               </div>
             )}
-            <div ref={bottom} />
           </div>
           {!token() && (
             <div className="mira-ai-login">
-              Bạn vẫn có thể dùng AI ở chế độ demo. Đăng nhập để MIRA ghi nhớ
-              hành vi và cá nhân hóa sâu hơn.{" "}
+              AI gợi ý từ sản phẩm của cửa hàng. Đăng nhập để MIRA ghi nhớ hành
+              vi và cá nhân hóa sâu hơn.{" "}
               <Link to="/login" onClick={() => setOpen(false)}>
                 Đăng nhập
               </Link>
@@ -207,7 +207,7 @@ export default function MiraAIChat() {
         ) : (
           <>
             <Sparkles size={20} />
-            <span>Hỏi MIRA AI</span>
+            <span>Hỏi MIRA</span>
           </>
         )}
       </button>

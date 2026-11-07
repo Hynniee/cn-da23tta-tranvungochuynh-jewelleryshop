@@ -67,7 +67,10 @@ const customer = {
   name: "MIRA Test",
   phone: "0901234567",
   email: "test@example.com",
-  address: "TP HCM",
+  address: "12 Nguyễn Huệ, Phường Thủ Dầu Một, Thành phố Hồ Chí Minh",
+  provinceCode: "79",
+  wardCode: "25747",
+  addressLine: "12 Nguyễn Huệ",
 };
 const sign = (body) =>
   crypto
@@ -102,122 +105,43 @@ try {
     },
   );
   await waitFor(base + "/health");
-  check((await api("/health")).database === "demo", "demo health");
-  const demo = await api("/products");
-  check(demo.length === 36, "36 jewelry products across seven categories");
-  check((await api("/products?search=Celeste")).length === 1, "demo search");
-  await api("/products/not-real", { status: 404 });
-  check(true, "missing product returns 404");
-  await api("/auth/register", { method: "POST", body: {}, status: 503 });
-  check(true, "database features fail fast in demo");
   check(
-    new Set(demo.map((p) => p.category)).size === 7,
-    "catalog includes anklets, charms and jewelry sets",
+    (await api("/health")).database === "disconnected",
+    "health reports missing database",
   );
-  check(
-    demo.some((p) => p.material === "Bạc 925" && p.price < 1000000) &&
-      demo.some((p) => p.stone === "Ngọc trai") &&
-      demo.some((p) => p.stone === "Ruby"),
-    "catalog includes affordable silver, pearls and gemstones",
-  );
-  check(
-    (await api("/products?search=ngoc%20trai")).length >= 4,
-    "accent-insensitive jewelry search",
-  );
-  const anklets = await api(
-    "/products?category=" + encodeURIComponent("Lắc chân"),
-  );
-  check(
-    anklets.length === 2 && anklets.every((p) => p.category === "Lắc chân"),
-    "new category API filter",
-  );
-  const silverReply = await api("/assistant", {
-    method: "POST",
-    body: { message: "Nhẫn bạc không kim cương dưới 1 triệu" },
-  });
-  check(
-    silverReply.mode !== "diamond" &&
-      silverReply.products.length > 0 &&
-      silverReply.products.every(
-        (p) =>
-          p.material === "Bạc 925" &&
-          p.stone !== "Kim cương" &&
-          p.price <= 1000000,
-      ),
-    "AI recommends silver and understands no diamonds",
-  );
-  const pearlReply = await api("/assistant", {
-    method: "POST",
-    body: { message: "Bông tai ngọc trai dưới 1 triệu" },
-  });
-  check(
-    pearlReply.products.length > 0 &&
-      pearlReply.products.every(
-        (p) =>
-          p.category === "Bông tai" &&
-          p.stone === "Ngọc trai" &&
-          p.price <= 1000000,
-      ),
-    "AI recommends pearl earrings within budget",
-  );
-  const jewelryDiamond = await api("/assistant", {
-    method: "POST",
-    body: { message: "Nhẫn kim cương dưới 30 triệu" },
-  });
-  check(
-    jewelryDiamond.mode !== "diamond" &&
-      jewelryDiamond.products.length > 0 &&
-      jewelryDiamond.products.every(
-        (p) => p.category === "Nhẫn" && p.stone === "Kim cương",
-      ),
-    "diamond jewelry is routed to products rather than loose stones",
-  );
-  const ranked = await api("/diamonds/rank", {
-    method: "POST",
-    body: {
-      budgetMax: 100000000,
-      weights: { carat: 4, cut: 3, color: 2, clarity: 1 },
-    },
-  });
-  check(
-    ranked.length > 0 &&
-      ranked.every((d) => d.price <= 100000000 && d.score <= 100),
-    "demo DSS budget and normalized scores",
-  );
-  await api("/diamonds/rank", {
-    method: "POST",
-    body: { targetCarat: -1 },
-    status: 400,
-  });
-  check(true, "DSS rejects invalid criteria");
-  const reply = await api("/assistant", {
-    method: "POST",
-    body: { message: "Nhẫn cầu hôn dưới 30 triệu" },
-  });
-  check(
-    reply.products.length > 0 &&
-      reply.products.every((p) => p._id && p.images?.length),
-    "assistant returns usable product cards",
-  );
-  const diamondReply = await api("/assistant", {
-    method: "POST",
-    body: { message: "kim cương dưới 100 triệu" },
-  });
-  check(
-    diamondReply.diamonds.every((d) => d.price <= 100000000),
-    "assistant respects diamond budget",
-  );
-  check(
-    (await api("/recommendations/ml-status")).trained,
-    "ML model resolves reliably",
-  );
+  for (const endpoint of [
+    "/products",
+    "/products/not-real",
+    "/diamonds",
+    "/recommendations/demo",
+  ]) {
+    await api(endpoint, { status: 503 });
+  }
   await api("/assistant", {
     method: "POST",
-    body: { message: "" },
-    status: 400,
+    body: { message: "Nhẫn bạc" },
+    status: 503,
   });
-  await api("/does-not-exist", { status: 404 });
-  check(true, "invalid requests return JSON errors");
+  await api("/auth/register", { method: "POST", body: {}, status: 503 });
+  check(true, "database outage returns 503 without sample data");
+  const provinces = await api("/locations/provinces");
+  check(
+    provinces.length === 34,
+    "shipping lists 34 post-merger provinces without database dependency",
+  );
+  const wards = await api("/locations/provinces/79/wards");
+  check(
+    wards.some((w) => w.code === "25747" && w.name === "Phường Thủ Dầu Một"),
+    "merged Ho Chi Minh City includes Thu Dau Mot ward",
+  );
+  await api("/locations/provinces/invalid/wards", { status: 404 });
+
+  const demo = JSON.parse(
+    await fs.readFile(
+      path.join(root, "scr/server/src/data/catalog.json"),
+      "utf8",
+    ),
+  ).map((p) => ({ ...p, images: [p.image] }));
   await new Promise((resolve) => {
     children[0].once("exit", resolve);
     children[0].kill();
@@ -235,8 +159,10 @@ try {
       GEMINI_API_KEY: "",
       PAYMENT_WEBHOOK_SECRET: "test-payment-secret",
       BANK_NAME: "MIRA Test Bank",
+      BANK_BIN: "970403",
       BANK_ACCOUNT_NO: "TEST-ACCOUNT",
       BANK_ACCOUNT_NAME: "MIRA TEST",
+      QR_TEMPLATE: "",
     },
   );
   await waitFor(base + "/health", (body) => body.database === "mongodb");
@@ -378,12 +304,34 @@ try {
     token,
     status: 400,
   });
+  await api("/orders", {
+    method: "POST",
+    body: { ...body, customer: { ...customer, provinceCode: "01" } },
+    token,
+    status: 400,
+  });
+  await api("/orders", {
+    method: "POST",
+    body: { ...body, customer: { ...customer, addressLine: " " } },
+    token,
+    status: 400,
+  });
+  check(
+    true,
+    "order rejects mismatched ward/province and empty street address",
+  );
   const order = await api("/orders", {
     method: "POST",
     body,
     token,
     status: 201,
   });
+  check(
+    order.customer.address === customer.address &&
+      order.customer.provinceCode === "79" &&
+      order.customer.wardCode === "25747",
+    "order stores composed address and administrative codes",
+  );
   check(
     order.total === 36000000 &&
       order.items[0].price === 18000000 &&
@@ -456,6 +404,12 @@ try {
     token,
   });
   check(payment.amount === qrOrder.total, "QR uses server order total");
+  const paymentQr = new URL(payment.qrUrl);
+  check(
+    paymentQr.searchParams.get("amount") === String(qrOrder.total) &&
+      paymentQr.searchParams.get("addInfo") === qrOrder.orderCode,
+    "QR encodes the server total and exact transfer reference",
+  );
   const webhook = {
     transactionId: "test-transfer-1",
     amount: qrOrder.total,
@@ -638,7 +592,7 @@ try {
   await expect(
     page.getByRole("heading", { name: "Tất Cả Sản Phẩm", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".shop-card")).toHaveCount(8);
+  await expect(page.locator(".shop-card")).toHaveCount(9);
   check(true, "dedicated Products page opens the full jewelry catalog");
   await expect(page.locator(".filters .filter-block > b")).toHaveText([
     "DANH MỤC",
@@ -669,7 +623,7 @@ try {
   await page.waitForURL(
     (url) => url.searchParams.get("maxPrice") === "1000000",
   );
-  await expect(page.locator(".shop-card")).toHaveCount(8);
+  await expect(page.locator(".shop-card")).toHaveCount(9);
   await expect(page.locator(".shop-intro > div > b")).toHaveText("9");
   check(
     true,
@@ -688,7 +642,7 @@ try {
   );
   await page.getByRole("button", { name: "Đặt lại", exact: true }).click();
   await expect(page.locator(".active-filters")).toHaveCount(0);
-  await expect(page.locator(".shop-card")).toHaveCount(8);
+  await expect(page.locator(".shop-card")).toHaveCount(9);
   check(true, "reset clears all catalog filters");
   await page.getByRole("checkbox", { name: "Bạc 925", exact: true }).click();
   await expect(
@@ -711,7 +665,7 @@ try {
     .locator(".lux-nav")
     .getByRole("link", { name: "SẢN PHẨM", exact: true })
     .click();
-  await expect(page.locator(".shop-card")).toHaveCount(8);
+  await expect(page.locator(".shop-card")).toHaveCount(9);
   check(
     new URL(page.url()).pathname === "/products",
     "header Products link opens the full catalog",
@@ -752,8 +706,30 @@ try {
   await page.goto("http://127.0.0.1:5187/wishlist");
   await page.getByRole("heading", { name: "Test Ring", exact: true }).waitFor();
   check(true, "wishlist saves and renders products");
-  await page.goto("http://127.0.0.1:5187/product/test-ring");
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.getByRole("heading", { name: "Test Ring", exact: true }).click();
   await page.getByRole("heading", { name: "Test Ring", exact: true }).waitFor();
+  await expect
+    .poll(() =>
+      page
+        .locator(".pd-product")
+        .evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+    )
+    .toBeLessThan(40);
+  check(
+    await page
+      .locator(".pd-product")
+      .evaluate((el) => document.activeElement === el),
+    "product navigation focuses image and information at the top of the viewport",
+  );
+  check(
+    (
+      await page
+        .locator(".pd-config h1")
+        .evaluate((el) => getComputedStyle(el).fontFamily)
+    ).includes("Be Vietnam Pro"),
+    "product title uses the shared Vietnamese font",
+  );
   await page.locator(".pd-engraving input").fill("Browser test");
   await page.getByRole("button", { name: "MUA NGAY BẰNG 1 CHẠM" }).click();
   await page.getByRole("heading", { name: "Giỏ Hàng Của Bạn" }).waitFor();
@@ -772,9 +748,29 @@ try {
   await page.getByLabel("HỌ VÀ TÊN", { exact: true }).fill(customer.name);
   await page.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill(customer.phone);
   await page.getByLabel("EMAIL", { exact: true }).fill(customer.email);
+  const provinceSelect = page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true });
+  const wardSelect = page.getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true });
+  await expect(provinceSelect.locator("option")).toHaveCount(35);
+  await expect(wardSelect).toBeDisabled();
+  await provinceSelect.selectOption("79");
+  await wardSelect.selectOption("25747");
+  await provinceSelect.selectOption("01");
+  await expect(wardSelect).toHaveValue("");
+  await expect(wardSelect.locator('option[value="00004"]')).toHaveCount(1);
+  await expect(wardSelect.locator('option[value="25747"]')).toHaveCount(0);
+  check(
+    true,
+    "changing province resets ward and loads matching post-merger wards",
+  );
   await page
-    .getByLabel("ĐỊA CHỈ BÀN GIAO", { exact: true })
-    .fill(customer.address);
+    .getByLabel("TỈNH / THÀNH PHỐ", { exact: true })
+    .selectOption(customer.provinceCode);
+  await page
+    .getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true })
+    .selectOption(customer.wardCode);
+  await page
+    .getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })
+    .fill(customer.addressLine);
   await page.getByRole("button", { name: /XÁC NHẬN ĐƠN HÀNG/ }).click();
   await page.waitForURL("**/account");
   check(
@@ -843,8 +839,14 @@ try {
   await page.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill(customer.phone);
   await page.getByLabel("EMAIL", { exact: true }).fill(customer.email);
   await page
-    .getByLabel("ĐỊA CHỈ BÀN GIAO", { exact: true })
-    .fill(customer.address);
+    .getByLabel("TỈNH / THÀNH PHỐ", { exact: true })
+    .selectOption(customer.provinceCode);
+  await page
+    .getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true })
+    .selectOption(customer.wardCode);
+  await page
+    .getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })
+    .fill(customer.addressLine);
   await page.getByRole("button", { name: /XÁC NHẬN ĐƠN HÀNG/ }).click();
   await page.waitForURL("**/account");
   check(
@@ -882,6 +884,8 @@ try {
     "/login",
     "/register",
     "/advisor",
+    "/ring-sizer",
+    "/jewelry-quiz",
     "/for-you",
     "/diamond-dss",
     "/about",
@@ -937,6 +941,8 @@ try {
     "/account",
     "/login",
     "/advisor",
+    "/ring-sizer",
+    "/jewelry-quiz",
     "/diamond-dss",
   ]) {
     await page.goto("http://127.0.0.1:5187" + route);

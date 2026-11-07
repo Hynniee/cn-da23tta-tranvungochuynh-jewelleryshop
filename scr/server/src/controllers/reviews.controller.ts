@@ -1,10 +1,10 @@
 import type { RequestHandler } from "express";
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
+import { productLookup } from "../services/product-data.service.js";
 import Order from "../models/Order.js";
 import Review from "../models/Review.js";
 import { AuthRequest } from "../middleware/auth.js";
-import { demoProducts } from "../data/demoProducts.js";
 
 const slugOf = (req: AuthRequest) => String(req.params.slug);
 
@@ -19,20 +19,7 @@ const purchased = (user: string, product: mongoose.Types.ObjectId) =>
     .lean();
 
 export const listReviews: RequestHandler = async (req: AuthRequest, res) => {
-  if (mongoose.connection.readyState !== 1) {
-    if (!demoProducts.some((p) => p.slug === slugOf(req)))
-      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
-    return res.json({
-      reviews: [],
-      total: 0,
-      average: 0,
-      page: 1,
-      pages: 1,
-      canReview: false,
-      hasReviewed: false,
-    });
-  }
-  const product = await Product.findOne({ slug: slugOf(req) })
+  const product = await Product.findOne(productLookup(slugOf(req)))
     .select("_id")
     .lean();
   if (!product)
@@ -94,7 +81,7 @@ export const createReview: RequestHandler = async (req: AuthRequest, res) => {
     return res.status(400).json({
       message: "Chọn từ 1 đến 5 sao và nhập nội dung từ 1 đến 2.000 ký tự.",
     });
-  const product = await Product.findOne({ slug: slugOf(req) })
+  const product = await Product.findOne(productLookup(slugOf(req)))
     .select("_id")
     .lean();
   if (!product)

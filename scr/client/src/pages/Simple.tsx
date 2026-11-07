@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { request } from "../lib/api";
-import { demoProducts } from "../data/demoProducts";
 import { getWishlist } from "../store/wishlist";
 import ProductCard from "../components/ProductCard";
 export function About() {
@@ -27,7 +26,7 @@ export function Wishlist() {
   useEffect(() => {
     request("/products")
       .then(setProducts)
-      .catch(() => setProducts(demoProducts));
+      .catch(() => setProducts([]));
     const update = () => setIds(getWishlist());
     window.addEventListener("wishlistchange", update);
     return () => window.removeEventListener("wishlistchange", update);

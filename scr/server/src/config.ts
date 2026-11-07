@@ -17,5 +17,5 @@ export const bankTransferAvailable = () =>
   Boolean(
     process.env.BANK_NAME?.trim() &&
     process.env.BANK_ACCOUNT_NO?.trim() &&
-    process.env.BANK_ACCOUNT_NAME?.trim(),
+    (process.env.BANK_BIN?.trim() || process.env.QR_TEMPLATE?.trim()),
   );

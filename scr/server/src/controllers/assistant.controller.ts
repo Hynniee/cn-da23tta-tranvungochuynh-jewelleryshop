@@ -60,11 +60,11 @@ export const chat: RequestHandler = async (req: AuthRequest, res) => {
     if (dbReady && req.user?.id) {
       await rebuildPreference(req.user.id);
       products = await recommend(req.user.id, 5, intent);
-    } else products = await recommend("demo", 5, intent);
+    } else products = await recommend("", 5, intent);
     let answer = await explain(message, products);
     if (personalWords.test(message) && !req.user?.id)
       answer =
-        "Bạn chưa đăng nhập nên MIRA đang gợi ý theo nhu cầu hiện tại và dữ liệu demo. Đăng nhập sau này sẽ giúp hệ thống học hành vi để cá nhân hóa tốt hơn. " +
+        "Bạn chưa đăng nhập nên MIRA đang gợi ý theo nhu cầu hiện tại và sản phẩm của cửa hàng. Đăng nhập để nhận gợi ý cá nhân hóa. " +
         answer;
     if (dbReady && req.user?.id)
       AIConversation.create({
@@ -80,18 +80,12 @@ export const chat: RequestHandler = async (req: AuthRequest, res) => {
       intent,
       answer,
       products,
-      demo: !dbReady,
     });
   } catch (e: any) {
     console.error("assistant:", e);
-    const intent = await extractIntent(message);
-    const products = await recommend("demo", 5, intent);
-    return res.json({
-      mode: "advisor",
-      intent,
-      answer: `MIRA đã chọn ${products.length} sản phẩm demo gần nhất với nhu cầu của bạn.`,
-      products,
-      demo: true,
+    return res.status(503).json({
+      message:
+        "Không tải được gợi ý từ dữ liệu cửa hàng. Vui lòng thử lại sau.",
     });
   }
 };

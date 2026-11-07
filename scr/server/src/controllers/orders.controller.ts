@@ -3,8 +3,10 @@ import { bankTransferAvailable } from "../config.js";
 import storeConfig from "../data/storeConfig.json" with { type: "json" };
 import mongoose from "mongoose";
 import { randomUUID } from "node:crypto";
+import { shippingAddress } from "../services/shipping-address.service.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import { catalogProduct } from "../services/product-data.service.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { audit } from "../services/audit.service.js";
 
@@ -16,12 +18,13 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
     items.length > 100 ||
     !["COD", "BANK_QR"].includes(paymentMethod) ||
     !customer ||
-    !["name", "phone", "email", "address"].every(
+    !["name", "phone", "email"].every(
       (key) => typeof customer[key] === "string" && customer[key].trim(),
     )
   ) {
     return res.status(400).json({ message: "Thông tin đơn hàng không hợp lệ" });
   }
+  const deliveryAddress = shippingAddress(customer);
   if (paymentMethod === "BANK_QR" && !bankTransferAvailable())
     return res.status(503).json({
       message:
@@ -56,7 +59,7 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
       quantity: item.quantity,
       size: item.size,
       image: product.images[0],
-      material: product.material,
+      material: catalogProduct(product.toObject()).material,
       engraving:
         product.engravingAllowed && typeof item.engraving === "string"
           ? item.engraving.slice(0, 16)
@@ -91,7 +94,7 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
         name: customer.name.trim(),
         phone: customer.phone.trim(),
         email: customer.email.trim(),
-        address: customer.address.trim(),
+        ...deliveryAddress,
         note: String(customer.note || "").slice(0, 1000),
       },
       items: normalized,

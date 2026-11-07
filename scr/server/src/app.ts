@@ -14,6 +14,8 @@ import analyticsRoutes from "./routes/analytics.js";
 import auditRoutes from "./routes/audit.js";
 import assistantRoutes from "./routes/assistant.js";
 import appointmentRoutes from "./routes/appointments.js";
+import { requireDatabase } from "./middleware/database.js";
+import locationRoutes from "./routes/locations.js";
 const app = express();
 mongoose.set("bufferCommands", false);
 app.use(
@@ -32,18 +34,19 @@ app.get("/api/health", (_q, res) =>
   res.json({
     ok: true,
     name: "MIRA API",
-    database: mongoose.connection.readyState === 1 ? "mongodb" : "demo",
+    database: mongoose.connection.readyState === 1 ? "mongodb" : "disconnected",
   }),
 );
+app.use("/api/locations", locationRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/products/:slug/reviews", reviewRoutes);
+app.use("/api/products", requireDatabase, productRoutes);
+app.use("/api/products/:slug/reviews", requireDatabase, reviewRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/behaviors", behaviorRoutes);
-app.use("/api/recommendations", recommendationRoutes);
-app.use("/api/diamonds", diamondRoutes);
+app.use("/api/recommendations", requireDatabase, recommendationRoutes);
+app.use("/api/diamonds", requireDatabase, diamondRoutes);
 app.use("/api/advisor", advisorRoutes);
-app.use("/api/assistant", assistantRoutes);
+app.use("/api/assistant", requireDatabase, assistantRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/analytics", analyticsRoutes);

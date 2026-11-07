@@ -1,6 +1,8 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
+import RingSizer from "./pages/RingSizer";
+import JewelryQuiz from "./pages/JewelryQuiz";
 import Shop from "./pages/Shop";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -31,6 +33,8 @@ const router = createBrowserRouter([
       { path: "/wishlist", element: <Wishlist /> },
       { path: "/about", element: <About /> },
       { path: "/advisor", element: <Advisor /> },
+      { path: "/ring-sizer", element: <RingSizer /> },
+      { path: "/jewelry-quiz", element: <JewelryQuiz /> },
       { path: "/appointments", element: <Appointment /> },
       { path: "/appointments/:code", element: <AppointmentConfirmation /> },
       { path: "/for-you", element: <Recommendations /> },

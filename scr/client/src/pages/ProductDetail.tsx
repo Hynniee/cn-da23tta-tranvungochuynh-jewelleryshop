@@ -1,12 +1,11 @@
 import ProductReviews from "../components/ProductReviews";
 import Image from "../components/Image";
 import ProductCard from "../components/ProductCard";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { request } from "../lib/api";
 import { freeShippingFrom } from "../lib/commerce";
 import { addCart } from "../store/cart";
-import { demoProducts } from "../data/demoProducts";
 
 type Product = {
   _id: string;
@@ -35,6 +34,15 @@ export default function ProductDetail() {
   const [size, setSize] = useState("");
   const [engraving, setEngraving] = useState("");
   const [notice, setNotice] = useState("");
+  const productSection = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    if (!product?._id || !productSection.current) return;
+    productSection.current.scrollIntoView({
+      block: "start",
+      behavior: "instant",
+    });
+    productSection.current.focus({ preventScroll: true });
+  }, [product?._id]);
   useEffect(() => {
     let active = true;
     setProduct(null);
@@ -59,24 +67,18 @@ export default function ProductDetail() {
       })
       .catch((error) => {
         if (!active) return;
-        const fallback =
-          error.status !== 404
-            ? demoProducts.find((p) => p.slug === slug)
-            : undefined;
-        if (fallback) show(fallback);
-        else
-          setError(
-            error.status === 404
-              ? "Không tìm thấy sản phẩm."
-              : "Không tải được sản phẩm. Vui lòng thử lại.",
-          );
+        setError(
+          error.status === 404
+            ? "Không tìm thấy sản phẩm."
+            : "Không tải được sản phẩm. Vui lòng thử lại.",
+        );
       });
     request("/products")
       .then((data) => {
         if (active) setRelated(data);
       })
       .catch(() => {
-        if (active) setRelated(demoProducts);
+        if (active) setRelated([]);
       });
     return () => {
       active = false;
@@ -146,7 +148,12 @@ export default function ProductDetail() {
         <span>/</span>
         <span>{product.name}</span>
       </div>
-      <section className="pd-product">
+      <section
+        className="pd-product"
+        ref={productSection}
+        tabIndex={-1}
+        aria-label="Ảnh và thông tin sản phẩm"
+      >
         <ProductGallery
           name={product.name}
           images={images}

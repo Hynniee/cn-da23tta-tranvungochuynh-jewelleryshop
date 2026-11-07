@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
+import { catalogProduct } from "./product-data.service.js";
 import UserPreference from "../models/UserPreference.js";
-import { demoProducts } from "../data/demoProducts.js";
 import { predictInterest } from "./ml.service.js";
 const norm = (m: any, k: string) => {
   const o = m instanceof Map ? Object.fromEntries(m) : m || {};
@@ -15,18 +15,10 @@ export async function recommend(userId: string, limit = 8, criteria: any = {}) {
     db && mongoose.isValidObjectId(userId)
       ? UserPreference.findOne({ user: userId }).lean()
       : Promise.resolve(null),
-    db
-      ? Product.find({ stock: { $gt: 0 } }).lean()
-      : Promise.resolve(
-          demoProducts.map((p: any, i: number) => ({
-            ...p,
-            _id: `demo-${i + 1}`,
-            images: [p.image],
-            stock: 12,
-          })),
-        ),
+    Product.find({ stock: { $gt: 0 } }).lean(),
   ]);
   return products
+    .map(catalogProduct)
     .filter(
       (p: any) =>
         (!criteria.budgetMax ||

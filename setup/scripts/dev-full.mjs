@@ -5,7 +5,6 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import net from "node:net";
-import { MongoMemoryServer } from "mongodb-memory-server";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const requireServer = createRequire(
   new URL("../../scr/server/package.json", import.meta.url),
@@ -15,7 +14,6 @@ requireServer("dotenv").config({
   quiet: true,
 });
 const children = [];
-let mongo;
 let closing = false;
 async function shutdown(code = 0) {
   if (closing) return;
@@ -31,7 +29,6 @@ async function shutdown(code = 0) {
           }),
       ),
   );
-  if (mongo) await mongo.stop();
   process.exitCode = code;
 }
 process.on("SIGINT", () => shutdown());
@@ -72,27 +69,11 @@ try {
       await fs.writeFile(secretFile, jwtSecret, { mode: 0o600 });
     }
   }
-  let uri = process.env.MONGO_URI;
+  const uri = process.env.MONGO_URI;
   if (!uri || uri.includes("CLUSTER.mongodb.net") || uri.includes("<")) {
-    const dbPath = path.join(localDir, "mongodb");
-    await fs.mkdir(dbPath, { recursive: true });
-    mongo = await MongoMemoryServer.create({
-      instance: { dbPath, storageEngine: "wiredTiger", dbName: "mira_local" },
-    });
-    uri = mongo.getUri("mira_local");
-    const seed = start(
-      ["--import", "tsx", "src/scripts/seed-catalog.ts"],
-      path.join(root, "scr/server"),
-      { MONGO_URI: uri },
+    throw new Error(
+      "Điền MONGO_URI của database hiện có trong scr/server/.env. Không tự tạo database hay dữ liệu mẫu.",
     );
-    await new Promise((resolve, reject) => {
-      seed.once("error", reject);
-      seed.once("exit", (code) =>
-        code === 0
-          ? resolve()
-          : reject(new Error("Không khởi tạo được danh mục")),
-      );
-    });
   }
   const env = {
     MONGO_URI: uri,
@@ -127,7 +108,7 @@ try {
     });
   }
   console.log(
-    `MIRA đầy đủ: http://localhost:${webPort} (API ${apiPort}). Đăng ký tài khoản để đặt hàng; dữ liệu local lưu trong .local-data/.`,
+    `MIRA đầy đủ: http://localhost:${webPort} (API ${apiPort}). Dùng database trong .env; không nạp dữ liệu mẫu.`,
   );
 } catch (error) {
   console.error(error);
