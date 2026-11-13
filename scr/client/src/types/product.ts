@@ -11,6 +11,7 @@ export type Product = {
   occasion?: string[];
   price: number;
   salePrice?: number;
+  promotion?: { id: string; name: string; type: string; endsAt: string };
   images: string[];
   stock: number;
   featured?: boolean;

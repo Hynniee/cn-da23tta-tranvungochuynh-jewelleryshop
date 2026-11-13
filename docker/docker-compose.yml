@@ -9,6 +9,8 @@ services:
     ports:
       - "5000:5000"
     restart: unless-stopped
+    volumes:
+      - product_uploads:/app/uploads
   web:
     build:
       context: ..
@@ -18,3 +20,6 @@ services:
     depends_on:
       - server
     restart: unless-stopped
+
+volumes:
+  product_uploads:

@@ -7,6 +7,10 @@ import {
 } from "../services/product-data.service.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { audit } from "../services/audit.service.js";
+import {
+  activeProductPromotions,
+  promotedProduct,
+} from "../services/promotion.service.js";
 
 const param = (v: string | string[]) => (Array.isArray(v) ? v[0] : v);
 
@@ -22,13 +26,15 @@ const normalize = (value: string) =>
 
 export const listProducts: RequestHandler = async (req, res) => {
   const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+  const now = new Date();
+  const promotions = await activeProductPromotions(now);
   const search = normalize(String(req.query.search || ""));
   const category = String(req.query.category || "");
   const material = String(req.query.material || "");
   const stone = String(req.query.stone || "");
   res.json(
     products
-      .map(catalogProduct)
+      .map((product) => promotedProduct(product, promotions, now))
       .filter(
         (p) =>
           (!category || p.category === category) &&
@@ -47,7 +53,7 @@ export const getProduct: RequestHandler = async (req, res, next) => {
     const slug = param(req.params.slug);
     const p = await Product.findOne(productLookup(slug)).lean();
     return p
-      ? res.json(catalogProduct(p))
+      ? res.json(promotedProduct(p, await activeProductPromotions()))
       : res.status(404).json({ message: "Không tìm thấy sản phẩm" });
   } catch (e) {
     next(e);

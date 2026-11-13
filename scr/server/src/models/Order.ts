@@ -4,6 +4,11 @@ const item = new mongoose.Schema(
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
     name: String,
     price: Number,
+    originalPrice: Number,
+    promotion: new mongoose.Schema(
+      { id: String, name: String, type: String, endsAt: String },
+      { _id: false },
+    ),
     quantity: Number,
     size: String,
     image: String,
@@ -31,6 +36,8 @@ const schema = new mongoose.Schema(
     },
     subtotal: Number,
     shippingFee: Number,
+    discountTotal: { type: Number, default: 0 },
+    voucher: { id: String, code: String, name: String, discount: Number },
     total: Number,
     paymentMethod: { type: String, default: "COD" },
     paymentStatus: {

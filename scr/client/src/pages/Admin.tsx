@@ -1,6 +1,8 @@
 import { categories, orderTransitions } from "../lib/commerce";
 import Image from "../components/Image";
+import AdminPromotions from "../components/AdminPromotions";
 import { readStoredObject } from "../lib/storage";
+import { notify } from "../lib/notifications";
 import {
   FormEvent,
   ReactNode,
@@ -22,6 +24,7 @@ import {
   Search,
   ShoppingBag,
   Trash2,
+  Tags,
   Users,
   X,
 } from "lucide-react";
@@ -32,7 +35,7 @@ import {
   type ProductForm,
 } from "../lib/product-editor";
 
-type Tab = "overview" | "products" | "orders" | "analytics";
+type Tab = "overview" | "products" | "orders" | "analytics" | "promotions";
 type Product = {
   _id: string;
   name: string;
@@ -105,8 +108,50 @@ export default function Admin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(EMPTY_PRODUCT);
   const [busy, setBusy] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!showForm) setImageFile(null);
+  }, [showForm]);
+  useEffect(() => {
+    if (!imageFile) {
+      setImagePreview("");
+      return;
+    }
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [writeWarning, setWriteWarning] = useState("");
+  const [checkingWrite, setCheckingWrite] = useState(false);
+  async function checkWriteStatus() {
+    setCheckingWrite(true);
+    try {
+      await request("/products/write-status", {
+        method: "POST",
+        signal: AbortSignal.timeout(5000),
+      });
+      setWriteWarning("");
+    } catch (error) {
+      setWriteWarning(
+        error instanceof Error
+          ? error.message
+          : "Chưa kiểm tra được kết nối ghi vào cơ sở dữ liệu.",
+      );
+    } finally {
+      setCheckingWrite(false);
+    }
+  }
+  useEffect(() => {
+    if (
+      tab === "products" &&
+      token() &&
+      ["admin", "manager"].includes(user.role || "")
+    )
+      void checkWriteStatus();
+  }, [tab]);
   const [analytics, setAnalytics] = useState<any>(null);
   const productFormRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -197,27 +242,69 @@ export default function Admin() {
       const existing = editingId
         ? products.find((product) => product._id === editingId)
         : undefined;
-      const changes = productChanges(
+      // Validate fields before uploading so invalid forms do not leave unused files.
+      const initialChanges = productChanges(
         form,
         existing ? productForm(existing) : undefined,
       );
+      if (editingId && !imageFile && !Object.keys(initialChanges).length) {
+        setShowForm(false);
+        return;
+      }
+      // Check writes before uploading; a readable secondary cannot save edits.
+      await request("/products/write-status", {
+        method: "POST",
+        signal: AbortSignal.timeout(5000),
+      });
+      setWriteWarning("");
+      let submittedForm = form;
+      if (imageFile) {
+        const result = await request("/uploads/products", {
+          method: "POST",
+          headers: { "Content-Type": imageFile.type },
+          body: imageFile,
+        });
+        submittedForm = { ...form, image: result.url };
+        setForm(submittedForm);
+        setImageFile(null);
+      }
+      const changes = productChanges(
+        submittedForm,
+        existing ? productForm(existing) : undefined,
+      );
+      if (existing && "images" in changes) {
+        changes.images = submittedForm.image.trim()
+          ? [submittedForm.image.trim(), ...(existing.images?.slice(1) || [])]
+          : existing.images?.slice(1) || [];
+      }
       if (editingId && !Object.keys(changes).length) {
         setShowForm(false);
         return;
       }
-      await request(editingId ? `/products/${editingId}` : "/products", {
-        method: editingId ? "PUT" : "POST",
-        body: JSON.stringify(changes),
-      });
-      setNotice(
+      const savedProduct: Product = await request(
+        editingId ? `/products/${editingId}` : "/products",
+        {
+          method: editingId ? "PUT" : "POST",
+          body: JSON.stringify(changes),
+        },
+      );
+      // Use the confirmed write response. A secondary read can still show the
+      // previous document while replication catches up.
+      setProducts((current) =>
+        editingId
+          ? current.map((product) =>
+              product._id === savedProduct._id ? savedProduct : product,
+            )
+          : [savedProduct, ...current],
+      );
+      notify(
         editingId
           ? `Đã cập nhật sản phẩm. Tồn kho: ${Number(form.stock)}.`
-          : "Đã thêm sản phẩm.",
+          : `Đã thêm sản phẩm vào kho. Tồn kho: ${savedProduct.stock}.`,
       );
       setForm(EMPTY_PRODUCT);
       setEditingId(null);
       setShowForm(false);
-      await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể lưu sản phẩm");
     } finally {
@@ -229,6 +316,7 @@ export default function Admin() {
     if (!window.confirm("Xóa sản phẩm này khỏi cửa hàng?")) return;
     try {
       await request(`/products/${id}`, { method: "DELETE" });
+      notify("Đã xóa sản phẩm.");
       await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể xóa sản phẩm");
@@ -241,6 +329,7 @@ export default function Admin() {
         method: "PATCH",
         body: JSON.stringify({ status }),
       });
+      notify("Đã cập nhật trạng thái đơn hàng.");
       await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể cập nhật đơn");
@@ -265,6 +354,12 @@ export default function Admin() {
           MIRA<span>ADMIN CONSOLE</span>
         </Link>
         <nav className="admin-nav">
+          <button
+            className={tab === "promotions" ? "active" : ""}
+            onClick={() => setTab("promotions")}
+          >
+            <Tags size={17} /> Khuyến mãi
+          </button>
           <button
             className={tab === "overview" ? "active" : ""}
             onClick={() => setTab("overview")}
@@ -306,11 +401,6 @@ export default function Admin() {
       </aside>
 
       <section className="admin-content">
-        {notice && (
-          <p role="status" className="admin-notice">
-            {notice}
-          </p>
-        )}
         {error && (
           <p role="alert" className="auth-error">
             {error}
@@ -326,12 +416,15 @@ export default function Admin() {
                   ? "Quản Lý Sản Phẩm"
                   : tab === "orders"
                     ? "Quản Lý Đơn Hàng"
-                    : "Phân Tích AI & Gợi Ý"}
+                    : tab === "promotions"
+                      ? "Voucher, Giảm Giá & Flash Sale"
+                      : "Phân Tích AI & Gợi Ý"}
             </h1>
           </div>
           <Link to="/">XEM CỬA HÀNG ↗</Link>
         </header>
 
+        {tab === "promotions" && <AdminPromotions products={products} />}
         {tab === "overview" && (
           <>
             <div className="admin-stats">
@@ -405,6 +498,20 @@ export default function Admin() {
 
         {tab === "products" && (
           <section className="admin-card admin-full">
+            {writeWarning && (
+              <div className="catalog-notice" role="status">
+                <p>
+                  <b>Chưa thể thêm hoặc sửa sản phẩm.</b> {writeWarning}
+                </p>
+                <button
+                  type="button"
+                  disabled={checkingWrite}
+                  onClick={() => void checkWriteStatus()}
+                >
+                  {checkingWrite ? "Đang kiểm tra..." : "Kiểm tra lại kết nối"}
+                </button>
+              </div>
+            )}
             <div className="admin-toolbar">
               <div className="admin-search">
                 <Search size={15} />
@@ -420,7 +527,6 @@ export default function Admin() {
                   setEditingId(null);
                   setForm(EMPTY_PRODUCT);
                   setError("");
-                  setNotice("");
                   setShowForm(true);
                 }}
               >
@@ -456,7 +562,6 @@ export default function Admin() {
                         setEditingId(p._id);
                         setForm(productForm(p));
                         setError("");
-                        setNotice("");
                         setShowForm(true);
                       }}
                     >
@@ -666,10 +771,79 @@ export default function Admin() {
                 URL hình ảnh
                 <input
                   value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
+                  disabled={busy}
+                  onChange={(e) => {
+                    setImageFile(null);
+                    setForm({ ...form, image: e.target.value });
+                  }}
                   placeholder="https://..."
                 />
               </label>
+              <div className="form-wide admin-image-upload">
+                <label htmlFor="product-image-file">
+                  Ảnh sản phẩm từ thiết bị
+                </label>
+                <input
+                  ref={imageInputRef}
+                  id="product-image-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={busy}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    if (!file) return;
+                    if (
+                      !["image/jpeg", "image/png", "image/webp"].includes(
+                        file.type,
+                      ) ||
+                      file.size > 5 * 1024 * 1024 ||
+                      !file.size
+                    ) {
+                      setError(
+                        "Vui lòng chọn ảnh JPG, PNG hoặc WebP, dung lượng tối đa 5 MB.",
+                      );
+                      return;
+                    }
+                    setError("");
+                    setImageFile(file);
+                  }}
+                />
+                <div className="admin-image-controls">
+                  <button
+                    type="button"
+                    className="admin-secondary"
+                    disabled={busy}
+                    onClick={() => imageInputRef.current?.click()}
+                  >
+                    Chọn tệp ảnh
+                  </button>
+                  <span>
+                    {imageFile?.name || "JPG, PNG, WebP · Tối đa 5 MB"}
+                  </span>
+                  {imageFile && (
+                    <button
+                      type="button"
+                      className="admin-secondary"
+                      disabled={busy}
+                      onClick={() => setImageFile(null)}
+                    >
+                      Bỏ tệp đã chọn
+                    </button>
+                  )}
+                </div>
+                {(imagePreview || form.image) && (
+                  <Image
+                    className="admin-image-preview"
+                    src={imagePreview || form.image}
+                    alt="Xem trước ảnh sản phẩm"
+                  />
+                )}
+                <small>
+                  Ảnh được tải lên khi bạn bấm Lưu sản phẩm và dùng làm ảnh đại
+                  diện.
+                </small>
+              </div>
             </div>
             <div className="modal-footer">
               {error && (

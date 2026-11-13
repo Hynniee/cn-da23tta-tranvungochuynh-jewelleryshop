@@ -3,10 +3,14 @@ export const token = () => localStorage.getItem("mira_token");
 
 export async function request(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers);
-  if (options.body) headers.set("Content-Type", "application/json");
+  if (typeof options.body === "string" && !headers.has("Content-Type"))
+    headers.set("Content-Type", "application/json");
   const accessToken = token();
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
-  const signal = options.signal ?? AbortSignal.timeout(30_000);
+  const timeout = AbortSignal.timeout(30_000);
+  const signal = options.signal
+    ? AbortSignal.any([options.signal, timeout])
+    : timeout;
   const readOnly = (options.method || "GET").toUpperCase() === "GET";
   let response: Response;
   // Atlas may still be connecting when the page first opens. Only retry reads;
@@ -53,7 +57,7 @@ export async function request(path: string, options: RequestInit = {}) {
       new Error(
         error?.message || `Không thể xử lý yêu cầu (${response.status}).`,
       ),
-      { status: response.status },
+      { status: response.status, code: error?.code },
     );
   }
   return response.status === 204 ? null : response.json();

@@ -1,3 +1,5 @@
+import { notify } from "../lib/notifications";
+
 const KEY = "mira_wishlist";
 export function getWishlist(): string[] {
   try {
@@ -18,4 +20,9 @@ export function toggleWishlist(id: string) {
     ),
   );
   window.dispatchEvent(new Event("wishlistchange"));
+  notify(
+    ids.includes(id)
+      ? "Đã xóa sản phẩm khỏi danh sách yêu thích."
+      : "Đã thêm sản phẩm vào danh sách yêu thích.",
+  );
 }

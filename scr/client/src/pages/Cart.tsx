@@ -2,6 +2,8 @@ import Image from "../components/Image";
 import { Link } from "react-router-dom";
 import { ArrowLeft, LockKeyhole, ShieldCheck, Trash2 } from "lucide-react";
 import { useCartController } from "../controllers/useCartController";
+import usePromotionQuote from "../controllers/usePromotionQuote";
+import VoucherField from "../components/VoucherField";
 
 const money = (value: number) => `${value.toLocaleString("vi-VN")}₫`;
 
@@ -11,12 +13,16 @@ export default function Cart() {
     checking,
     notice,
     inStock,
-    subtotal,
-    shipping,
-    total,
+    subtotal: cartSubtotal,
+    shipping: cartShipping,
+    total: cartTotal,
     updateQuantity,
     canIncrease,
   } = useCartController();
+  const promotion = usePromotionQuote(cart);
+  const subtotal = promotion.quote?.subtotal ?? cartSubtotal;
+  const shipping = promotion.quote?.shippingFee ?? cartShipping;
+  const total = promotion.quote?.total ?? cartTotal;
 
   return (
     <main className="lux-cart-page">
@@ -64,7 +70,9 @@ export default function Cart() {
                     {item.carat ? `${item.carat} ct · ` : ""}Size {item.size}
                   </p>
                   {item.engraving && <em>Khắc: “{item.engraving}”</em>}
-                  <strong>{money(item.price)}</strong>
+                  <strong>
+                    {money(promotion.quote?.items[index]?.price ?? item.price)}
+                  </strong>
                 </div>
                 <div className="lux-qty">
                   <button
@@ -107,12 +115,23 @@ export default function Cart() {
               <b>Đã bao gồm</b>
             </div>
             <hr />
+            <VoucherField promotion={promotion} />
+            {!!promotion.quote?.discountTotal && (
+              <div className="voucher-success">
+                <span>Giảm bằng voucher</span>
+                <b>−{money(promotion.quote.discountTotal)}</b>
+              </div>
+            )}
             <div className="lux-total">
               <span>Tổng thanh toán</span>
               <b>{money(total)}</b>
             </div>
             <small>Đã bao gồm VAT và hồ sơ giám định đi kèm sản phẩm.</small>
-            {inStock && !checking && !notice ? (
+            {inStock &&
+            !checking &&
+            !notice &&
+            promotion.quote &&
+            !promotion.loading ? (
               <Link to="/checkout" className="summary-checkout">
                 TIẾN HÀNH THANH TOÁN
               </Link>

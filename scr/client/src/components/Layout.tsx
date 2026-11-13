@@ -6,7 +6,10 @@ export default function Layout() {
   return (
     <>
       <Header />
-      <div>
+      <a className="skip-link" href="#main-content">
+        Đến nội dung chính
+      </a>
+      <div id="main-content" tabIndex={-1}>
         <Outlet />
       </div>
       <Footer />

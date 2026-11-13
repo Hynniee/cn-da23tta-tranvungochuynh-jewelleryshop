@@ -13,34 +13,33 @@ import { useEffect, useState } from "react";
 import { request } from "../lib/api";
 import ProductCard from "../components/ProductCard";
 const cats = [
-  [
-    "NHẪN",
-    "Biểu tượng của lời hứa vĩnh cửu",
-    "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=900&q=85",
-  ],
-  [
-    "DÂY CHUYỀN",
-    "Ánh sáng chạm gần trái tim",
-    "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=900&q=85",
-  ],
-  [
-    "BÔNG TAI",
-    "Điểm sáng của khí chất",
-    "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=900&q=85",
-  ],
-  [
-    "LẮC & VÒNG TAY",
-    "Nhịp điệu của sự thanh lịch",
-    "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=900&q=85",
-  ],
+  ["NHẪN", "Biểu tượng của lời hứa vĩnh cửu", "/editorial/rings.jpg"],
+  ["DÂY CHUYỀN", "Ánh sáng chạm gần trái tim", "/editorial/necklaces.jpg"],
+  ["BÔNG TAI", "Điểm sáng của khí chất", "/editorial/earrings.jpg"],
+  ["LẮC & VÒNG TAY", "Nhịp điệu của sự thanh lịch", "/editorial/bracelets.jpg"],
 ];
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    request("/products")
-      .then(setProducts)
-      .catch(() => setProducts([]));
-  }, []);
+    const controller = new AbortController();
+    setLoading(true);
+    setError("");
+    request("/products", { signal: controller.signal })
+      .then((data) => {
+        if (!controller.signal.aborted) setProducts(data);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setError("Chưa thể tải bộ sưu tập. Vui lòng thử lại sau ít phút.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [attempt]);
   const featured = products.filter((p) => p.featured);
   const curatedSlugs = [
     "nhan-bac-flora",
@@ -57,7 +56,11 @@ export default function Home() {
   return (
     <div className="figma-home">
       <section className="hero-lux">
-        <Image src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=1800&q=90" />
+        <Image
+          src="/editorial/hero.jpg"
+          alt="Trang sức MIRA với điểm nhấn vàng và đá quý"
+          fetchPriority="high"
+        />
         <div className="hero-shade" />
         <div className="hero-copy">
           <span>MAISON MIRA · FINE JEWELRY</span>
@@ -113,7 +116,7 @@ export default function Home() {
               className="cat-card"
               key={c[0]}
             >
-              <Image src={c[2]} />
+              <Image src={c[2]} alt={c[0]} loading="lazy" />
               <div>
                 <small>0{i + 1}</small>
                 <h3>{c[0]}</h3>
@@ -158,14 +161,41 @@ export default function Home() {
           </Link>
         </div>
         <div className="best-grid">
+          {loading &&
+            Array.from({ length: 4 }, (_, index) => (
+              <div
+                key={index}
+                className="product-skeleton"
+                aria-hidden="true"
+              />
+            ))}
           {best.map((p) => (
             <ProductCard key={p._id} p={p} />
           ))}
         </div>
+        {loading && <p role="status">Đang tải bộ sưu tập...</p>}
+        {error && (
+          <div className="catalog-notice" role="alert">
+            <p>{error}</p>
+            <button onClick={() => setAttempt((value) => value + 1)}>
+              Thử lại
+            </button>
+          </div>
+        )}
+        {!loading && !error && !best.length && (
+          <p role="status">
+            Bộ sưu tập đang được cập nhật. Mời bạn khám phá các dịch vụ tư vấn
+            bên dưới.
+          </p>
+        )}
       </section>
       <section id="atelier" className="craft">
         <div className="craft-photo">
-          <Image src="https://images.unsplash.com/photo-1627293509201-cd0c780043e6?auto=format&fit=crop&w=1100&q=85" />
+          <Image
+            src="/editorial/atelier.jpg"
+            alt="Chi tiết trang sức và nghệ thuật chế tác"
+            loading="lazy"
+          />
         </div>
         <div className="craft-copy">
           <span>THE ART OF MIRA</span>

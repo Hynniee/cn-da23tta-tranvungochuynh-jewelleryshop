@@ -34,7 +34,10 @@ export default function DiamondDSS() {
       <header>
         <span>DIAMOND DECISION SUPPORT</span>
         <h1>Chọn kim cương theo 4Cs</h1>
-        <p>Weighted Scoring: Carat 40% · Cut 30% · Color 20% · Clarity 10%.</p>
+        <p>
+          So sánh theo trọng lượng 40%, giác cắt 30%, màu sắc 20% và độ tinh
+          khiết 10% trong ngân sách của bạn.
+        </p>
       </header>
       <form className="dss-form" onSubmit={run}>
         <label>

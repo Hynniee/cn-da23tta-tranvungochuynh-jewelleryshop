@@ -31,10 +31,16 @@ export default function Advisor() {
     <main className="smart-page">
       <header>
         <Bot />
-        <h3>MIRA AI JEWELRY ADVISOR</h3>
+        <span>MIRA JEWELRY ADVISOR</span>
+        <h1>Tìm thiết kế dành riêng cho bạn</h1>
+        <p>
+          Chia sẻ dịp tặng, phong cách và ngân sách. MIRA sẽ giúp bạn khám phá
+          những lựa chọn phù hợp.
+        </p>
       </header>
       <form className="advisor-box" onSubmit={submit}>
         <textarea
+          aria-label="Nhu cầu tư vấn trang sức"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={4}
@@ -43,12 +49,15 @@ export default function Advisor() {
           <Sparkles size={16} />
           {busy ? "ĐANG PHÂN TÍCH..." : "TƯ VẤN CHO TÔI"}
         </button>
-        {error && <p>{error}</p>}
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
       </form>
       {data && (
         <section className="smart-result">
-          <h2>Phân tích nhu cầu</h2>
-          <pre>{JSON.stringify(data.intent, null, 2)}</pre>
+          <h2>Gợi ý từ MIRA</h2>
           <p>{data.answer}</p>
           <div className="smart-products">
             {data.products?.map((p: any) => (

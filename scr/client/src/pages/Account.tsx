@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { request, token } from "../lib/api";
 import AccountGuest from "../components/AccountGuest";
+import { notify } from "../lib/notifications";
 
 type User = {
   _id?: string;
@@ -41,7 +42,8 @@ export default function Account() {
     try {
       await request(`/orders/${id}/cancel`, { method: "PATCH" });
       setOrders(await request("/orders/mine"));
-      setMessage("Đã hủy đơn hàng.");
+      setMessage("");
+      notify("Đã hủy đơn hàng.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể hủy đơn");
     } finally {
@@ -86,7 +88,8 @@ export default function Account() {
       localStorage.setItem("mira_user", JSON.stringify(updated));
       setUser(updated);
       setForm(updated);
-      setMessage("Đã lưu thông tin cá nhân.");
+      setMessage("");
+      notify("Đã lưu thông tin cá nhân.");
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Không thể lưu hồ sơ");
     }

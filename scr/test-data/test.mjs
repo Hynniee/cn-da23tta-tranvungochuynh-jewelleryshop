@@ -258,6 +258,23 @@ try {
     status: 400,
   });
   check(true, "product update validates price");
+  check(
+    (await api("/products/write-status", { method: "POST", token: admin }))
+      .writable === true,
+    "admin write preflight detects an accessible primary",
+  );
+  const savedDescription =
+    "Description saved by the admin editing regression test";
+  const editedProduct = await api("/products/" + product._id, {
+    method: "PUT",
+    token: admin,
+    body: { description: savedDescription },
+  });
+  check(
+    editedProduct.description === savedDescription &&
+      (await api("/products/test-ring")).description === savedDescription,
+    "admin product edits persist and return the confirmed updated document",
+  );
   const body = {
     customer,
     items: [
@@ -731,8 +748,9 @@ try {
     "product title uses the shared Vietnamese font",
   );
   await page.locator(".pd-engraving input").fill("Browser test");
-  await page.getByRole("button", { name: "MUA NGAY BẰNG 1 CHẠM" }).click();
-  await page.getByRole("heading", { name: "Giỏ Hàng Của Bạn" }).waitFor();
+  await page.getByRole("button", { name: "MUA NGAY", exact: true }).click();
+  await expect(page).toHaveURL(/\/checkout$/);
+  await page.goto("http://127.0.0.1:5187/cart");
   check(
     (await page.getByText("Browser test", { exact: false }).count()) > 0,
     "browser product selection reaches cart",
@@ -817,10 +835,8 @@ try {
       .count()) === 1 && (await page.locator(".pd-engraving").count()) === 0,
     "pearl earrings show silver material and no ring engraving",
   );
-  await page.getByRole("button", { name: "MUA NGAY BẰNG 1 CHẠM" }).click();
-  await page
-    .getByRole("heading", { name: "Giỏ Hàng Của Bạn", exact: true })
-    .waitFor();
+  await page.getByRole("button", { name: "MUA NGAY", exact: true }).click();
+  await expect(page).toHaveURL(/\/checkout$/);
   await page.evaluate(() => {
     localStorage.removeItem("mira_token");
     localStorage.removeItem("mira_user");
@@ -873,9 +889,10 @@ try {
     status: 201,
   });
   await page.goto(`http://127.0.0.1:5187/checkout?order=${resumeOrder._id}`);
-  await page
-    .getByRole("heading", { name: `Thanh toán đơn ${resumeOrder.orderCode}` })
-    .waitFor();
+  await page.getByRole("heading", { name: "Hoàn tất thanh toán" }).waitFor();
+  await expect(page.locator(".transfer-heading")).toContainText(
+    resumeOrder.orderCode,
+  );
   check(true, "pending bank payment can be resumed with empty cart");
   for (const route of [
     "/",

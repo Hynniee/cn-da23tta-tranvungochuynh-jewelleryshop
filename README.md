@@ -18,7 +18,7 @@ MIRA-Jewelry/
 │   ├── deployment-guide.md   # Sơ đồ và cấu hình triển khai
 │   ├── MVC.md                # Kiến trúc mã nguồn
 │   ├── demo-data/            # Danh mục dữ liệu, cách tái lập kết quả
-│   └── scripts/dev-full.mjs  # Khởi động đầy đủ với MongoDB local
+│   └── scripts/dev-full.mjs  # Khởi động bằng MongoDB đã cấu hình trong .env
 ├── scr/                      # Mã nguồn và dữ liệu thử nghiệm
 │   ├── client/               # React + Vite + TypeScript (View)
 │   ├── server/               # Express, Controller, Model, Service
@@ -41,13 +41,24 @@ Các lệnh bên dưới chạy từ thư mục gốc. Giữ tên `scr` theo yê
 
 Hướng dẫn cho người chấm: [cài đặt](setup/README.md) → [dữ liệu và tái lập kết quả](setup/demo-data/README.md) → [báo cáo tiến độ](progress-report/README.md) → [tài liệu đồ án](thesis/README.md).
 
-**Tình trạng hồ sơ:** các thư mục tuần và tài liệu Word/PDF/slide hiện chưa có báo cáo chính thức. Cần bổ sung tài liệu thực tế trước khi nộp; hướng dẫn trong từng thư mục xác định nội dung cần đặt vào đó.
+**Tình trạng hồ sơ:** đã có báo cáo Word tuần 1 và [tuần 2](progress-report/week-02/BCTD%20T2.docx). Báo cáo tuần 2 ghi giai đoạn 09–15/11/2026, cập nhật đến 13/11/2026. Tài liệu thuyết minh, PDF và slide tiếp tục bổ sung theo hướng dẫn từng thư mục.
 
 ## Kiến trúc MVC
 
 Backend tách `routes` → `controllers` → `models/services`; React đảm nhiệm View. Trang giỏ hàng tách Model tính toán, Controller hook và View JSX. Xem [hướng dẫn MVC](setup/MVC.md) để biết trách nhiệm từng lớp và cách thêm chức năng.
 
 ## Chạy nhanh với MongoDB hiện có
+
+Chạy local từ thư mục gốc sau khi cấu hình `scr/server/.env`:
+
+```bash
+npm ci
+npm run dev
+```
+
+Lệnh tự chọn cổng trống cho API và web, đồng thời cấu hình proxy đúng cổng API. Mở địa chỉ được in trong Terminal (mặc định http://localhost:5173). Không tự nhập dữ liệu mẫu. `npm run db:check` kiểm tra kết nối đọc và primary phục vụ ghi.
+
+Hoặc chạy Docker:
 ```bash
 docker compose -f docker/docker-compose.yml up --build -d
 ```
@@ -59,9 +70,17 @@ Cấu hình `MONGO_URI` trong `scr/server/.env` trỏ đúng tên database trư�
 Không đưa file `.env`, mật khẩu hoặc API key lên GitHub.
 
 ## Chức năng
+
+Giao diện dùng chung tông nền kem, chữ đậm và điểm nhấn vàng; biểu mẫu, nút và thẻ nội dung thống nhất trên desktop/mobile. Thông báo yêu thích, giỏ hàng, lưu sản phẩm/tồn kho và khuyến mãi tự ẩn sau 3 giây. **Mua ngay** mở phần chọn size/khắc tên nếu cần; sản phẩm một lựa chọn và nút Mua ngay ở chi tiết chuyển tới thanh toán.
+
+Thanh toán QR có vùng hiển thị riêng, thông tin ngân hàng/nội dung chuyển khoản kèm nút sao chép, xử lý lỗi tải ảnh và nút kiểm tra trạng thái từ máy chủ. Việc bấm kiểm tra không tự đánh dấu đã thanh toán; xác nhận tiền vẫn qua luồng đối soát hiện có.
 E-commerce, MIRA AI Chat, Recommendation Engine, Diamond DSS 4Cs, quản trị và dữ liệu demo.
 
+Khuyến mãi: **Admin → Khuyến mãi** quản lý voucher, giảm giá sản phẩm và flash sale theo lịch. Khách nhập mã tại giỏ hàng/thanh toán; server tính lại ưu đãi khi đặt đơn và lưu số tiền giảm trong đơn hàng. Xem [quy tắc và kiểm thử khuyến mãi](setup/promotions.md).
+
 Private Salon: `/appointments` cho phép đặt lịch, xem trang xác nhận và nhận email qua Gmail SMTP. Xem [cấu hình email](setup/private-salon.md).
+
+Quản trị sản phẩm: mở `/admin` → Sản phẩm → Thêm sản phẩm hoặc Sửa → **Chọn tệp ảnh**. Hỗ trợ JPG, PNG, WebP tối đa 5 MB, xem trước trước khi lưu; vẫn có thể nhập URL ảnh. Ảnh tệp được lưu tại `scr/server/uploads/products` khi bấm Lưu sản phẩm, đường dẫn lưu trong sản phẩm; sửa ảnh đại diện giữ lại các ảnh khác trong bộ ảnh. Endpoint upload yêu cầu quyền admin/manager. Docker dùng volume `product_uploads` để giữ ảnh khi tạo lại container. Có thể đặt `PRODUCT_UPLOAD_DIR` thành đường dẫn tuyệt đối để thay thư mục lưu. Build rồi chạy `npm run test:uploads` khi web local đang chạy để kiểm tra API upload và form admin bằng dữ liệu kiểm thử riêng.
 
 ## Học máy + DSS
 
@@ -81,6 +100,10 @@ Website: http://localhost:5173. Chạy `npm run build`, sau đó `npm test` đ�
 Catalog của website lấy từ database trong `MONGO_URI`. Các bản ghi có `metals`, `gemstone` hoặc thiếu `slug` được chuyển đổi khi đọc để tương thích với bộ lọc và đường dẫn sản phẩm; không sửa dữ liệu gốc. `scr/server/src/data/catalog.json` chỉ còn dùng cho các script tạo dữ liệu kiểm thử.
 
 Chạy `npm run dev:full` để mở API và website với MongoDB đã cấu hình. Lệnh này không tạo MongoDB local và không tự nạp sản phẩm mẫu. URI Atlas cần có tên database, ví dụ `/mira_jewelry`. Nếu DNS không phân giải được Atlas, có thể đặt `MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8` trong `.env`. Các lệnh seed/catalog import chỉ dành cho database thử nghiệm.
+
+Khi danh mục không tải được, chạy `npm run db:check` để kiểm tra kết nối và đếm sản phẩm trong collection `products`, không thay đổi dữ liệu. Nếu báo lỗi TLS, kiểm tra cluster đang Active và thêm IP máy chạy API tại Atlas → Network Access → IP Access List → Add Current IP Address; đồng thời kiểm tra phần mềm chặn mạng/TLS. Lỗi TLS xảy ra trước xác thực nên chưa thể kết luận database rỗng hoặc mật khẩu sai. Xem [hướng dẫn kết nối Atlas](https://www.mongodb.com/docs/atlas/troubleshoot-connection/).
+
+Nếu secondary truy cập được nhưng primary đang lỗi mạng/TLS, có thể tạm đặt `MONGO_READ_PREFERENCE=primaryPreferred` trong `.env` rồi khởi động lại server. Ứng dụng ưu tiên đọc primary và chỉ chuyển sang secondary khi cần; dữ liệu đọc dự phòng có thể chậm đồng bộ. Cấu hình này áp dụng cho các thao tác đọc và không khôi phục khả năng ghi: đăng ký, đặt hàng, cập nhật sản phẩm và thanh toán vẫn cần primary. Đặt lại `primary` khi kết nối cluster ổn định. `npm run db:check` báo riêng số sản phẩm đọc được và khả năng truy cập primary. Xem [MongoDB Read Preference](https://www.mongodb.com/docs/manual/core/read-preference-use-cases/).
 
 Trang sản phẩm chung: `/products`, có mục **SẢN PHẨM** trên menu. Trang này mở toàn bộ trang sức và dùng bốn nhóm lọc: danh mục, chất liệu kim loại, loại đá / điểm nhấn và ngân sách tối đa.
 

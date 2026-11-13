@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { request } from "../lib/api";
 import { freeShippingFrom } from "../lib/commerce";
 import { addCart } from "../store/cart";
+import { notify } from "../lib/notifications";
 
 type Product = {
   _id: string;
@@ -18,6 +19,7 @@ type Product = {
   stock: number;
   price: number;
   salePrice?: number;
+  promotion?: { name: string; type: string; endsAt: string };
   images?: string[];
   sizes?: string[];
   engravingAllowed?: boolean;
@@ -33,21 +35,23 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [size, setSize] = useState("");
   const [engraving, setEngraving] = useState("");
-  const [notice, setNotice] = useState("");
   const productSection = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     if (!product?._id || !productSection.current) return;
-    productSection.current.scrollIntoView({
+    const target =
+      window.location.hash === "#purchase"
+        ? document.getElementById("purchase") || productSection.current
+        : productSection.current;
+    target.scrollIntoView({
       block: "start",
       behavior: "instant",
     });
-    productSection.current.focus({ preventScroll: true });
+    target.focus({ preventScroll: true });
   }, [product?._id]);
   useEffect(() => {
     let active = true;
     setProduct(null);
     setError("");
-    setNotice("");
     setEngraving("");
     setActiveImage(0);
     const show = (data: Product) => {
@@ -124,16 +128,16 @@ export default function ProductDetail() {
       stock: product.stock,
     });
     if (!added) {
-      setNotice("Số lượng trong giỏ đã đạt tồn kho hiện tại.");
+      notify("Số lượng trong giỏ đã đạt tồn kho hiện tại.", "info");
       return;
     }
-    setNotice("Đã thêm sản phẩm vào giỏ hàng.");
+    notify("Đã thêm sản phẩm vào giỏ hàng.");
     if (!product._id.startsWith("demo-"))
       request("/behaviors", {
         method: "POST",
         body: JSON.stringify({ type: "ADD_CART", product: product._id }),
       }).catch(() => undefined);
-    if (buyNow) navigate("/cart");
+    if (buyNow) navigate("/checkout");
   }
   return (
     <main className="pd-page">
@@ -160,7 +164,7 @@ export default function ProductDetail() {
           activeImage={activeImage}
           onSelect={setActiveImage}
         />
-        <div className="pd-config">
+        <div className="pd-config" id="purchase" tabIndex={-1}>
           <div className="pd-meta">
             <span>
               {product.category} · {product.stone || "Không đính đá"}
@@ -170,10 +174,22 @@ export default function ProductDetail() {
           <h1>{product.name}</h1>
           <div className="pd-price-box">
             <h2>{money(price)}</h2>
-            {product.salePrice !== undefined &&
-              product.salePrice < product.price && (
-                <del>{money(product.price)}</del>
-              )}
+            {price < product.price && (
+              <del className="original-price">{money(product.price)}</del>
+            )}
+            {product.promotion && (
+              <p className="product-promotion-note">
+                <b>
+                  {product.promotion.type === "flash_sale"
+                    ? "Flash sale"
+                    : "Ưu đãi"}
+                  : {product.promotion.name}
+                </b>
+                <br />
+                Kết thúc{" "}
+                {new Date(product.promotion.endsAt).toLocaleString("vi-VN")}
+              </p>
+            )}
             <p>Giá theo chất liệu và kích cỡ sản phẩm đã chọn.</p>
             <span className="pd-ship">
               MIỄN PHÍ VẬN CHUYỂN TỪ {money(freeShippingFrom)}
@@ -211,7 +227,6 @@ export default function ProductDetail() {
                 className={size === value ? "active" : ""}
                 onClick={() => {
                   setSize(value);
-                  setNotice("");
                 }}
               >
                 {value}
@@ -255,14 +270,9 @@ export default function ProductDetail() {
               disabled={soldOut}
               onClick={() => add(true)}
             >
-              MUA NGAY BẰNG 1 CHẠM
+              MUA NGAY
             </button>
           </div>
-          {notice && (
-            <p role="status" className="cart-notice">
-              {notice} <Link to="/cart">Xem giỏ hàng →</Link>
-            </p>
-          )}
           <button className="pd-salon" onClick={() => navigate("/advisor")}>
             TƯ VẤN CHẤT LIỆU & KÍCH CỠ
           </button>

@@ -102,6 +102,7 @@ export default function Auth({ register = false }: AuthProps) {
               <label>
                 <span>HỌ VÀ TÊN</span>
                 <input
+                  autoComplete="name"
                   value={form.name}
                   onChange={(e) => updateField("name", e.target.value)}
                   placeholder="Nguyễn Minh Anh"
@@ -115,6 +116,7 @@ export default function Auth({ register = false }: AuthProps) {
                 <Mail size={16} />
                 <input
                   type="email"
+                  autoComplete="email"
                   value={form.email}
                   onChange={(e) => updateField("email", e.target.value)}
                   placeholder="email@example.com"
@@ -128,6 +130,7 @@ export default function Auth({ register = false }: AuthProps) {
                 <LockKeyhole size={16} />
                 <input
                   type={showPassword ? "text" : "password"}
+                  autoComplete={register ? "new-password" : "current-password"}
                   value={form.password}
                   onChange={(e) => updateField("password", e.target.value)}
                   placeholder="Tối thiểu 6 ký tự"
@@ -137,7 +140,8 @@ export default function Auth({ register = false }: AuthProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label="Hiện mật khẩu"
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  aria-pressed={showPassword}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -149,7 +153,11 @@ export default function Auth({ register = false }: AuthProps) {
                 <span>Liên hệ MIRA để được hỗ trợ tài khoản.</span>
               </div>
             )}
-            {error && <div className="auth-error">{error}</div>}
+            {error && (
+              <div className="auth-error" role="alert">
+                {error}
+              </div>
+            )}
             <button className="auth-submit" disabled={loading}>
               {loading
                 ? "ĐANG XỬ LÝ..."

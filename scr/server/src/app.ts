@@ -14,8 +14,14 @@ import analyticsRoutes from "./routes/analytics.js";
 import auditRoutes from "./routes/audit.js";
 import assistantRoutes from "./routes/assistant.js";
 import appointmentRoutes from "./routes/appointments.js";
-import { requireDatabase } from "./middleware/database.js";
+import {
+  requireDatabase,
+  isDatabaseConnectionError,
+} from "./middleware/database.js";
 import locationRoutes from "./routes/locations.js";
+import uploadRoutes, { productUploadDirectory } from "./routes/uploads.js";
+import promotionRoutes from "./routes/promotions.js";
+import { PromotionError } from "./services/promotion.service.js";
 const app = express();
 mongoose.set("bufferCommands", false);
 app.use(
@@ -38,7 +44,20 @@ app.get("/api/health", (_q, res) =>
   }),
 );
 app.use("/api/locations", locationRoutes);
+app.use("/api/uploads", uploadRoutes);
+app.use(
+  "/api/uploads/products",
+  express.static(productUploadDirectory, {
+    dotfiles: "deny",
+    maxAge: "1y",
+    immutable: true,
+    setHeaders: (res) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+    },
+  }),
+);
 app.use("/api/auth", authRoutes);
+app.use("/api/promotions", promotionRoutes);
 app.use("/api/products", requireDatabase, productRoutes);
 app.use("/api/products/:slug/reviews", requireDatabase, reviewRoutes);
 app.use("/api/orders", orderRoutes);
@@ -61,19 +80,41 @@ app.use(
     res: express.Response,
     _next: express.NextFunction,
   ) => {
+    if (err instanceof PromotionError) {
+      res.status(err.status).json({ message: err.message });
+      return;
+    }
+    if (isDatabaseConnectionError(err)) {
+      console.warn("Database request unavailable", {
+        method: _req.method,
+        path: _req.path,
+        error: err.name,
+      });
+      res.status(503).json({
+        code: "DATABASE_UNAVAILABLE",
+        message:
+          "Kết nối MongoDB Atlas đang gián đoạn hoặc chưa truy cập được primary. Chưa xác nhận được yêu cầu; vui lòng kiểm tra kết nối cơ sở dữ liệu rồi thử lại.",
+      });
+      return;
+    }
     if (err.code === 11000) {
       res.status(409).json({ message: "Dữ liệu đã tồn tại" });
       return;
     }
     const status =
-      err.status === 400 ||
-      err.name === "ValidationError" ||
-      err.name === "CastError"
+      err.name === "ValidationError" || err.name === "CastError"
         ? 400
-        : 500;
+        : Number.isInteger(err.status) && err.status >= 400 && err.status < 500
+          ? err.status
+          : 500;
     if (status === 500) console.error(err);
     res.status(status).json({
-      message: status === 400 ? "Dữ liệu yêu cầu không hợp lệ" : "Lỗi máy chủ",
+      message:
+        status === 413
+          ? "Dữ liệu gửi lên vượt quá dung lượng cho phép"
+          : status < 500
+            ? "Dữ liệu yêu cầu không hợp lệ"
+            : "Lỗi máy chủ",
     });
   },
 );

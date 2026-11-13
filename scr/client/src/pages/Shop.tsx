@@ -1,6 +1,7 @@
 import CatalogFilters from "../components/CatalogFilters";
 import { MAX_BUDGET } from "../lib/catalogFilters";
 import Image from "../components/Image";
+import ProductBuyButton from "../components/ProductBuyButton";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Heart, Search, SlidersHorizontal } from "lucide-react";
@@ -24,6 +25,7 @@ export default function Shop({
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
+  const [attempt, setAttempt] = useState(0);
   const [wishlist, setWishlist] = useState(getWishlist);
   const category = params.get("category") || "";
   const selectedMaterials = params.getAll("material");
@@ -58,11 +60,17 @@ export default function Shop({
       : fallback;
   };
   const maxPrice = readPrice("maxPrice", MAX_BUDGET);
-  const page = Math.max(1, Number(params.get("page")) || 1);
+  const requestedPage = Number(params.get("page"));
+  const page = Number.isFinite(requestedPage)
+    ? Math.max(1, Math.floor(requestedPage))
+    : 1;
 
   useEffect(() => {
     let active = true;
-    request("/products")
+    const controller = new AbortController();
+    setLoading(true);
+    setNotice("");
+    request("/products", { signal: controller.signal })
       .then((data) => {
         if (active) setProducts(data);
       })
@@ -81,9 +89,10 @@ export default function Shop({
     window.addEventListener("wishlistchange", update);
     return () => {
       active = false;
+      controller.abort();
       window.removeEventListener("wishlistchange", update);
     };
-  }, []);
+  }, [attempt]);
 
   function change(key: string, value: string) {
     setParams(
@@ -267,7 +276,14 @@ export default function Shop({
               <button onClick={() => setParams({})}>Xóa bộ lọc</button>
             </div>
           )}
-          {notice && <p role="status">{notice}</p>}
+          {notice && (
+            <div className="catalog-notice" role="alert">
+              <p>{notice}</p>
+              <button onClick={() => setAttempt((value) => value + 1)}>
+                Thử lại
+              </button>
+            </div>
+          )}
           <div className="catalog-toolbar">
             <div>
               <b>{shown.length}</b> / {filtered.length} tác phẩm
@@ -288,7 +304,7 @@ export default function Shop({
           </div>
           {loading ? (
             <p role="status">Đang tải bộ sưu tập...</p>
-          ) : !shown.length ? (
+          ) : notice ? null : !shown.length ? (
             <section className="lux-empty">
               <h2>Không có sản phẩm phù hợp</h2>
               <button onClick={() => setParams({})}>Đặt lại bộ lọc</button>
@@ -305,7 +321,15 @@ export default function Shop({
                         loading="lazy"
                       />
                     </Link>
-                    {p.featured && <span>MIRA SELECTION</span>}
+                    {(p.promotion || p.featured) && (
+                      <span>
+                        {p.promotion
+                          ? p.promotion.type === "flash_sale"
+                            ? "FLASH SALE"
+                            : "ƯU ĐÃI"
+                          : "MIRA SELECTION"}
+                      </span>
+                    )}
                     <button
                       aria-label={`Yêu thích ${p.name}`}
                       aria-pressed={wishlist.includes(p._id)}
@@ -327,8 +351,14 @@ export default function Shop({
                   </Link>
                   <div className="card-bottom">
                     <strong>{price(p).toLocaleString("vi-VN")}₫</strong>
+                    {p.salePrice != null && p.salePrice < p.price && (
+                      <del className="original-price">
+                        {p.price.toLocaleString("vi-VN")}₫
+                      </del>
+                    )}
                     <Link to={`/product/${p.slug}`}>Xem chi tiết →</Link>
                   </div>
+                  <ProductBuyButton product={p} />
                 </article>
               ))}
             </div>

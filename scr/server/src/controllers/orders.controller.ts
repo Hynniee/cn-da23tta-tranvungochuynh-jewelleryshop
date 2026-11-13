@@ -1,14 +1,13 @@
 import type { RequestHandler } from "express";
 import { bankTransferAvailable } from "../config.js";
 import storeConfig from "../data/storeConfig.json" with { type: "json" };
-import mongoose from "mongoose";
 import { randomUUID } from "node:crypto";
 import { shippingAddress } from "../services/shipping-address.service.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
-import { catalogProduct } from "../services/product-data.service.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { audit } from "../services/audit.service.js";
+import { quoteOrder, PromotionError } from "../services/promotion.service.js";
 
 export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
   const { items, customer, paymentMethod } = req.body;
@@ -30,48 +29,33 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
       message:
         "Chuyển khoản chưa sẵn sàng. Vui lòng chọn thanh toán khi nhận hàng.",
     });
-  const normalized = [];
-  const quantities = new Map<string, number>();
-  for (const item of items) {
-    if (
-      !item ||
-      typeof item !== "object" ||
-      !mongoose.isValidObjectId(item.product) ||
-      !Number.isInteger(item.quantity) ||
-      item.quantity < 1 ||
-      item.quantity > 100
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Sản phẩm hoặc số lượng không hợp lệ" });
-    }
-    const product = await Product.findById(item.product);
-    const quantity = (quantities.get(item.product) || 0) + item.quantity;
-    if (!product || product.stock < quantity)
-      return res.status(409).json({ message: "Sản phẩm không đủ tồn kho" });
-    quantities.set(item.product, quantity);
-    if (product.sizes.length && !product.sizes.includes(item.size))
-      return res.status(400).json({ message: "Kích cỡ không hợp lệ" });
-    normalized.push({
-      product: product._id,
-      name: product.name,
-      price: product.salePrice ?? product.price,
-      quantity: item.quantity,
-      size: item.size,
-      image: product.images[0],
-      material: catalogProduct(product.toObject()).material,
-      engraving:
-        product.engravingAllowed && typeof item.engraving === "string"
-          ? item.engraving.slice(0, 16)
-          : "",
-    });
-  }
-  const subtotal = normalized.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
+  const calculation = await quoteOrder(
+    items,
+    req.body.voucherCode,
+    new Date(),
+    "primary",
   );
-  const shippingFee =
-    subtotal >= storeConfig.freeShippingFrom ? 0 : storeConfig.shippingFee;
+  const normalized = calculation.items;
+  const quantities = new Map<string, number>();
+  for (const item of items)
+    quantities.set(
+      item.product,
+      (quantities.get(item.product) || 0) + item.quantity,
+    );
+  const { subtotal, shippingFee, discountTotal, voucher, total } = calculation;
+  if (req.body.quotedTotal != null) {
+    if (!Number.isSafeInteger(req.body.quotedTotal) || req.body.quotedTotal < 0)
+      throw new PromotionError("Số tiền xác nhận không hợp lệ.");
+    if (req.body.quotedTotal !== total)
+      throw new PromotionError(
+        "Giá hoặc ưu đãi đã thay đổi. Vui lòng kiểm tra lại tổng tiền trước khi xác nhận đơn hàng.",
+        409,
+      );
+  }
+  if (paymentMethod === "BANK_QR" && total <= 0)
+    throw new PromotionError(
+      "Đơn hàng miễn phí không cần chuyển khoản. Vui lòng chọn thanh toán khi nhận hàng.",
+    );
   const reserved: { id: string; quantity: number }[] = [];
   try {
     for (const [id, quantity] of quantities) {
@@ -100,7 +84,9 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
       items: normalized,
       subtotal,
       shippingFee,
-      total: subtotal + shippingFee,
+      discountTotal,
+      voucher,
+      total,
       paymentMethod,
       paymentStatus: paymentMethod === "BANK_QR" ? "PENDING" : "UNPAID",
       status: paymentMethod === "BANK_QR" ? "pending_payment" : "pending",

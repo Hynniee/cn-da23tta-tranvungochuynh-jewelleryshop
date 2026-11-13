@@ -8,6 +8,12 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Check, CreditCard, LockKeyhole, Truck } from "lucide-react";
 import { getCart, saveCart, reconcileCart, cartHasStock } from "../store/cart";
 import { request, token } from "../lib/api";
+import usePromotionQuote from "../controllers/usePromotionQuote";
+import VoucherField from "../components/VoucherField";
+import PaymentTransfer, {
+  type TransferDetails,
+} from "../components/PaymentTransfer";
+import { notify } from "../lib/notifications";
 
 const money = (value: number) => `${value.toLocaleString("vi-VN")}₫`;
 
@@ -16,6 +22,7 @@ export default function Checkout() {
   const orderId = params.get("order");
   const [loadingPayment, setLoadingPayment] = useState(Boolean(orderId));
   const [cart, setCart] = useState(getCart);
+  const promotion = usePromotionQuote(cart, !orderId);
   const [checkingCart, setCheckingCart] = useState(!orderId);
   const [cartReady, setCartReady] = useState(false);
   const navigate = useNavigate();
@@ -39,12 +46,15 @@ export default function Checkout() {
   }, []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [qr, setQr] = useState<any>(null);
-  const subtotal = cart.reduce(
+  const [qr, setQr] = useState<TransferDetails | null>(null);
+  const cartSubtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const shipping = shippingFee(subtotal);
+  const subtotal = promotion.quote?.subtotal ?? cartSubtotal;
+  const shipping = promotion.quote?.shippingFee ?? shippingFee(subtotal);
+  const discount = promotion.quote?.discountTotal ?? 0;
+  const total = promotion.quote?.total ?? subtotal + shipping;
 
   useEffect(() => {
     if (!token()) return;
@@ -83,6 +93,9 @@ export default function Checkout() {
   useEffect(() => {
     if (!orderId || !token()) return;
     let active = true;
+    setLoadingPayment(true);
+    setQr(null);
+    setError("");
     request(`/payments/create/${encodeURIComponent(orderId)}`, {
       method: "POST",
     })
@@ -121,6 +134,8 @@ export default function Checkout() {
       submitting ||
       checkingCart ||
       !cartReady ||
+      promotion.loading ||
+      !promotion.quote ||
       !cartHasStock(cart)
     )
       return;
@@ -152,11 +167,18 @@ export default function Checkout() {
           })),
           subtotal,
           shippingFee: shipping,
-          total: subtotal + shipping,
+          total,
           paymentMethod: payment,
+          voucherCode: promotion.quote?.voucher?.code,
+          quotedTotal: promotion.quote.total,
         }),
       });
       saveCart([]);
+      try {
+        sessionStorage.removeItem("mira_voucher");
+      } catch {
+        /* Optional session persistence. */
+      }
       if (payment === "BANK_QR") {
         setLoadingPayment(true);
         navigate(`/checkout?order=${encodeURIComponent(order._id)}`, {
@@ -164,8 +186,16 @@ export default function Checkout() {
         });
         return;
       }
+      notify("Đã đặt hàng thành công.");
       navigate("/account");
     } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "status" in error &&
+        error.status === 409
+      )
+        promotion.refresh();
       setError(error instanceof Error ? error.message : "Không thể đặt hàng.");
     } finally {
       setSubmitting(false);
@@ -185,61 +215,7 @@ export default function Checkout() {
         <Link to="/account">Về tài khoản</Link>
       </section>
     );
-  if (qr)
-    return (
-      <main className="smart-page">
-        <header>
-          <span>THANH TOÁN QR</span>
-          <h1>Thanh toán đơn {qr.payment?.orderCode}</h1>
-          <p>
-            Quét mã bằng ứng dụng ngân hàng. Số tiền và nội dung chuyển khoản đã
-            được điền sẵn theo đơn hàng.
-          </p>
-        </header>
-        <section className="smart-result">
-          {error && <p role="alert">Đơn đã được tạo. {error}</p>}
-          {qr.qrUrl && (
-            <img
-              src={qr.qrUrl}
-              alt={`QR Sacombank thanh toán đơn ${qr.transferContent}`}
-              style={{
-                width: "100%",
-                maxWidth: 320,
-                display: "block",
-                margin: "auto",
-              }}
-            />
-          )}
-          <h2>{money(qr.amount)}</h2>
-          <p>
-            Ngân hàng:{" "}
-            <b>
-              {qr.bankName ||
-                "Vui lòng liên hệ MIRA để nhận thông tin thanh toán"}
-            </b>
-          </p>
-          <p>
-            Số tài khoản:{" "}
-            <b>
-              {qr.accountNo ||
-                "Vui lòng liên hệ MIRA để nhận thông tin thanh toán"}
-            </b>
-          </p>
-          <p>
-            Nội dung: <b>{qr.transferContent}</b>
-          </p>
-          {qr.accountName && (
-            <p>
-              Chủ tài khoản: <b>{qr.accountName}</b>
-            </p>
-          )}
-          <p>Đơn hàng đang chờ xác nhận thanh toán.</p>
-          <button className="place-order" onClick={() => navigate("/account")}>
-            XEM TRẠNG THÁI ĐƠN
-          </button>
-        </section>
-      </main>
-    );
+  if (qr) return <PaymentTransfer key={qr.orderId} details={qr} />;
 
   if (!cart.length)
     return (
@@ -315,6 +291,7 @@ export default function Checkout() {
             <button
               type="button"
               className={payment === "COD" ? "active" : ""}
+              aria-pressed={payment === "COD"}
               onClick={() => setPayment("COD")}
             >
               <Truck />
@@ -324,7 +301,8 @@ export default function Checkout() {
             <button
               type="button"
               className={payment === "BANK_QR" ? "active" : ""}
-              disabled={!bankAvailable}
+              aria-pressed={payment === "BANK_QR"}
+              disabled={!bankAvailable || total <= 0}
               onClick={() => setPayment("BANK_QR")}
             >
               <CreditCard />
@@ -350,12 +328,17 @@ export default function Checkout() {
           <button
             className="place-order"
             disabled={
-              submitting || checkingCart || !cartReady || !cartHasStock(cart)
+              submitting ||
+              checkingCart ||
+              !cartReady ||
+              !cartHasStock(cart) ||
+              promotion.loading ||
+              !promotion.quote
             }
           >
             {submitting
               ? "ĐANG XỬ LÝ..."
-              : `XÁC NHẬN ĐƠN HÀNG · ${money(subtotal + shipping)}`}
+              : `XÁC NHẬN ĐƠN HÀNG · ${money(total)}`}
           </button>
           <p className="checkout-security">
             <LockKeyhole size={13} /> Thông tin thanh toán được mã hóa và bảo
@@ -365,7 +348,7 @@ export default function Checkout() {
         <aside className="checkout-order-lux">
           <span className="page-kicker">YOUR SELECTION</span>
           <h2>Đơn Hàng Của Bạn</h2>
-          {cart.map((item) => (
+          {cart.map((item, index) => (
             <div
               className="checkout-mini"
               key={`${item._id}-${item.size}-${item.engraving || ""}`}
@@ -377,10 +360,16 @@ export default function Checkout() {
                   Size {item.size} · SL {item.quantity}
                 </small>
               </div>
-              <strong>{money(item.price * item.quantity)}</strong>
+              <strong>
+                {money(
+                  (promotion.quote?.items[index]?.price ?? item.price) *
+                    item.quantity,
+                )}
+              </strong>
             </div>
           ))}
           <hr />
+          <VoucherField promotion={promotion} />
           <p>
             <span>Tạm tính</span>
             <b>{money(subtotal)}</b>
@@ -389,9 +378,15 @@ export default function Checkout() {
             <span>Vận chuyển</span>
             <b>{shipping ? money(shipping) : "Miễn phí"}</b>
           </p>
+          {discount > 0 && (
+            <p className="voucher-success">
+              <span>Đã giảm bằng voucher</span>
+              <b>−{money(discount)}</b>
+            </p>
+          )}
           <p className="checkout-total">
             <span>TỔNG</span>
-            <b>{money(subtotal + shipping)}</b>
+            <b>{money(total)}</b>
           </p>
         </aside>
       </div>

@@ -7,14 +7,20 @@
     "scr/server"
   ],
   "scripts": {
-    "dev": "concurrently \"npm --workspace scr/server run dev\" \"npm --workspace scr/client run dev\"",
+    "dev": "node setup/scripts/dev-full.mjs",
     "build": "npm --workspace scr/server run build && npm --workspace scr/client run build",
     "test": "node scr/test-data/test.mjs",
     "test:cart": "node --import tsx --test scr/test-data/cart-model.test.ts",
+    "test:ui": "node scr/test-data/ui-regressions.mjs",
+    "test:checkout-ui": "node scr/test-data/checkout-ui.test.mjs",
+    "test:uploads": "node scr/test-data/product-upload.test.mjs",
+    "test:db-errors": "node scr/test-data/database-errors.test.mjs",
+    "test:promotions": "node scr/test-data/promotions.test.mjs",
     "test:appointments": "node --test scr/test-data/appointments.test.mjs",
     "format": "prettier --write \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",
     "format:check": "prettier --check \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",
     "dev:full": "node setup/scripts/dev-full.mjs",
+    "db:check": "node setup/scripts/check-database.mjs",
     "catalog:import": "npm --workspace scr/server run seed:catalog",
     "test:tools": "node --import tsx --test scr/test-data/personal-tools.test.ts"
   },

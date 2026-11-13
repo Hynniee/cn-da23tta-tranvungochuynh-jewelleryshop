@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
-import { catalogProduct } from "./product-data.service.js";
 import UserPreference from "../models/UserPreference.js";
 import { predictInterest } from "./ml.service.js";
+import {
+  activeProductPromotions,
+  promotedProduct,
+} from "./promotion.service.js";
 const norm = (m: any, k: string) => {
   const o = m instanceof Map ? Object.fromEntries(m) : m || {};
   const mx = Math.max(1, ...Object.values(o).map(Number));
@@ -17,8 +20,9 @@ export async function recommend(userId: string, limit = 8, criteria: any = {}) {
       : Promise.resolve(null),
     Product.find({ stock: { $gt: 0 } }).lean(),
   ]);
+  const promotions = await activeProductPromotions();
   return products
-    .map(catalogProduct)
+    .map((product) => promotedProduct(product, promotions))
     .filter(
       (p: any) =>
         (!criteria.budgetMax ||

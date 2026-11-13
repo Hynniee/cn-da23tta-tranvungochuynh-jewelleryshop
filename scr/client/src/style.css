@@ -37,7 +37,7 @@ select {
   font-size: 12px;
   letter-spacing: 0.08em;
 }
-header {
+:where(.lux-header) {
   height: 82px;
   display: flex;
   align-items: center;
@@ -611,7 +611,7 @@ footer > div {
   text-align: center;
 }
 @media (max-width: 850px) {
-  header {
+  :where(.lux-header) {
     padding: 0 20px;
   }
   nav {

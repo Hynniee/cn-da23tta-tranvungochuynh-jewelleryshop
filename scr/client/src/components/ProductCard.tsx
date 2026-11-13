@@ -1,4 +1,5 @@
 import Image from "./Image";
+import ProductBuyButton from "./ProductBuyButton";
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -13,6 +14,11 @@ export default function ProductCard({ p }: { p: any }) {
   return (
     <article className="product-card">
       <div className="photo">
+        {p.promotion && (
+          <span className="promotion-badge">
+            {p.promotion.type === "flash_sale" ? "FLASH SALE" : "ƯU ĐÃI"}
+          </span>
+        )}
         <Link to={`/product/${p.slug}`}>
           <Image src={p.images?.[0] || "/placeholder.svg"} alt={p.name} />
         </Link>
@@ -35,6 +41,12 @@ export default function ProductCard({ p }: { p: any }) {
         <h3>{p.name}</h3>
       </Link>
       <strong>{Number(p.salePrice ?? p.price).toLocaleString("vi-VN")}₫</strong>
+      {p.salePrice != null && p.salePrice < p.price && (
+        <del className="original-price">
+          {Number(p.price).toLocaleString("vi-VN")}₫
+        </del>
+      )}
+      <ProductBuyButton product={p} />
     </article>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { request, token } from "../lib/api";
+import { notify } from "../lib/notifications";
 
 type ReviewData = {
   reviews: {
@@ -24,7 +25,6 @@ export default function ProductReviews({ slug }: { slug: string }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   useEffect(() => {
@@ -50,7 +50,6 @@ export default function ProductReviews({ slug }: { slug: string }) {
     if (sending) return;
     setSending(true);
     setError("");
-    setNotice("");
     try {
       await request(`/products/${encodeURIComponent(slug)}/reviews`, {
         method: "POST",
@@ -62,7 +61,7 @@ export default function ProductReviews({ slug }: { slug: string }) {
       setComment("");
       setPage(1);
       setRevision((value) => value + 1);
-      setNotice("Cảm ơn bạn! Đánh giá đã được đăng.");
+      notify("Cảm ơn bạn! Đánh giá đã được đăng.");
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -95,11 +94,6 @@ export default function ProductReviews({ slug }: { slug: string }) {
           </p>
         )}
       </div>
-      {notice && (
-        <p role="status" className="cart-notice">
-          {notice}
-        </p>
-      )}
       {error && (
         <div role="alert">
           <p>{error}</p>
