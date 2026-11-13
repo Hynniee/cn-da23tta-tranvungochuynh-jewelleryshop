@@ -49,12 +49,9 @@ export default function PaymentTransfer({
     }
   }
   function confirmTransfer() {
-    navigate(
-      `/account?tab=orders&order=${encodeURIComponent(details.orderId)}`,
-      {
-        state: { transferSubmitted: details.orderId },
-      },
-    );
+    navigate(`/thank-you?order=${encodeURIComponent(details.orderId)}`, {
+      state: { transferSubmitted: details.orderId },
+    });
   }
   const fields: [string, string | undefined][] = [
     ["Ngân hàng", details.bankName],

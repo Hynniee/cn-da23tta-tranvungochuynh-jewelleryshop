@@ -21,6 +21,7 @@ import PaymentTransfer, {
   type TransferDetails,
 } from "../components/PaymentTransfer";
 import { notify } from "../lib/notifications";
+import useAddressBook from "../controllers/useAddressBook";
 
 const money = (value: number) => `${value.toLocaleString("vi-VN")}₫`;
 
@@ -34,6 +35,12 @@ export default function Checkout() {
   const [cartReady, setCartReady] = useState(false);
   const promotion = usePromotionQuote(cart, !orderId && cartReady);
   const navigate = useNavigate();
+  const addressBook = useAddressBook(!orderId && Boolean(token()));
+  const [addressChoice, setAddressChoice] = useState("new");
+  const selectedAddress =
+    addressChoice === "new"
+      ? undefined
+      : addressBook.addresses.find((a) => a._id === addressChoice);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -148,6 +155,7 @@ export default function Checkout() {
     if (
       !cart.length ||
       submitting ||
+      addressBook.loading ||
       checkingCart ||
       !cartReady ||
       promotion.loading ||
@@ -155,14 +163,18 @@ export default function Checkout() {
       !cartHasStock(cart)
     )
       return;
-    if (!form.name.trim() || !form.phone.trim()) {
+    const recipient = selectedAddress
+      ? { ...form, name: selectedAddress.name, phone: selectedAddress.phone }
+      : form;
+    const destination = selectedAddress || delivery;
+    if (!recipient.name.trim() || !recipient.phone.trim()) {
       setError("Vui lòng nhập họ tên và số điện thoại người nhận.");
       return;
     }
     if (
-      !delivery.provinceCode ||
-      !delivery.wardCode ||
-      !delivery.addressLine.trim()
+      !destination.provinceCode ||
+      !destination.wardCode ||
+      !destination.addressLine.trim()
     ) {
       setError("Vui lòng chọn tỉnh/thành, phường/xã và nhập địa chỉ cụ thể.");
       return;
@@ -173,7 +185,13 @@ export default function Checkout() {
       const order = await request("/orders", {
         method: "POST",
         body: JSON.stringify({
-          customer: { ...form, ...delivery },
+          addressId: selectedAddress?._id,
+          customer: {
+            ...recipient,
+            provinceCode: destination.provinceCode,
+            wardCode: destination.wardCode,
+            addressLine: destination.addressLine,
+          },
           items: cart.map((item) => ({
             product: item._id,
             name: item.name,
@@ -268,26 +286,83 @@ export default function Checkout() {
       <div className="checkout-grid-lux">
         <form className="checkout-form-lux" onSubmit={submit}>
           <h2>01. Thông tin người nhận</h2>
-          <div className="field-grid">
-            <label>
-              HỌ VÀ TÊN
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Nguyễn Hoàng Khánh"
-              />
-            </label>
-            <label>
-              SỐ ĐIỆN THOẠI
-              <input
-                required
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="0908 xxx xxx"
-              />
-            </label>
-          </div>
+          {addressBook.loading && <p role="status">Đang tải địa chỉ đã lưu…</p>}
+          {addressBook.error && (
+            <div className="saved-address-error">
+              <p>{addressBook.error} Bạn vẫn có thể nhập địa chỉ mới.</p>
+              <button
+                type="button"
+                className="ui-secondary"
+                onClick={addressBook.reload}
+              >
+                Tải lại địa chỉ
+              </button>
+            </div>
+          )}
+          {!!addressBook.addresses.length && (
+            <div className="checkout-address-picker">
+              <label>
+                ĐỊA CHỈ GIAO HÀNG
+                <select
+                  aria-label="Chọn địa chỉ giao hàng"
+                  value={selectedAddress?._id || "new"}
+                  onChange={(e) => setAddressChoice(e.target.value)}
+                >
+                  <option value="new">Nhập địa chỉ mới</option>
+                  {addressBook.addresses.map((a) => (
+                    <option key={a._id} value={a._id}>
+                      {a.label} · {a.name}
+                      {a.isDefault ? " (Mặc định)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Link to="/account?tab=address" target="_blank" rel="noreferrer">
+                Quản lý sổ địa chỉ
+              </Link>
+              <button type="button" onClick={addressBook.reload}>
+                Cập nhật danh sách
+              </button>
+            </div>
+          )}
+          {selectedAddress ? (
+            <div className="checkout-saved-address">
+              <strong>
+                {selectedAddress.name} · {selectedAddress.phone}
+              </strong>
+              <p>{selectedAddress.address}</p>
+              <small>
+                {selectedAddress.label}
+                {selectedAddress.isDefault ? " · Địa chỉ mặc định" : ""}
+              </small>
+            </div>
+          ) : (
+            <>
+              <div className="field-grid">
+                <label>
+                  HỌ VÀ TÊN
+                  <input
+                    required
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Nguyễn Hoàng Khánh"
+                  />
+                </label>
+                <label>
+                  SỐ ĐIỆN THOẠI
+                  <input
+                    required
+                    value={form.phone}
+                    onChange={(e) =>
+                      setForm({ ...form, phone: e.target.value })
+                    }
+                    placeholder="0908 xxx xxx"
+                  />
+                </label>
+              </div>
+              <ShippingAddressFields value={delivery} onChange={setDelivery} />
+            </>
+          )}
           <label>
             EMAIL (KHÔNG BẮT BUỘC)
             <input
@@ -297,7 +372,6 @@ export default function Checkout() {
               placeholder="email@example.com"
             />
           </label>
-          <ShippingAddressFields value={delivery} onChange={setDelivery} />
           <label>
             LỜI NHẮN CHO MIRA
             <textarea
@@ -349,6 +423,7 @@ export default function Checkout() {
             className="place-order"
             disabled={
               submitting ||
+              addressBook.loading ||
               checkingCart ||
               !cartReady ||
               !cartHasStock(cart) ||

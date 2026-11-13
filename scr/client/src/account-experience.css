@@ -1,0 +1,487 @@
+/* Shared account, saved delivery addresses and transfer acknowledgement. */
+.account-card .wishlist-products .shop-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 18px;
+  margin-top: 24px;
+}
+.account-card .wishlist-products > .btn {
+  display: inline-flex;
+  margin-top: 24px;
+}
+.order-cancellation-support {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.address-book-help,
+.address-book-legacy {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.address-book > header {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.address-book > header .ui-primary {
+  color: white;
+  background: var(--ink);
+  border: 0;
+  letter-spacing: 0;
+  font-size: 12px;
+}
+.address-book-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.address-book-form h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.address-book-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+}
+.address-book-form .field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.address-book-form input:not([type="checkbox"]),
+.address-book-form select {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-raised);
+  font: inherit;
+  font-size: 13px;
+}
+.address-book-form input:focus,
+.address-book-form select:focus {
+  outline: 2px solid #96703555;
+  outline-offset: 2px;
+}
+.address-book-form label.address-default-option {
+  flex-direction: row;
+  align-items: center;
+  letter-spacing: 0;
+  font-size: 13px;
+}
+.address-default-option input {
+  width: 17px;
+  height: 17px;
+}
+.address-book-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.address-book-form > .address-book-actions {
+  justify-content: flex-end;
+}
+.saved-address-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.saved-address-card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+.saved-address-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+}
+.saved-address-heading span {
+  color: #765c2d;
+  background: #f4eddf;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+.saved-address-card h3 {
+  font-size: 15px;
+  margin: 16px 0 8px;
+}
+.saved-address-card p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.saved-address-card button {
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.checkout-address-picker {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.checkout-address-picker > label {
+  grid-column: 1 / -1;
+}
+.checkout-address-picker > a,
+.checkout-address-picker > button {
+  font-size: 12px;
+  color: var(--gold);
+  background: transparent;
+  border: 0;
+  padding: 4px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+.checkout-saved-address {
+  padding: 20px;
+  border: 1px solid #cfc2aa;
+  background: var(--surface);
+  border-radius: 10px;
+  margin: 20px 0;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.checkout-saved-address strong {
+  font-size: 14px;
+}
+.checkout-saved-address p {
+  margin: 8px 0;
+}
+.checkout-saved-address small,
+.saved-address-error {
+  color: var(--muted);
+}
+.saved-address-error {
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.account-main,
+.account-card {
+  min-width: 0;
+}
+.account-orders {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.account-orders-table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+.account-orders-hint {
+  display: none;
+}
+.account-orders-table col:nth-child(1) {
+  width: 24%;
+}
+.account-orders-table col:nth-child(2) {
+  width: 13%;
+}
+.account-orders-table col:nth-child(3) {
+  width: 18%;
+}
+.account-orders-table col:nth-child(4) {
+  width: 17%;
+}
+.account-orders-table col:nth-child(5) {
+  width: 28%;
+}
+.account-orders-table th {
+  background: var(--surface);
+  padding: 15px 12px;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  text-align: left;
+}
+.account-orders-table td {
+  padding: 16px 12px;
+  height: 112px;
+  vertical-align: middle;
+  border-top: 1px solid var(--line);
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.account-orders-table th:nth-child(4),
+.account-orders-table .order-total-cell {
+  text-align: right;
+}
+.account-orders-table .account-status {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  border-radius: 5px;
+  font-size: 11px;
+  padding: 5px 8px;
+}
+.account-status.order-status-completed,
+.account-status.order-status-confirmed {
+  background: #e9f3ec;
+  color: #256645;
+}
+.account-status.order-status-cancelled {
+  background: #f4e9e6;
+  color: #8d4540;
+}
+.account-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+}
+.account-order-actions button {
+  min-height: 30px;
+  margin: 0;
+  padding: 4px 0;
+  font-size: 11px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.account-order-actions a {
+  flex-basis: 100%;
+  color: var(--gold);
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.thankyou-page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 60px 24px 70px;
+}
+.thankyou-hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.thankyou-icon {
+  width: 78px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 24px;
+  background: #ede7da;
+  color: var(--gold);
+  border-radius: 50%;
+}
+.thankyou-hero .page-kicker {
+  display: block;
+  letter-spacing: 2px;
+  font-size: 11px;
+}
+.thankyou-hero h1 {
+  font-size: clamp(27px, 4vw, 40px);
+  line-height: 1.35;
+  margin: 16px 0;
+  font-weight: 500;
+  letter-spacing: -0.6px;
+}
+.thankyou-hero > p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+.thankyou-order-code {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.thankyou-card {
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
+}
+.thankyou-payment {
+  display: flex;
+  gap: 14px;
+  padding: 22px;
+  border-radius: 10px;
+  background: #f4eddf;
+  color: #765c2d;
+}
+.thankyou-payment.paid {
+  background: #e9f3ec;
+  color: #256645;
+}
+.thankyou-payment > svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.thankyou-payment h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+.thankyou-payment p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.9;
+}
+.thankyou-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 32px 0;
+  padding: 0;
+  list-style: none;
+}
+.thankyou-steps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  color: #9b958a;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.thankyou-steps span {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+}
+.thankyou-steps .done {
+  color: #256645;
+}
+.thankyou-steps .done span {
+  background: #e9f3ec;
+  border-color: #d2e4d8;
+}
+.thankyou-steps .current {
+  color: var(--gold);
+}
+.thankyou-summary {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  border-top: 1px solid var(--line);
+  padding: 24px 0;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.thankyou-summary span {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+.thankyou-summary strong {
+  display: block;
+}
+.thankyou-summary p {
+  color: var(--muted);
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.thankyou-summary .thankyou-total {
+  font-size: 24px;
+}
+.thankyou-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.thankyou-signature {
+  text-align: center;
+  color: var(--gold);
+  margin-top: 28px;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .account-card .wishlist-products .shop-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .account-orders-hint {
+    display: block;
+    margin: 0;
+    padding: 12px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .address-book-form {
+    padding: 18px 14px;
+  }
+  .address-book-form .field-grid {
+    grid-template-columns: 1fr;
+  }
+  .address-book > header .ui-primary {
+    width: 100%;
+  }
+  .thankyou-page {
+    padding: 36px 16px 45px;
+  }
+  .thankyou-card {
+    padding: 20px 16px;
+  }
+  .thankyou-payment {
+    padding: 16px;
+    gap: 10px;
+  }
+  .thankyou-payment h2 {
+    font-size: 15px;
+  }
+  .thankyou-summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .thankyou-actions {
+    flex-direction: column;
+  }
+  .thankyou-steps {
+    gap: 6px;
+  }
+}

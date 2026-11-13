@@ -73,7 +73,9 @@ Không đưa file `.env`, mật khẩu hoặc API key lên GitHub.
 
 Giao diện dùng chung tông nền kem, chữ đậm và điểm nhấn vàng; biểu mẫu, nút và thẻ nội dung thống nhất trên desktop/mobile. Thông báo yêu thích, giỏ hàng, lưu sản phẩm/tồn kho và khuyến mãi tự ẩn sau 3 giây. **Mua ngay** mở phần chọn size/khắc tên nếu cần; sản phẩm một lựa chọn và nút Mua ngay ở chi tiết chuyển tới thanh toán.
 
-Thanh toán QR có vùng hiển thị riêng, thông tin ngân hàng/nội dung chuyển khoản kèm nút sao chép, xử lý lỗi tải ảnh và nút kiểm tra trạng thái từ máy chủ. Việc bấm kiểm tra không tự đánh dấu đã thanh toán; xác nhận tiền vẫn qua luồng đối soát hiện có.
+Thanh toán QR có vùng hiển thị riêng, thông tin ngân hàng/nội dung chuyển khoản kèm nút sao chép và xử lý lỗi tải ảnh. Nút **Tôi đã chuyển khoản** mở trang cảm ơn `/thank-you?order=...`, hiển thị thông tin đơn và tự cập nhật trạng thái từ máy chủ; chỉ luồng đối soát mới xác nhận đã thanh toán. Từ trang này có thể mở chi tiết đúng đơn trong tài khoản.
+
+**Sổ địa chỉ**: thêm/sửa/xóa và chọn một địa chỉ mặc định trong tài khoản, dùng API tỉnh/thành–phường/xã chung với thanh toán (34 tỉnh/thành sau sáp nhập). Biểu mẫu chỉ mở khi thêm/sửa; hồ sơ cá nhân không còn ô địa chỉ tự do. Thanh toán mặc định mở form địa chỉ mới; người nhận có thể chủ động chọn địa chỉ đã lưu trong danh sách. Server kiểm tra chủ sở hữu và lưu bản địa chỉ tại thời điểm đặt hàng, nên sửa sổ địa chỉ không làm thay đổi đơn cũ. Danh sách đơn hàng dùng bảng cột/hàng thống nhất, cuộn ngang bên trong trên điện thoại.
 E-commerce, MIRA AI Chat, Recommendation Engine, Diamond DSS 4Cs, quản trị và dữ liệu demo.
 
 Khuyến mãi: **Admin → Khuyến mãi** quản lý voucher, giảm giá sản phẩm và flash sale theo lịch. Khách nhập mã tại giỏ hàng/thanh toán; server tính lại ưu đãi khi đặt đơn và lưu số tiền giảm trong đơn hàng. Xem [quy tắc và kiểm thử khuyến mãi](setup/promotions.md).

@@ -8,6 +8,7 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import ThankYou from "./pages/ThankYou";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
 import Admin from "./pages/Admin";
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
       { path: "/product/:slug", element: <ProductDetail /> },
       { path: "/cart", element: <Cart /> },
       { path: "/checkout", element: <Checkout /> },
+      { path: "/thank-you", element: <ThankYou /> },
       { path: "/login", element: <Auth /> },
       { path: "/register", element: <Auth register /> },
       { path: "/account", element: <Account /> },

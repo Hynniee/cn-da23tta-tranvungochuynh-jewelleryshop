@@ -108,6 +108,7 @@ await page.route("**/api/**", async (route) => {
     return route.fulfill({ status: 201, json: fixtureOrder });
   } else if (path === "/api/products") json = products;
   else if (path === "/api/auth/me") json = user;
+  else if (path === "/api/auth/me/addresses") json = [];
   else if (path === "/api/products/write-status") json = { ok: true };
   else if (path === "/api/payments/options")
     json = { bankTransferAvailable: true };
@@ -136,13 +137,11 @@ await page.route("**/api/**", async (route) => {
       status: paymentOrderStatus,
     };
   } else if (path === "/api/promotions/quote") {
-    const items = req
-      .postDataJSON()
-      .items.map((item) => ({
-        ...item,
-        price:
-          products.find((p) => p._id === item.product)?.price || product.price,
-      }));
+    const items = req.postDataJSON().items.map((item) => ({
+      ...item,
+      price:
+        products.find((p) => p._id === item.product)?.price || product.price,
+    }));
     const subtotal = items.reduce(
       (sum, item) => sum + item.quantity * item.price,
       0,
@@ -185,6 +184,8 @@ await page.route("**/api/**", async (route) => {
       },
       { ...fixtureOrder, status: paymentOrderStatus, paymentStatus },
     ];
+  } else if (path.startsWith("/api/orders/") && req.method() === "GET") {
+    json = { ...fixtureOrder, status: paymentOrderStatus, paymentStatus };
   } else if (["/api/orders", "/api/promotions"].includes(path)) json = [];
   else if (path.endsWith("/wards"))
     json = [{ code: "25747", name: "Phường Thủ Dầu Một" }];
@@ -289,6 +290,13 @@ try {
   await page
     .getByRole("button", { name: "Tôi đã chuyển khoản", exact: true })
     .click();
+  await expect(page).toHaveURL(/\/thank-you\?order=fixture-order$/);
+  await expect(
+    page.getByRole("heading", { name: "Cảm ơn bạn đã chọn MIRA", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Xem chi tiết đơn hàng", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/account\?tab=orders&order=fixture-order$/);
   const dialog = page.getByRole("dialog", {
     name: "Chi tiết đơn hàng",
@@ -306,7 +314,7 @@ try {
   await expect(dialog.locator(".order-payment-state")).toContainText(
     "Đang chờ xác nhận thanh toán",
   );
-  await expect(dialog).toContainText("vui lòng không chuyển lại");
+  await expect(dialog).toContainText("Trạng thái sẽ tự cập nhật");
   await expect(dialog.locator(".order-payment-state")).not.toContainText(
     "Đã thanh toán",
   );
@@ -342,7 +350,7 @@ try {
   ).toBeVisible();
   assert.equal(await page.evaluate(() => document.body.style.overflow), "");
   await page
-    .locator(".account-orders article")
+    .locator(".account-orders tbody tr")
     .filter({ hasText: "MIRA20261113TEST" })
     .getByRole("button", { name: "Xem chi tiết", exact: true })
     .click();
@@ -380,11 +388,18 @@ try {
   await page
     .getByRole("button", { name: "Tôi đã chuyển khoản", exact: true })
     .click();
+  await expect(page).toHaveURL(/\/thank-you\?order=fixture-order$/);
+  await expect(
+    page.getByRole("heading", { name: "Cảm ơn bạn đã chọn MIRA", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Xem chi tiết đơn hàng", exact: true })
+    .click();
   await expect(dialog.locator(".order-payment-state")).toContainText(
     "Đơn hàng đã hủy",
   );
   await expect(dialog).toContainText(
-    "Vui lòng không chuyển khoản cho đơn hàng này",
+    "Vui lòng chờ chúng tôi rà soát giao dịch và xử lý hoàn tiền",
   );
   const requestsAfterCancelled = statusRequests;
   await page.clock.runFor(15000);
@@ -397,11 +412,70 @@ try {
     "PASS QR image retry and cancelled order is shown in order popup",
   );
 
+  for (const scenario of [
+    {
+      method: "BANK_QR",
+      status: "PAID",
+      message: "rà soát giao dịch và xử lý hoàn tiền",
+    },
+    {
+      method: "BANK_QR",
+      status: "REFUNDED",
+      message: "Khoản thanh toán của đơn hàng đã được hoàn lại",
+    },
+    {
+      method: "COD",
+      status: "UNPAID",
+      message: "Đơn hàng của bạn đã được hủy",
+    },
+  ]) {
+    fixtureOrder.paymentMethod = scenario.method;
+    paymentStatus = scenario.status;
+    await page.goto(`${base}/thank-you?order=fixture-order`);
+    await expect(page.locator(".thankyou-payment h2")).toHaveText(
+      "Đơn hàng đã hủy",
+    );
+    await expect(page.locator(".thankyou-payment")).toContainText(
+      scenario.message,
+    );
+    await expect(
+      page
+        .locator(".thankyou-payment")
+        .getByRole("link", { name: "liên hệ MIRA", exact: true }),
+    ).toHaveAttribute("href", "/advisor");
+    await page
+      .getByRole("link", { name: "Xem chi tiết đơn hàng", exact: true })
+      .click();
+    await expect(dialog.locator(".order-payment-state strong")).toHaveText(
+      "Đơn hàng đã hủy",
+    );
+    await expect(dialog.locator(".order-payment-state")).toContainText(
+      scenario.message,
+    );
+    await expect(
+      dialog
+        .locator(".order-payment-state")
+        .getByRole("link", { name: "liên hệ MIRA", exact: true }),
+    ).toHaveAttribute("href", "/advisor");
+  }
+  fixtureOrder.paymentMethod = "BANK_QR";
+  paymentStatus = "UNPAID";
+  console.log(
+    "PASS cancelled bank/refunded/COD copy and support links on thank-you and order popup",
+  );
+
   paymentOrderStatus = "pending_payment";
   statusFails = true;
   await page.goto(`${base}/checkout?order=fixture-order`);
   await page
     .getByRole("button", { name: "Tôi đã chuyển khoản", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/thank-you\?order=fixture-order$/);
+  await expect(
+    page.getByRole("heading", { name: "Cảm ơn bạn đã chọn MIRA", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Xem chi tiết đơn hàng", exact: true })
     .click();
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("alert")).toContainText("Không thể kết nối");
@@ -428,6 +502,13 @@ try {
   await page
     .getByRole("button", { name: "Tôi đã chuyển khoản", exact: true })
     .click();
+  await expect(page).toHaveURL(/\/thank-you\?order=fixture-order$/);
+  await expect(
+    page.getByRole("heading", { name: "Cảm ơn bạn đã chọn MIRA", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Xem chi tiết đơn hàng", exact: true })
+    .click();
   await expect
     .poll(() => statusRequests)
     .toBeGreaterThan(requestsAfterMismatch);
@@ -450,6 +531,13 @@ try {
   await page.goto(`${base}/checkout?order=fixture-order`);
   await page
     .getByRole("button", { name: "Tôi đã chuyển khoản", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/thank-you\?order=fixture-order$/);
+  await expect(
+    page.getByRole("heading", { name: "Cảm ơn bạn đã chọn MIRA", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Xem chi tiết đơn hàng", exact: true })
     .click();
   await expect(page).toHaveURL(/\/account\?tab=orders&order=fixture-order$/);
   await expect(page.getByRole("alert")).toContainText("Chưa tải được đơn hàng");

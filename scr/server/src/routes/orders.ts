@@ -8,6 +8,7 @@ r.use(auth, requireDatabase);
 r.post("/", controller.createOrder);
 r.get("/mine", controller.listMyOrders);
 r.get("/", admin, controller.listOrders);
+r.get("/:id", controller.getMyOrder);
 r.patch("/:id/status", admin, controller.updateStatus);
 r.patch("/:id/cancel", controller.updateStatus);
 export default r;

@@ -116,6 +116,118 @@ try {
   await expect(
     page.getByRole("button", { name: "Ẩn mật khẩu", exact: true }),
   ).toBeVisible();
+  const favorites = [
+    {
+      _id: "favorite-one",
+      slug: "favorite-one",
+      name: "Nhẫn yêu thích",
+      category: "Nhẫn",
+      material: "Bạc 925",
+      price: 650000,
+      stock: 8,
+      sizes: ["Tiêu chuẩn"],
+      images: ["/products/nhan-bac-flora.svg"],
+    },
+    {
+      _id: "favorite-two",
+      slug: "favorite-two",
+      name: "Vòng yêu thích",
+      category: "Vòng tay",
+      material: "Bạc 925",
+      price: 750000,
+      stock: 6,
+      sizes: ["Tiêu chuẩn"],
+      images: ["/products/nhan-bac-flora.svg"],
+    },
+  ];
+  await page.unroute("**/api/products");
+  await page.route("**/api/products", (route) =>
+    route.fulfill({ json: favorites }),
+  );
+  await page.route("**/api/auth/me", (route) =>
+    route.fulfill({
+      json: {
+        name: "Wishlist Buyer",
+        email: "fixture@example.com",
+        role: "customer",
+      },
+    }),
+  );
+  await page.route("**/api/orders/mine", (route) =>
+    route.fulfill({ json: [] }),
+  );
+  await page.evaluate(() => {
+    localStorage.setItem("mira_token", "browser-fixture");
+    localStorage.setItem(
+      "mira_wishlist",
+      JSON.stringify(["favorite-one", "favorite-two"]),
+    );
+  });
+  await page.goto(`${base}/account?tab=wishlist`);
+  await expect(page.locator(".account-card .product-card")).toHaveCount(2);
+  await expect(page.locator(".account-card")).toContainText("650.000₫");
+  await expect(page.locator('.account-card a[href="/wishlist"]')).toHaveCount(
+    0,
+  );
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.ok(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    await page
+      .locator(".account-card")
+      .screenshot({
+        path: `scr/test-data/results/account-wishlist-${width}.png`,
+      });
+  }
+  await page
+    .getByRole("button", { name: "Yêu thích Nhẫn yêu thích", exact: true })
+    .click();
+  await expect(page.locator(".account-card .product-card")).toHaveCount(1);
+  assert.deepEqual(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("mira_wishlist")),
+    ),
+    ["favorite-two"],
+  );
+  await page.goto(`${base}/wishlist`);
+  await expect(page.locator(".product-card")).toHaveCount(1);
+  await expect(page.locator(".product-card")).toContainText("Vòng yêu thích");
+  await page
+    .getByRole("button", { name: "Yêu thích Vòng yêu thích", exact: true })
+    .click();
+  await expect(
+    page.getByText("Chưa có sản phẩm yêu thích.", { exact: true }),
+  ).toBeVisible();
+  await page.goto(`${base}/account?tab=wishlist`);
+  await expect(
+    page.getByText("Chưa có sản phẩm yêu thích.", { exact: true }),
+  ).toBeVisible();
+  await page.unroute("**/api/products");
+  await page.route("**/api/products", (route) =>
+    route.fulfill({ status: 500, json: { message: "Fixture outage" } }),
+  );
+  await page.reload();
+  await expect(page.getByRole("alert")).toContainText(
+    "Chưa tải được sản phẩm yêu thích",
+  );
+  await expect(
+    page.getByText("Chưa có sản phẩm yêu thích.", { exact: true }),
+  ).toHaveCount(0);
+  await page.unroute("**/api/products");
+  await page.route("**/api/products", (route) =>
+    route.fulfill({ json: favorites }),
+  );
+  await page.getByRole("button", { name: "Thử lại", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(
+    page.getByText("Chưa có sản phẩm yêu thích.", { exact: true }),
+  ).toBeVisible();
+  console.log(
+    "PASS wishlist renders directly in account, shares saved products and removal with wishlist page, fits mobile/desktop and handles empty/error/retry",
+  );
   assert.deepEqual(errors, [], "No browser JavaScript errors");
   console.log(
     "PASS local editorial images, header search, mobile menu, responsive layout, outage/retry states, guest recommendations and password visibility",

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle2, Clock3, X } from "lucide-react";
-import { request } from "../lib/api";
+import useOrderPayment, { PaymentUpdate } from "../controllers/useOrderPayment";
 import { orderLabels } from "../lib/commerce";
-import { notify } from "../lib/notifications";
+import OrderCancellationNotice from "./OrderCancellationNotice";
 
 export type CustomerOrder = {
   _id: string;
@@ -27,7 +27,6 @@ export type CustomerOrder = {
   }[];
   customer?: { name?: string; phone?: string; address?: string; note?: string };
 };
-type PaymentUpdate = { status: string; paymentStatus: string };
 const money = (value: number) => `${value.toLocaleString("vi-VN")} ₫`;
 
 export default function OrderDetailsDialog({
@@ -42,15 +41,10 @@ export default function OrderDetailsDialog({
   onPaymentUpdate: (id: string, update: PaymentUpdate) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [error, setError] = useState("");
-  const [retry, setRetry] = useState(0);
+  const { waiting, error, retry } = useOrderPayment(order, onPaymentUpdate);
   const paid = order.paymentStatus === "PAID";
   const cancelled = order.status === "cancelled";
   const needsReview = order.paymentStatus === "MISMATCH";
-  const waiting =
-    order.paymentMethod === "BANK_QR" &&
-    order.status === "pending_payment" &&
-    ["PENDING", "UNPAID", undefined].includes(order.paymentStatus);
   const code = order.orderCode || `#${order._id.slice(-8).toUpperCase()}`;
 
   useEffect(() => {
@@ -67,50 +61,14 @@ export default function OrderDetailsDialog({
     };
   }, []);
 
-  useEffect(() => {
-    if (!waiting) return;
-    const controller = new AbortController();
-    let timer: ReturnType<typeof setTimeout>;
-    async function syncPayment() {
-      try {
-        const result: PaymentUpdate = await request(
-          `/payments/order/${encodeURIComponent(order._id)}`,
-          { signal: controller.signal },
-        );
-        if (controller.signal.aborted) return;
-        setError("");
-        onPaymentUpdate(order._id, result);
-        if (result.paymentStatus === "PAID")
-          notify("Đã xác nhận thanh toán đơn hàng.");
-        else if (
-          result.status === "pending_payment" &&
-          ["PENDING", "UNPAID"].includes(result.paymentStatus)
-        )
-          timer = setTimeout(() => void syncPayment(), 5000);
-      } catch (e) {
-        if (!controller.signal.aborted)
-          setError(
-            e instanceof Error
-              ? e.message
-              : "Chưa cập nhật được trạng thái thanh toán.",
-          );
-      }
-    }
-    void syncPayment();
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
-  }, [order._id, waiting, retry, onPaymentUpdate]);
-
-  const paymentLabel = paid
-    ? "Đã thanh toán"
-    : needsReview
-      ? "Cần đối soát giao dịch"
-      : order.paymentStatus === "REFUNDED"
-        ? "Đã hoàn tiền"
-        : cancelled
-          ? "Đơn hàng đã hủy"
+  const paymentLabel = cancelled
+    ? "Đơn hàng đã hủy"
+    : paid
+      ? "Đã thanh toán"
+      : needsReview
+        ? "Cần đối soát giao dịch"
+        : order.paymentStatus === "REFUNDED"
+          ? "Đã hoàn tiền"
           : waiting
             ? "Đang chờ xác nhận thanh toán"
             : "Chưa thanh toán";
@@ -155,10 +113,10 @@ export default function OrderDetailsDialog({
         </button>
       </div>
       <div
-        className={`order-payment-state ${paid ? "paid" : ""}`}
+        className={`order-payment-state ${paid && !cancelled ? "paid" : ""}`}
         role="status"
       >
-        {paid ? <CheckCircle2 size={20} /> : <Clock3 size={20} />}
+        {paid && !cancelled ? <CheckCircle2 size={20} /> : <Clock3 size={20} />}
         <div>
           <strong>{paymentLabel}</strong>
           {waiting && (
@@ -168,23 +126,21 @@ export default function OrderDetailsDialog({
                 : "Trạng thái sẽ tự cập nhật khi MIRA xác nhận giao dịch."}
             </p>
           )}
-          {needsReview && (
+          {needsReview && !cancelled && (
             <p>Vui lòng liên hệ MIRA để đối soát trước khi chuyển thêm tiền.</p>
           )}
-          {cancelled && <p>Vui lòng không chuyển khoản cho đơn hàng này.</p>}
+          {cancelled && (
+            <OrderCancellationNotice
+              paymentMethod={order.paymentMethod}
+              paymentStatus={order.paymentStatus}
+            />
+          )}
         </div>
       </div>
       {error && waiting && (
         <div className="form-error" role="alert">
           {error}
-          <button
-            type="button"
-            className="ui-secondary"
-            onClick={() => {
-              setError("");
-              setRetry((value) => value + 1);
-            }}
-          >
+          <button type="button" className="ui-secondary" onClick={retry}>
             Thử lại kết nối
           </button>
         </div>

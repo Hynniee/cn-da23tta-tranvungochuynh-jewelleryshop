@@ -9,6 +9,8 @@ import {
 } from "react-router-dom";
 import { request, token } from "../lib/api";
 import AccountGuest from "../components/AccountGuest";
+import AddressBook from "../components/AddressBook";
+import WishlistProducts from "../components/WishlistProducts";
 import { notify } from "../lib/notifications";
 import OrderDetailsDialog, {
   CustomerOrder,
@@ -273,15 +275,6 @@ export default function Account() {
                     <input value="••••••••••" disabled />
                   </div>
                 </label>
-                <label>
-                  <span>ĐỊA CHỈ GIAO HÀNG</span>
-                  <input
-                    value={form.address || ""}
-                    onChange={(e) =>
-                      setForm({ ...form, address: e.target.value })
-                    }
-                  />
-                </label>
                 <footer>
                   <span>{message}</span>
                   <button type="submit">LƯU THAY ĐỔI</button>
@@ -318,58 +311,91 @@ export default function Account() {
                   <Link to="/shop">KHÁM PHÁ BỘ SƯU TẬP</Link>
                 </div>
               ) : (
-                <div className="account-orders">
-                  {orders.map((o) => (
-                    <article key={o._id}>
-                      <div>
-                        <small>MÃ ĐƠN HÀNG</small>
-                        <b>
-                          {o.orderCode || `#${o._id.slice(-8).toUpperCase()}`}
-                        </b>
-                      </div>
-                      <div>
-                        <small>NGÀY ĐẶT</small>
-                        <span>
-                          {new Date(o.createdAt).toLocaleDateString("vi-VN")}
-                        </span>
-                      </div>
-                      <div>
-                        <small>TRẠNG THÁI</small>
-                        {["pending", "pending_payment"].includes(o.status) && (
-                          <button
-                            className="cancel-order"
-                            disabled={busyOrder !== null}
-                            onClick={() => cancelOrder(o._id)}
-                          >
-                            {busyOrder === o._id ? "Đang hủy..." : "Hủy đơn"}
-                          </button>
-                        )}
-                        <span className="account-status">
-                          {orderLabels[o.status] || o.status}
-                        </span>
-                        {o.status === "pending_payment" && (
-                          <Link
-                            to={`/checkout?order=${encodeURIComponent(o._id)}`}
-                          >
-                            Thanh toán chuyển khoản
-                          </Link>
-                        )}
-                      </div>
-                      <div>
-                        <small>TỔNG TIỀN</small>
-                        <strong>{o.total.toLocaleString("vi-VN")} ₫</strong>
-                        <button
-                          type="button"
-                          className="order-details-button"
-                          onClick={() =>
-                            setParams({ tab: "orders", order: o._id })
-                          }
-                        >
-                          Xem chi tiết
-                        </button>
-                      </div>
-                    </article>
-                  ))}
+                <div
+                  className="account-orders"
+                  tabIndex={0}
+                  aria-label="Danh sách đơn hàng"
+                >
+                  <p className="account-orders-hint">
+                    Vuốt ngang để xem đầy đủ thông tin và thao tác.
+                  </p>
+                  <table className="account-orders-table">
+                    <colgroup>
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th>Mã đơn hàng</th>
+                        <th>Ngày đặt</th>
+                        <th>Trạng thái</th>
+                        <th>Tổng tiền</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((o) => (
+                        <tr key={o._id}>
+                          <td>
+                            <b>
+                              {o.orderCode ||
+                                `#${o._id.slice(-8).toUpperCase()}`}
+                            </b>
+                          </td>
+                          <td>
+                            {new Date(o.createdAt).toLocaleDateString("vi-VN")}
+                          </td>
+                          <td>
+                            <span
+                              className={`account-status order-status-${o.status}`}
+                            >
+                              {orderLabels[o.status] || o.status}
+                            </span>
+                          </td>
+                          <td className="order-total-cell">
+                            <strong>{o.total.toLocaleString("vi-VN")} ₫</strong>
+                          </td>
+                          <td>
+                            <div className="account-order-actions">
+                              <button
+                                type="button"
+                                className="order-details-button"
+                                onClick={() =>
+                                  setParams({ tab: "orders", order: o._id })
+                                }
+                              >
+                                Xem chi tiết
+                              </button>
+                              {["pending", "pending_payment"].includes(
+                                o.status,
+                              ) && (
+                                <button
+                                  type="button"
+                                  className="cancel-order"
+                                  disabled={busyOrder !== null}
+                                  onClick={() => cancelOrder(o._id)}
+                                >
+                                  {busyOrder === o._id
+                                    ? "Đang hủy…"
+                                    : "Hủy đơn"}
+                                </button>
+                              )}
+                              {o.status === "pending_payment" && (
+                                <Link
+                                  to={`/checkout?order=${encodeURIComponent(o._id)}`}
+                                >
+                                  Thanh toán chuyển khoản
+                                </Link>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
               {!ordersLoading &&
@@ -384,26 +410,11 @@ export default function Account() {
           )}
 
           {tab === "address" && (
-            <div className="account-card">
-              <header>
-                <div>
-                  <p>GIAO HÀNG</p>
-                  <h2>Sổ Địa Chỉ</h2>
-                </div>
-                <button onClick={() => setTab("profile")}>
-                  CẬP NHẬT ĐỊA CHỈ
-                </button>
-              </header>
-              <div className="account-addresses">
-                <article>
-                  <b>MẶC ĐỊNH</b>
-                  <h3>{user.name}</h3>
-                  <p>{form.phone || "Chưa cập nhật số điện thoại"}</p>
-                  <p>{user.address || "Chưa cập nhật địa chỉ giao hàng."}</p>
-                  <button onClick={() => setTab("profile")}>Chỉnh sửa</button>
-                </article>
-              </div>
-            </div>
+            <AddressBook
+              name={user.name}
+              phone={user.phone}
+              legacyAddress={user.address}
+            />
           )}
 
           {tab === "wishlist" && (
@@ -414,11 +425,7 @@ export default function Account() {
                   <h2>Danh Sách Yêu Thích</h2>
                 </div>
               </header>
-              <div className="account-empty">
-                <h3>Lưu lại thiết kế bạn yêu thích</h3>
-                <p>Các sản phẩm được đánh dấu trái tim sẽ xuất hiện tại đây.</p>
-                <Link to="/wishlist">XEM DANH SÁCH YÊU THÍCH</Link>
-              </div>
+              <WishlistProducts />
             </div>
           )}
 

@@ -18,6 +18,7 @@ npm test
 - `product-upload.test.mjs`, `database-errors.test.mjs`: tải ảnh quản trị và xử lý lỗi MongoDB; chạy `npm run test:uploads`, `npm run test:db-errors` sau build.
 - `ui-regressions.mjs`: tìm kiếm, menu mobile, trạng thái tải/lỗi và đăng nhập; chạy `npm run test:ui` khi web dev đang chạy.
 - `checkout-ui.test.mjs`: QR ở 320/390/768/1440 px, sao chép, lỗi ảnh/thử lại, trạng thái thanh toán, Mua ngay và 18 màn hình desktop/mobile. Chạy `npm run test:checkout-ui` khi web dev đang chạy; toàn bộ API và ảnh QR được mô phỏng trong trình duyệt, không gửi giao dịch thật. Có thể đặt `UI_TEST_URL` nếu web dùng cổng khác.
+- `account-checkout.test.mjs`: CRUD địa chỉ, mặc định/giới hạn khi lưu đồng thời, phân quyền, bản địa chỉ trong đơn hàng, thanh toán bằng địa chỉ đã lưu/nhập mới, trang cảm ơn và bảng đơn hàng trên desktop/mobile. Chạy `npm run test:account-checkout` sau build khi web dev đang chạy. MongoDB tạm và API kiểm thử riêng, không ghi Atlas.
 - `results/`: ảnh và `summary.json` được tạo khi chạy, không đưa vào Git.
 
 Điều kiện chạy và dữ liệu tái lập: [setup/README.md](../../setup/README.md), [demo-data](../../setup/demo-data/README.md).

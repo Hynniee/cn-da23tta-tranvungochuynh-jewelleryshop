@@ -5,12 +5,36 @@ import { randomUUID } from "node:crypto";
 import { shippingAddress } from "../services/shipping-address.service.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import User from "../models/User.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { audit } from "../services/audit.service.js";
 import { quoteOrder, PromotionError } from "../services/promotion.service.js";
 
 export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
-  const { items, customer, paymentMethod } = req.body;
+  const { items, paymentMethod, addressId } = req.body;
+  let customer = req.body.customer;
+  if (addressId != null) {
+    if (typeof addressId !== "string" || !addressId || addressId.length > 100)
+      return res.status(400).json({ message: "Địa chỉ đã lưu không hợp lệ." });
+    const user = await User.findById(req.user!.id)
+      .select("addresses")
+      .read("primary")
+      .lean();
+    const saved = user?.addresses?.find((a) => a._id === addressId);
+    if (!saved)
+      return res.status(404).json({
+        message:
+          "Địa chỉ đã lưu không còn tồn tại. Vui lòng chọn lại hoặc nhập địa chỉ mới.",
+      });
+    customer = {
+      ...customer,
+      name: saved.name,
+      phone: saved.phone,
+      provinceCode: saved.provinceCode,
+      wardCode: saved.wardCode,
+      addressLine: saved.addressLine,
+    };
+  }
   if (
     !Array.isArray(items) ||
     !items.length ||
@@ -112,6 +136,15 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
       return res.status(409).json({ message: error.message });
     throw error;
   }
+};
+
+export const getMyOrder: RequestHandler = async (req: AuthRequest, res) => {
+  const order = await Order.findOne({ _id: req.params.id, user: req.user!.id });
+  if (!order)
+    return res
+      .status(404)
+      .json({ message: "Không tìm thấy đơn hàng trong tài khoản của bạn." });
+  res.json(order);
 };
 
 export const listMyOrders: RequestHandler = async (req: AuthRequest, res) =>
