@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { request } from "../lib/api";
 import { freeShippingFrom } from "../lib/commerce";
 import { addCart } from "../store/cart";
+import { BUY_NOW_CHECKOUT, saveBuyNow } from "../store/buy-now";
 import { notify } from "../lib/notifications";
 
 type Product = {
@@ -114,7 +115,7 @@ export default function ProductDetail() {
     .slice(0, 4);
   function add(buyNow = false) {
     if (!product || soldOut) return;
-    const added = addCart({
+    const selection = {
       _id: product._id,
       slug: product.slug,
       name: product.name,
@@ -126,7 +127,20 @@ export default function ProductDetail() {
       stone: product.stone,
       engraving: product.engravingAllowed ? engraving.trim() : "",
       stock: product.stock,
-    });
+    };
+    if (buyNow) {
+      try {
+        saveBuyNow(selection);
+        navigate(BUY_NOW_CHECKOUT);
+      } catch {
+        notify(
+          "Chưa thể bắt đầu mua ngay. Vui lòng cho phép lưu dữ liệu trên trình duyệt rồi thử lại.",
+          "info",
+        );
+      }
+      return;
+    }
+    const added = addCart(selection);
     if (!added) {
       notify("Số lượng trong giỏ đã đạt tồn kho hiện tại.", "info");
       return;
@@ -137,7 +151,6 @@ export default function ProductDetail() {
         method: "POST",
         body: JSON.stringify({ type: "ADD_CART", product: product._id }),
       }).catch(() => undefined);
-    if (buyNow) navigate("/checkout");
   }
   return (
     <main className="pd-page">

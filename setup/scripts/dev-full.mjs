@@ -82,7 +82,7 @@ try {
     CLIENT_URL: `http://localhost:${webPort},http://127.0.0.1:${webPort}`,
   };
   const api = start(
-    ["--import", "tsx", "src/index.ts"],
+    [path.join(root, "node_modules/tsx/dist/cli.mjs"), "watch", "src/index.ts"],
     path.join(root, "scr/server"),
     env,
   );

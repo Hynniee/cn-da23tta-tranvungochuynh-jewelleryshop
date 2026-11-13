@@ -16,13 +16,22 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
     !items.length ||
     items.length > 100 ||
     !["COD", "BANK_QR"].includes(paymentMethod) ||
-    !customer ||
-    !["name", "phone", "email"].every(
-      (key) => typeof customer[key] === "string" && customer[key].trim(),
-    )
+    !customer
   ) {
     return res.status(400).json({ message: "Thông tin đơn hàng không hợp lệ" });
   }
+  if (typeof customer.name !== "string" || !customer.name.trim())
+    return res
+      .status(400)
+      .json({ message: "Vui lòng nhập họ tên người nhận." });
+  if (typeof customer.phone !== "string" || !customer.phone.trim())
+    return res
+      .status(400)
+      .json({ message: "Vui lòng nhập số điện thoại người nhận." });
+  if (customer.email != null && typeof customer.email !== "string")
+    return res
+      .status(400)
+      .json({ message: "Email không hợp lệ. Bạn có thể để trống trường này." });
   const deliveryAddress = shippingAddress(customer);
   if (paymentMethod === "BANK_QR" && !bankTransferAvailable())
     return res.status(503).json({
@@ -77,7 +86,7 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
       customer: {
         name: customer.name.trim(),
         phone: customer.phone.trim(),
-        email: customer.email.trim(),
+        email: typeof customer.email === "string" ? customer.email.trim() : "",
         ...deliveryAddress,
         note: String(customer.note || "").slice(0, 1000),
       },

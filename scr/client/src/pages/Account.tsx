@@ -1,10 +1,18 @@
 import { orderLabels } from "../lib/commerce";
 import { readStoredObject } from "../lib/storage";
-import { FormEvent, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { request, token } from "../lib/api";
 import AccountGuest from "../components/AccountGuest";
 import { notify } from "../lib/notifications";
+import OrderDetailsDialog, {
+  CustomerOrder,
+} from "../components/OrderDetailsDialog";
 
 type User = {
   _id?: string;
@@ -17,20 +25,43 @@ type User = {
   gender?: string;
   role?: string;
 };
-type Order = {
-  orderCode?: string;
-  _id: string;
-  createdAt: string;
-  status: string;
-  total: number;
-};
+type AccountTab = "profile" | "orders" | "address" | "wishlist";
 
 export default function Account() {
   const nav = useNavigate();
-  const [tab, setTab] = useState<"profile" | "orders" | "address" | "wishlist">(
-    "profile",
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
+  const selectedOrderId = params.get("order");
+  const requestedTab = params.get("tab");
+  const tab = selectedOrderId
+    ? "orders"
+    : ["orders", "address", "wishlist"].includes(requestedTab || "")
+      ? requestedTab
+      : "profile";
+  function setTab(value: AccountTab) {
+    setParams({ tab: value });
+  }
+  function closeOrder() {
+    const next = new URLSearchParams(params);
+    next.delete("order");
+    next.set("tab", "orders");
+    setParams(next, { replace: true });
+  }
+  const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
+  const [ordersRetry, setOrdersRetry] = useState(0);
+  const selectedOrder = orders.find((order) => order._id === selectedOrderId);
+  const updatePayment = useCallback(
+    (id: string, update: { status: string; paymentStatus: string }) => {
+      setOrders((current) =>
+        current.map((order) =>
+          order._id === id ? { ...order, ...update } : order,
+        ),
+      );
+    },
+    [],
   );
-  const [orders, setOrders] = useState<Order[]>([]);
   const [user, setUser] = useState<User>(() =>
     readStoredObject<User>("mira_user", { name: "", email: "" }),
   );
@@ -60,10 +91,25 @@ export default function Account() {
         localStorage.setItem("mira_user", JSON.stringify(u));
       })
       .catch((e) => setMessage(e.message));
-    request("/orders/mine")
-      .then(setOrders)
-      .catch((e) => setMessage(e.message));
   }, []);
+
+  useEffect(() => {
+    if (!token()) return;
+    const controller = new AbortController();
+    setOrdersLoading(true);
+    setOrdersError("");
+    request("/orders/mine", { signal: controller.signal })
+      .then((result: CustomerOrder[]) => {
+        if (!controller.signal.aborted) setOrders(result);
+      })
+      .catch((e) => {
+        if (!controller.signal.aborted) setOrdersError(e.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setOrdersLoading(false);
+      });
+    return () => controller.abort();
+  }, [ordersRetry]);
 
   if (!token()) return <AccountGuest />;
 
@@ -252,7 +298,20 @@ export default function Account() {
                   <h2>Đơn Hàng Của Tôi</h2>
                 </div>
               </header>
-              {!orders.length ? (
+              {ordersLoading ? (
+                <p role="status">Đang tải đơn hàng…</p>
+              ) : ordersError ? (
+                <div className="account-empty" role="alert">
+                  <p>{ordersError}</p>
+                  <button
+                    type="button"
+                    className="ui-secondary"
+                    onClick={() => setOrdersRetry((value) => value + 1)}
+                  >
+                    Tải lại đơn hàng
+                  </button>
+                </div>
+              ) : !orders.length ? (
                 <div className="account-empty">
                   <h3>Chưa có đơn hàng nào</h3>
                   <p>Khám phá những thiết kế Fine Jewelry của MIRA.</p>
@@ -289,7 +348,9 @@ export default function Account() {
                           {orderLabels[o.status] || o.status}
                         </span>
                         {o.status === "pending_payment" && (
-                          <Link to={`/checkout?order=${o._id}`}>
+                          <Link
+                            to={`/checkout?order=${encodeURIComponent(o._id)}`}
+                          >
                             Thanh toán chuyển khoản
                           </Link>
                         )}
@@ -297,11 +358,28 @@ export default function Account() {
                       <div>
                         <small>TỔNG TIỀN</small>
                         <strong>{o.total.toLocaleString("vi-VN")} ₫</strong>
+                        <button
+                          type="button"
+                          className="order-details-button"
+                          onClick={() =>
+                            setParams({ tab: "orders", order: o._id })
+                          }
+                        >
+                          Xem chi tiết
+                        </button>
                       </div>
                     </article>
                   ))}
                 </div>
               )}
+              {!ordersLoading &&
+                !ordersError &&
+                selectedOrderId &&
+                !selectedOrder && (
+                  <p role="alert">
+                    Không tìm thấy đơn hàng này trong tài khoản của bạn.
+                  </p>
+                )}
             </div>
           )}
 
@@ -363,6 +441,17 @@ export default function Account() {
           </div>
         </section>
       </div>
+      {tab === "orders" && selectedOrder && (
+        <OrderDetailsDialog
+          key={selectedOrder._id}
+          order={selectedOrder}
+          transferSubmitted={
+            location.state?.transferSubmitted === selectedOrder._id
+          }
+          onClose={closeOrder}
+          onPaymentUpdate={updatePayment}
+        />
+      )}
     </main>
   );
 }

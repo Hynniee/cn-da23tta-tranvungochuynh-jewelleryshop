@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { addCart } from "../store/cart";
+import { BUY_NOW_CHECKOUT, saveBuyNow } from "../store/buy-now";
 import { notify } from "../lib/notifications";
 
 type BuyProduct = {
@@ -36,8 +36,8 @@ export default function ProductBuyButton({ product }: { product: BuyProduct }) {
       </Link>
     );
   function buy() {
-    if (
-      !addCart({
+    try {
+      saveBuyNow({
         _id: product._id,
         slug: product.slug,
         name: product.name,
@@ -48,13 +48,14 @@ export default function ProductBuyButton({ product }: { product: BuyProduct }) {
         material: product.material,
         stone: product.stone,
         stock: product.stock,
-      })
-    ) {
-      notify("Số lượng trong giỏ đã đạt tồn kho hiện tại.", "info");
-      return;
+      });
+      navigate(BUY_NOW_CHECKOUT);
+    } catch {
+      notify(
+        "Chưa thể bắt đầu mua ngay. Vui lòng cho phép lưu dữ liệu trên trình duyệt rồi thử lại.",
+        "info",
+      );
     }
-    notify("Đã thêm sản phẩm vào giỏ hàng.");
-    navigate("/checkout");
   }
   return (
     <button

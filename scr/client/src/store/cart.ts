@@ -60,7 +60,8 @@ export function addCart(item: CartItem) {
   return true;
 }
 
-export function reconcileCart(
+export function reconcileItems(
+  selectedItems: CartItem[],
   products: {
     _id: string;
     slug?: string;
@@ -74,7 +75,7 @@ export function reconcileCart(
     sizes?: string[];
   }[],
 ): CartItem[] {
-  const items = getCart().map((item) => {
+  return selectedItems.map((item) => {
     const product = products.find(
       (p) =>
         p._id === item._id ||
@@ -93,6 +94,11 @@ export function reconcileCart(
       image: product.images?.[0] || item.image,
     };
   });
+}
+export function reconcileCart(
+  products: Parameters<typeof reconcileItems>[1],
+): CartItem[] {
+  const items = reconcileItems(getCart(), products);
   saveCart(items);
   return items;
 }

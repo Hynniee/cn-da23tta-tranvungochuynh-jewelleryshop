@@ -339,10 +339,14 @@ try {
   );
   const order = await api("/orders", {
     method: "POST",
-    body,
+    body: { ...body, customer: { ...customer, email: "   " } },
     token,
     status: 201,
   });
+  check(
+    order.customer.email === "",
+    "COD order accepts a blank optional email",
+  );
   check(
     order.customer.address === customer.address &&
       order.customer.provinceCode === "79" &&
@@ -412,10 +416,15 @@ try {
   });
   const qrOrder = await api("/orders", {
     method: "POST",
-    body: { ...body, paymentMethod: "BANK_QR" },
+    body: {
+      ...body,
+      customer: { ...customer, email: undefined },
+      paymentMethod: "BANK_QR",
+    },
     token,
     status: 201,
   });
+  check(qrOrder.customer.email === "", "QR order accepts an omitted email");
   const payment = await api("/payments/create/" + qrOrder._id, {
     method: "POST",
     token,
@@ -747,13 +756,19 @@ try {
     ).includes("Be Vietnam Pro"),
     "product title uses the shared Vietnamese font",
   );
+  const cartBeforeBuyNow = await page.evaluate(() =>
+    localStorage.getItem("mira_cart"),
+  );
   await page.locator(".pd-engraving input").fill("Browser test");
   await page.getByRole("button", { name: "MUA NGAY", exact: true }).click();
-  await expect(page).toHaveURL(/\/checkout$/);
-  await page.goto("http://127.0.0.1:5187/cart");
+  await expect(page).toHaveURL(/\/checkout\?buyNow=1$/);
   check(
-    (await page.getByText("Browser test", { exact: false }).count()) > 0,
-    "browser product selection reaches cart",
+    (await page.evaluate(
+      () => JSON.parse(sessionStorage.getItem("mira_buy_now")).engraving,
+    )) === "Browser test" &&
+      (await page.evaluate(() => localStorage.getItem("mira_cart"))) ===
+        cartBeforeBuyNow,
+    "buy now preserves engraving without adding to cart",
   );
   await page.evaluate(
     ({ token, user }) => {
@@ -762,10 +777,14 @@ try {
     },
     { token, user: login.user },
   );
-  await page.goto("http://127.0.0.1:5187/checkout");
+  await page.goto("http://127.0.0.1:5187/checkout?buyNow=1");
   await page.getByLabel("HỌ VÀ TÊN", { exact: true }).fill(customer.name);
   await page.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill(customer.phone);
-  await page.getByLabel("EMAIL", { exact: true }).fill(customer.email);
+  const checkoutEmail = page.getByLabel("EMAIL (KHÔNG BẮT BUỘC)", {
+    exact: true,
+  });
+  await expect(checkoutEmail).not.toHaveAttribute("required");
+  await checkoutEmail.fill("");
   const provinceSelect = page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true });
   const wardSelect = page.getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true });
   await expect(provinceSelect.locator("option")).toHaveCount(35);
@@ -836,24 +855,26 @@ try {
     "pearl earrings show silver material and no ring engraving",
   );
   await page.getByRole("button", { name: "MUA NGAY", exact: true }).click();
-  await expect(page).toHaveURL(/\/checkout$/);
+  await expect(page).toHaveURL(/\/checkout\?buyNow=1$/);
   await page.evaluate(() => {
     localStorage.removeItem("mira_token");
     localStorage.removeItem("mira_user");
   });
-  await page.goto("http://127.0.0.1:5187/checkout");
+  await page.goto("http://127.0.0.1:5187/checkout?buyNow=1");
   await page.getByRole("link", { name: "ĐĂNG NHẬP", exact: true }).click();
   await page.locator(".auth-form input[type=email]").fill("other@example.com");
   await page
     .locator(".auth-form input[type=password]")
     .fill(credentials.password);
   await page.getByRole("button", { name: "ĐĂNG NHẬP", exact: true }).click();
-  await page.waitForURL("**/checkout");
+  await page.waitForURL("**/checkout?buyNow=1");
   await expect(page.locator(".checkout-mini")).toHaveCount(1);
   check(true, "login returns to checkout with pearl item preserved");
   await page.getByLabel("HỌ VÀ TÊN", { exact: true }).fill(customer.name);
   await page.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill(customer.phone);
-  await page.getByLabel("EMAIL", { exact: true }).fill(customer.email);
+  await page
+    .getByLabel("EMAIL (KHÔNG BẮT BUỘC)", { exact: true })
+    .fill(customer.email);
   await page
     .getByLabel("TỈNH / THÀNH PHỐ", { exact: true })
     .selectOption(customer.provinceCode);

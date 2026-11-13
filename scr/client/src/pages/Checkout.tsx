@@ -6,7 +6,14 @@ import ShippingAddressFields, {
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Check, CreditCard, LockKeyhole, Truck } from "lucide-react";
-import { getCart, saveCart, reconcileCart, cartHasStock } from "../store/cart";
+import {
+  getCart,
+  saveCart,
+  reconcileCart,
+  reconcileItems,
+  cartHasStock,
+} from "../store/cart";
+import { BUY_NOW_CHECKOUT, clearBuyNow, getBuyNow } from "../store/buy-now";
 import { request, token } from "../lib/api";
 import usePromotionQuote from "../controllers/usePromotionQuote";
 import VoucherField from "../components/VoucherField";
@@ -20,11 +27,12 @@ const money = (value: number) => `${value.toLocaleString("vi-VN")}₫`;
 export default function Checkout() {
   const [params] = useSearchParams();
   const orderId = params.get("order");
+  const buyNow = params.get("buyNow") === "1" && !orderId;
   const [loadingPayment, setLoadingPayment] = useState(Boolean(orderId));
-  const [cart, setCart] = useState(getCart);
-  const promotion = usePromotionQuote(cart, !orderId);
+  const [cart, setCart] = useState(() => (buyNow ? getBuyNow() : getCart()));
   const [checkingCart, setCheckingCart] = useState(!orderId);
   const [cartReady, setCartReady] = useState(false);
+  const promotion = usePromotionQuote(cart, !orderId && cartReady);
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
@@ -72,10 +80,18 @@ export default function Checkout() {
   useEffect(() => {
     if (orderId) return;
     let active = true;
+    setCart(buyNow ? getBuyNow() : getCart());
+    setCartReady(false);
+    setCheckingCart(true);
+    setError("");
     request("/products")
       .then((products) => {
         if (active) {
-          setCart(reconcileCart(products));
+          setCart(
+            buyNow
+              ? reconcileItems(getBuyNow(), products)
+              : reconcileCart(products),
+          );
           setCartReady(true);
         }
       })
@@ -89,7 +105,7 @@ export default function Checkout() {
     return () => {
       active = false;
     };
-  }, [orderId]);
+  }, [orderId, buyNow]);
   useEffect(() => {
     if (!orderId || !token()) return;
     let active = true;
@@ -119,7 +135,7 @@ export default function Checkout() {
         <h2>Đăng nhập để tiếp tục thanh toán</h2>
         <Link
           className="gold-btn"
-          to={`/login?next=${encodeURIComponent(orderId ? `/checkout?order=${orderId}` : "/checkout")}`}
+          to={`/login?next=${encodeURIComponent(orderId ? `/checkout?order=${encodeURIComponent(orderId)}` : buyNow ? BUY_NOW_CHECKOUT : "/checkout")}`}
         >
           ĐĂNG NHẬP
         </Link>
@@ -139,6 +155,10 @@ export default function Checkout() {
       !cartHasStock(cart)
     )
       return;
+    if (!form.name.trim() || !form.phone.trim()) {
+      setError("Vui lòng nhập họ tên và số điện thoại người nhận.");
+      return;
+    }
     if (
       !delivery.provinceCode ||
       !delivery.wardCode ||
@@ -173,7 +193,8 @@ export default function Checkout() {
           quotedTotal: promotion.quote.total,
         }),
       });
-      saveCart([]);
+      if (buyNow) clearBuyNow();
+      else saveCart([]);
       try {
         sessionStorage.removeItem("mira_voucher");
       } catch {
@@ -220,7 +241,7 @@ export default function Checkout() {
   if (!cart.length)
     return (
       <section className="lux-empty">
-        <h2>Giỏ hàng đang trống</h2>
+        <h2>{buyNow ? "Chưa có sản phẩm mua ngay" : "Giỏ hàng đang trống"}</h2>
         <Link to="/shop">Khám phá bộ sưu tập</Link>
       </section>
     );
@@ -268,9 +289,8 @@ export default function Checkout() {
             </label>
           </div>
           <label>
-            EMAIL
+            EMAIL (KHÔNG BẮT BUỘC)
             <input
-              required
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}

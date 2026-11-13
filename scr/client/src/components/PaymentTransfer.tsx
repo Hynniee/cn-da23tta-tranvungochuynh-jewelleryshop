@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -9,7 +9,6 @@ import {
   RefreshCw,
   ShieldCheck,
 } from "lucide-react";
-import { request } from "../lib/api";
 import { notify } from "../lib/notifications";
 
 export type TransferDetails = {
@@ -29,15 +28,14 @@ export default function PaymentTransfer({
 }: {
   details: TransferDetails;
 }) {
+  const navigate = useNavigate();
   const [imageState, setImageState] = useState<"loading" | "ready" | "error">(
     "loading",
   );
   const [imageRevision, setImageRevision] = useState(0);
-  const [checking, setChecking] = useState(false);
-  const [error, setError] = useState("");
-  const [status, setStatus] = useState(details.payment?.status || "PENDING");
-  const [cancelled, setCancelled] = useState(false);
+  const status = details.payment?.status || "PENDING";
   const paid = status === "PAID";
+  const needsReview = status === "MISMATCH";
   const code = details.payment?.orderCode || details.transferContent;
   async function copy(value: string) {
     try {
@@ -50,31 +48,13 @@ export default function PaymentTransfer({
       );
     }
   }
-  async function refresh() {
-    if (checking) return;
-    setChecking(true);
-    setError("");
-    try {
-      const result = await request(
-        `/payments/order/${encodeURIComponent(details.orderId)}`,
-      );
-      setStatus(result.paymentStatus);
-      setCancelled(result.status === "cancelled");
-      notify(
-        result.paymentStatus === "PAID"
-          ? "Đã xác nhận thanh toán đơn hàng."
-          : "Đã cập nhật trạng thái đơn hàng.",
-        result.paymentStatus === "PAID" ? "success" : "info",
-      );
-    } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Chưa kiểm tra được thanh toán. Vui lòng thử lại.",
-      );
-    } finally {
-      setChecking(false);
-    }
+  function confirmTransfer() {
+    navigate(
+      `/account?tab=orders&order=${encodeURIComponent(details.orderId)}`,
+      {
+        state: { transferSubmitted: details.orderId },
+      },
+    );
   }
   const fields: [string, string | undefined][] = [
     ["Ngân hàng", details.bankName],
@@ -89,18 +69,10 @@ export default function PaymentTransfer({
       </Link>
       <div className="transfer-heading">
         <span className="page-kicker">MIRA SECURE PAYMENT</span>
-        <h1>
-          {paid
-            ? "Thanh toán thành công"
-            : cancelled
-              ? "Đơn hàng đã hủy"
-              : "Hoàn tất thanh toán"}
-        </h1>
+        <h1>{paid ? "Thanh toán thành công" : "Hoàn tất thanh toán"}</h1>
         <p>
           Đơn hàng <strong>{code}</strong>
-          {!paid &&
-            !cancelled &&
-            " · Quét QR hoặc chuyển khoản theo thông tin bên dưới."}
+          {!paid && " · Quét QR hoặc chuyển khoản theo thông tin bên dưới."}
         </p>
       </div>
       <section className="transfer-card" aria-label="Thông tin chuyển khoản">
@@ -112,24 +84,17 @@ export default function PaymentTransfer({
             {paid ? <CheckCircle2 size={16} /> : <Clock3 size={16} />}
             {paid
               ? "Đã thanh toán"
-              : cancelled
-                ? "Đã hủy"
-                : status === "MISMATCH"
-                  ? "Cần đối soát giao dịch"
-                  : "Chờ thanh toán"}
+              : status === "MISMATCH"
+                ? "Cần đối soát giao dịch"
+                : "Chờ thanh toán"}
           </span>
-          {paid || cancelled ? (
+          {paid ? (
             <div className="transfer-complete">
               <CheckCircle2 size={64} />
-              <h2>
-                {paid
-                  ? "MIRA đã nhận thanh toán"
-                  : "Đơn hàng không còn chờ thanh toán"}
-              </h2>
+              <h2>MIRA đã nhận thanh toán</h2>
               <p>
-                {paid
-                  ? "Bạn có thể theo dõi tiến độ chuẩn bị và giao hàng trong tài khoản."
-                  : "Vui lòng không chuyển khoản cho đơn hàng này."}
+                Bạn có thể theo dõi tiến độ chuẩn bị và giao hàng trong tài
+                khoản.
               </p>
             </div>
           ) : (
@@ -207,11 +172,11 @@ export default function PaymentTransfer({
               </div>
             ))}
           </dl>
-          {!paid && !cancelled && (
+          {!paid && !needsReview && (
             <p className="transfer-note">
-              Vui lòng giữ nguyên số tiền và nội dung chuyển khoản để MIRA đối
-              chiếu đúng đơn hàng. Trạng thái được cập nhật sau khi giao dịch
-              được xác nhận.
+              Vui lòng chuyển đúng số tiền và nội dung. Sau khi chuyển khoản
+              thành công trên ứng dụng ngân hàng, chọn “Tôi đã chuyển khoản” để
+              mở chi tiết đơn hàng và theo dõi xác nhận thanh toán.
             </p>
           )}
           {status === "MISMATCH" && (
@@ -220,27 +185,20 @@ export default function PaymentTransfer({
               khi chuyển thêm tiền.
             </p>
           )}
-          {error && (
-            <p className="form-error" role="alert">
-              {error}
-            </p>
-          )}
           <div className="transfer-actions">
-            {!paid && !cancelled && (
+            {!paid && !needsReview && (
               <button
                 type="button"
                 className="ui-primary"
-                disabled={checking}
-                onClick={() => void refresh()}
+                onClick={confirmTransfer}
               >
-                <RefreshCw
-                  size={16}
-                  className={checking ? "is-spinning" : ""}
-                />{" "}
-                {checking ? "Đang kiểm tra…" : "Kiểm tra thanh toán"}
+                <CheckCircle2 size={16} /> Tôi đã chuyển khoản
               </button>
             )}
-            <Link className="ui-secondary" to="/account">
+            <Link
+              className="ui-secondary"
+              to={`/account?tab=orders&order=${encodeURIComponent(details.orderId)}`}
+            >
               Xem đơn hàng của tôi
             </Link>
           </div>
