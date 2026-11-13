@@ -708,6 +708,8 @@ try {
   await page
     .getByRole("heading", { name: "Nhẫn Celeste", exact: true })
     .waitFor();
+  // This heading can already exist before the filter update finishes rendering.
+  await expect(page.locator(".shop-card")).toHaveCount(1);
   check(
     (await page.locator(".shop-card").count()) === 1,
     "browser catalog search",

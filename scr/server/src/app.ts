@@ -14,6 +14,8 @@ import analyticsRoutes from "./routes/analytics.js";
 import auditRoutes from "./routes/audit.js";
 import assistantRoutes from "./routes/assistant.js";
 import appointmentRoutes from "./routes/appointments.js";
+import customerRoutes from "./routes/customers.js";
+import adminNotificationRoutes from "./routes/admin-notifications.js";
 import {
   requireDatabase,
   isDatabaseConnectionError,
@@ -67,6 +69,8 @@ app.use("/api/diamonds", requireDatabase, diamondRoutes);
 app.use("/api/advisor", advisorRoutes);
 app.use("/api/assistant", requireDatabase, assistantRoutes);
 app.use("/api/appointments", appointmentRoutes);
+app.use("/api/customers", customerRoutes);
+app.use("/api/admin/notifications", adminNotificationRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/audit", auditRoutes);

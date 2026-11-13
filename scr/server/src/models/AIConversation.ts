@@ -3,6 +3,7 @@ const schema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     message: String,
+    sessionId: { type: String, index: true },
     intent: { type: mongoose.Schema.Types.Mixed, default: {} },
     answer: String,
     recommendedProducts: [

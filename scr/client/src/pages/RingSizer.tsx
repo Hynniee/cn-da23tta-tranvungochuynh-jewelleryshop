@@ -159,20 +159,8 @@ export default function RingSizer() {
             Hình minh họa, không dùng kích thước trên màn hình để đo.
           </p>
           <details>
-            <summary>Bảng size tham khảo và nguồn</summary>
-            <p>
-              Đường kính đối chiếu theo{" "}
-              <a
-                href="https://trangsuc.doji.vn/pages/huong-dan-do-size-nhan"
-                target="_blank"
-                rel="noreferrer"
-              >
-                hướng dẫn đo nhẫn DOJI
-              </a>
-              . Đây là bảng tham khảo, không phải cam kết size của mọi sản phẩm
-              MIRA.
-            </p>
-            <table>
+            <summary>Bảng size tham khảo</summary>
+                    <table>
               <thead>
                 <tr>
                   <th>Size</th>

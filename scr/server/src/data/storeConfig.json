@@ -13,10 +13,11 @@
   "shippingFee": 30000,
   "freeShippingFrom": 2000000,
   "orderTransitions": {
-    "pending_payment": ["cancelled"],
+    "pending_payment": ["confirmed", "cancelled"],
     "pending": ["confirmed", "cancelled"],
-    "confirmed": ["shipping", "cancelled"],
-    "shipping": ["completed"],
+    "confirmed": ["shipping", "delivered", "completed", "cancelled"],
+    "shipping": ["delivered", "completed"],
+    "delivered": ["completed"],
     "completed": [],
     "cancelled": []
   },
@@ -25,6 +26,7 @@
     "pending": "Chờ xác nhận",
     "confirmed": "Đã xác nhận",
     "shipping": "Đang giao",
+    "delivered": "Đã giao",
     "completed": "Hoàn tất",
     "cancelled": "Đã hủy"
   }

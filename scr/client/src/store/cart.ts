@@ -1,3 +1,4 @@
+import { trackBehavior } from "../lib/behavior";
 export type CartItem = {
   _id: string;
   name: string;
@@ -57,6 +58,7 @@ export function addCart(item: CartItem) {
   if (index >= 0) cart[index].quantity += item.quantity;
   else cart.push(item);
   saveCart(cart);
+  trackBehavior("ADD_CART", { product: item._id });
   return true;
 }
 

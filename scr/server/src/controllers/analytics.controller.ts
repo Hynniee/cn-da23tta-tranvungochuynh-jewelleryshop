@@ -3,7 +3,7 @@ import Behavior from "../models/Behavior.js";
 import RecommendationLog from "../models/RecommendationLog.js";
 import AIConversation from "../models/AIConversation.js";
 import Order from "../models/Order.js";
-import Payment from "../models/Payment.js";
+import { unresolvedPaymentMismatches } from "../services/payment-status.service.js";
 
 export const getAnalytics: RequestHandler = async (_q, res) => {
   const [events, recs, ai, paid, mismatch] = await Promise.all([
@@ -11,7 +11,7 @@ export const getAnalytics: RequestHandler = async (_q, res) => {
     RecommendationLog.countDocuments(),
     AIConversation.countDocuments(),
     Order.countDocuments({ paymentStatus: "PAID" }),
-    Payment.countDocuments({ status: "MISMATCH" }),
+    unresolvedPaymentMismatches(),
   ]);
   const clicks = await RecommendationLog.countDocuments({
       clickedProduct: { $exists: true },

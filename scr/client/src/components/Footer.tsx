@@ -1,4 +1,4 @@
-import { Headphones, LockKeyhole, ShieldCheck, Gem } from "lucide-react";
+import { LockKeyhole, ShieldCheck, Gem } from "lucide-react";
 import { Link } from "react-router-dom";
 export default function Footer() {
   return (
@@ -74,9 +74,6 @@ export default function Footer() {
           <LockKeyhole size={13} /> THANH TOÁN BẢO MẬT SSL 256-BIT
         </span>
       </div>
-      <a href="/advisor" className="concierge">
-        <span></span> CONCIERGE 24/7 <Headphones size={16} />
-      </a>
     </>
   );
 }

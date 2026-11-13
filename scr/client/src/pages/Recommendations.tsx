@@ -2,6 +2,7 @@ import Image from "../components/Image";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { request, token } from "../lib/api";
+import ProductComparison from "../components/ProductComparison";
 export default function Recommendations() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -83,6 +84,7 @@ export default function Recommendations() {
           </Link>
         ))}
       </div>
+      <ProductComparison products={data?.products || []} />
     </main>
   );
 }

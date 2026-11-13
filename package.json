@@ -10,6 +10,8 @@
     "dev": "node setup/scripts/dev-full.mjs",
     "build": "npm --workspace scr/server run build && npm --workspace scr/client run build",
     "test": "node scr/test-data/test.mjs",
+    "test:decision-support": "node scr/test-data/decision-support.test.mjs",
+    "test:admin-notifications": "node scr/test-data/admin-notifications.test.mjs",
     "test:cart": "node --import tsx --test scr/test-data/cart-model.test.ts",
     "test:ui": "node scr/test-data/ui-regressions.mjs",
     "test:checkout-ui": "node scr/test-data/checkout-ui.test.mjs",

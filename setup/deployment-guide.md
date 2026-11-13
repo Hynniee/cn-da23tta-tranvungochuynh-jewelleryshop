@@ -7,11 +7,11 @@ flowchart LR
     Browser[Trình duyệt] -->|localhost:8080| Web[Nginx + React SPA]
     Web -->|/api → server:5000| API[Express API]
     Browser -->|localhost:5000/api, kiểm tra trực tiếp| API
-    API -->|MONGO_URI, tùy chọn| Mongo[(MongoDB Atlas hoặc MongoDB riêng)]
+    API -->|MONGO_URI, bắt buộc| Mongo[(MongoDB Atlas hoặc MongoDB riêng)]
     API -->|GEMINI_API_KEY, tùy chọn| Gemini[Google Gemini API]
 ```
 
-Compose hiện có hai service `web` và `server`, không tạo MongoDB. Khi chưa cấu hình database, API dùng danh mục demo; đăng ký và đặt đơn cần MongoDB. Với MongoDB ở máy host, cấu hình URI phù hợp từ trong container, chẳng hạn hostname `host.docker.internal` trên Docker Desktop.
+Compose mặc định có `web` và `server`, dùng MongoDB đã cấu hình trong `.env`. File bổ sung `docker/docker-compose.local.yml` tạo MongoDB local với volume riêng; xem [hướng dẫn Docker](../docker/README.md). Chưa kết nối database thì API dữ liệu trả 503. Với MongoDB ở host, dùng URI phù hợp từ trong container, chẳng hạn `host.docker.internal` trên Docker Desktop.
 
 Từ gốc repository:
 
@@ -21,17 +21,17 @@ docker compose -f docker/docker-compose.yml ps
 docker compose -f docker/docker-compose.yml logs
 ```
 
-Mở http://localhost:8080 và kiểm tra http://localhost:5000/api/health. API trả `database: "demo"` hoặc `"mongodb"` để nhận biết chế độ. Dừng bằng `docker compose -f docker/docker-compose.yml down`.
+Mở http://localhost:8080 và kiểm tra http://localhost:5000/api/health. API trả `database: "disconnected"` hoặc `"mongodb"`. Dừng bằng `docker compose -f docker/docker-compose.yml down` (thêm file local nếu đã dùng khi khởi động).
 
 ## Local đầy đủ
 
 ```text
 Trình duyệt → Vite (mặc định 5173) → /api proxy → Express (mặc định 5001)
-                                                   ├─ MongoDB local (.local-data/)
+                                                   ├─ MongoDB theo MONGO_URI
                                                    └─ Gemini (tùy chọn)
 ```
 
-`npm ci` rồi `npm run dev:full` tự chọn cổng trống, khởi động database local và bổ sung catalog khi chưa cấu hình MongoDB riêng. Địa chỉ thực tế được in trong terminal. Script nằm tại `setup/scripts/dev-full.mjs`. Nếu `.env` cấu hình MongoDB riêng, cần chủ động nạp catalog bằng `npm run catalog:import`.
+`npm ci` rồi `npm run dev:full` tự chọn cổng trống và dùng MongoDB hiện có từ `.env`; không tự tạo database hoặc nạp catalog. Địa chỉ thực tế được in trong terminal. Script nằm tại `setup/scripts/dev-full.mjs`. Chỉ chủ động nạp catalog bằng `npm run catalog:import` nếu muốn thêm dữ liệu mẫu vào database thử nghiệm.
 
 ## Cấu hình và thành phần bên ngoài
 

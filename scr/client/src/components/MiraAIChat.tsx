@@ -2,33 +2,8 @@ import Image from "./Image";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Bot, ChevronDown, Send, Sparkles, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { request, token } from "../lib/api";
-
-type Product = {
-  _id: string;
-  slug: string;
-  name: string;
-  price: number;
-  images?: string[];
-  score?: number;
-};
-type Diamond = {
-  _id: string;
-  certificateNo?: string;
-  carat: number;
-  cut: string;
-  color: string;
-  clarity: string;
-  price: number;
-  score?: number;
-};
-type Reply = {
-  mode: "advisor" | "recommendation" | "diamond";
-  answer: string;
-  products?: Product[];
-  diamonds?: Diamond[];
-};
-type Msg = { from: "user" | "ai"; text: string; reply?: Reply };
+import { token } from "../lib/api";
+import { useAdvisorConversation } from "../controllers/useAdvisorConversation";
 
 const suggestions = [
   "Trang sức bạc dưới 1 triệu",
@@ -39,14 +14,14 @@ const suggestions = [
 
 export default function MiraAIChat() {
   const [open, setOpen] = useState(false),
-    [input, setInput] = useState(""),
-    [busy, setBusy] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([
-    {
-      from: "ai",
-      text: "Xin chào, mình là MIRA AI ✨ Hãy nói ngân sách, loại trang sức, chất liệu hoặc dịp tặng. Mình sẽ phân tích nhu cầu, xếp hạng sản phẩm MIRA và hỗ trợ chọn kim cương theo 4Cs.",
-    },
-  ]);
+    [input, setInput] = useState("");
+  const {
+    messages,
+    busy,
+    error,
+    send: sendConversation,
+    reset,
+  } = useAdvisorConversation();
   const messageList = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const list = messageList.current;
@@ -57,27 +32,10 @@ export default function MiraAIChat() {
     const q = text.trim();
     if (!q || busy) return;
     setInput("");
-    setMessages((m) => [...m, { from: "user", text: q }]);
-    setBusy(true);
     try {
-      const data = await request("/assistant", {
-        method: "POST",
-        body: JSON.stringify({ message: q }),
-      });
-      setMessages((m) => [
-        ...m,
-        { from: "ai", text: data.answer, reply: data },
-      ]);
-    } catch (e: any) {
-      setMessages((m) => [
-        ...m,
-        {
-          from: "ai",
-          text: e.message || "MIRA AI chưa thể xử lý yêu cầu này.",
-        },
-      ]);
-    } finally {
-      setBusy(false);
+      await sendConversation(q);
+    } catch {
+      setInput(q);
     }
   }
   function submit(e: FormEvent) {
@@ -107,6 +65,14 @@ export default function MiraAIChat() {
             <span>Dành cho bạn</span>
             <span>4Cs DSS</span>
           </div>
+          <div className="decision-actions chat-actions">
+            <button disabled={busy} onClick={reset}>
+              Hội thoại mới
+            </button>
+            <Link to="/advisor" onClick={() => setOpen(false)}>
+              So sánh & điều chỉnh tiêu chí
+            </Link>
+          </div>
           <div className="mira-ai-messages" ref={messageList}>
             {messages.map((m, i) => (
               <div key={i} className={`mira-msg ${m.from}`}>
@@ -127,7 +93,10 @@ export default function MiraAIChat() {
                           <div>
                             <b>{p.name}</b>
                             <span>
-                              {Number(p.price).toLocaleString("vi-VN")}₫
+                              {Number(p.salePrice ?? p.price).toLocaleString(
+                                "vi-VN",
+                              )}
+                              ₫
                             </span>
                             {p.score != null && (
                               <small>
@@ -151,6 +120,12 @@ export default function MiraAIChat() {
                   <div className="mira-chat-diamonds">
                     {m.reply.diamonds.slice(0, 4).map((d) => (
                       <article key={d._id}>
+                        <Link
+                          to={`/diamond/${d._id}`}
+                          onClick={() => setOpen(false)}
+                        >
+                          Xem chi tiết kim cương →
+                        </Link>
                         <b>
                           {d.carat} ct · {d.cut}
                         </b>
@@ -194,11 +169,17 @@ export default function MiraAIChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Nhập nhu cầu của bạn..."
+              maxLength={2000}
             />
             <button disabled={busy || !input.trim()} aria-label="Gửi">
               <Send size={18} />
             </button>
           </form>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
         </section>
       )}
       <button className="mira-ai-launcher" onClick={() => setOpen((v) => !v)}>

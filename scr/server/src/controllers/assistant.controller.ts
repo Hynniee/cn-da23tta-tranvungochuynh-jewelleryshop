@@ -1,91 +1,153 @@
 import type { RequestHandler } from "express";
-import mongoose from "mongoose";
+import { randomUUID } from "node:crypto";
 import { AuthRequest } from "../middleware/auth.js";
-import { extractIntent, explain } from "../services/gemini.service.js";
+import {
+  extractIntent,
+  explain,
+  mergeIntent,
+} from "../services/gemini.service.js";
 import { recommend } from "../services/recommendation.service.js";
 import { rebuildPreference } from "../services/preference.service.js";
-import { rankDiamonds } from "../services/diamond.service.js";
+import { rankDiamonds, diamondCriteria } from "../services/diamond.service.js";
 import AIConversation from "../models/AIConversation.js";
+import AdvisorSession from "../models/AdvisorSession.js";
+import { resolveWeights } from "../services/dss.service.js";
 
-const diamondWords = /kim cương|diamond|4cs|carat|clarity|cut|color/i;
-
-const personalWords =
-  /dành (riêng )?cho (tôi|tớ|mình|t)|hợp với (tôi|tớ|mình|t)|sở thích|cá nhân/i;
-
-const money = (t: string) => {
-  const m = t.match(/(\d+(?:[.,]\d+)?)\s*(?:triệu|tr)/i);
-  return m ? Number(m[1].replace(",", ".")) * 1_000_000 : undefined;
-};
-
-export const chat: RequestHandler = async (req: AuthRequest, res) => {
+export const chat: RequestHandler = async (req: AuthRequest, res, next) => {
   const started = Date.now();
-  const message = String(req.body.message || "").trim();
-  if (!message)
-    return res.status(400).json({ message: "Vui lòng nhập nhu cầu" });
-  const dbReady = mongoose.connection.readyState === 1;
+  const message =
+    typeof req.body.message === "string" ? req.body.message.trim() : "";
+  if (!message || message.length > 2000)
+    return res
+      .status(400)
+      .json({ message: "Vui lòng nhập nhu cầu từ 1 đến 2.000 ký tự" });
+  const requestedId = req.body.conversationId;
+  if (
+    requestedId !== undefined &&
+    (typeof requestedId !== "string" || !/^[0-9a-f-]{36}$/i.test(requestedId))
+  )
+    return res.status(400).json({ message: "Mã hội thoại không hợp lệ" });
   try {
-    if (
-      diamondWords.test(message) &&
-      !/nhẫn|dây chuyền|mặt dây|vòng tay|bông tai|hoa tai|lắc|charm|bộ trang sức|ngọc trai|không.*kim cương/i.test(
-        message,
-      )
-    ) {
-      const diamonds = (
-        await rankDiamonds({
-          targetCarat: Number(
-            message
-              .match(/(\d+(?:[.,]\d+)?)\s*(?:carat|ct)/i)?.[1]
-              ?.replace(",", ".") || 1,
-          ),
-          budgetMax: money(message),
-          weights: {
-            carat: 0.25,
-            cut: /ưu tiên.*cut|ưu tiên.*giác cắt/i.test(message) ? 0.55 : 0.25,
-            color: 0.25,
-            clarity: 0.25,
-          },
+    let session = requestedId
+      ? await AdvisorSession.findOne({
+          sessionId: requestedId,
+          user: req.user?.id || null,
+          expiresAt: { $gt: new Date() },
         })
-      ).slice(0, 5);
-      const top: any = diamonds[0];
-      return res.json({
-        mode: "diamond",
-        answer: top
-          ? `MIRA đã phân tích theo 4Cs. Gợi ý nổi bật: ${top.carat} carat, Cut ${top.cut}, Color ${top.color}, Clarity ${top.clarity}, mức phù hợp ${top.score}%.`
-          : "Chưa có lựa chọn phù hợp.",
-        diamonds,
+      : null;
+    if (requestedId && !session)
+      return res.status(404).json({
+        message:
+          "Phiên tư vấn hết hạn hoặc không thuộc tài khoản này. Hãy bắt đầu hội thoại mới.",
       });
+    session ||= new AdvisorSession({
+      sessionId: randomUUID(),
+      user: req.user?.id || null,
+      expiresAt: new Date(Date.now() + 30 * 86400000),
+    });
+    const previous: any = session.intent || {};
+    const context = JSON.stringify({
+      criteria: previous,
+      turns: session.turns.slice(-8).map(({ role, text }) => ({ role, text })),
+    });
+    const extracted = await extractIntent(message, context);
+    const diamondRequest =
+      /kim cương|diamond|4cs|carat|clarity|\bcut\b|\bcolor\b/i.test(message);
+    const explicitDiamondSwitch =
+      /kim cương rời|chuyển.*(?:kim cương|4cs)/i.test(message);
+    const isDiamond =
+      !extracted.category &&
+      !/không.*kim cương/i.test(message) &&
+      (session.mode === "diamond" ||
+        explicitDiamondSwitch ||
+        (!previous.category && diamondRequest));
+    const mode = isDiamond ? "diamond" : "advisor";
+    const switched = mode !== session.mode;
+    const intent: any = mergeIntent(switched ? {} : previous, extracted);
+    const removable: Record<string, string[]> = {
+      "chất liệu": ["material"],
+      "phong cách": ["style"],
+      "loại đá": ["stone", "excludeStone"],
+      dịp: ["occasion"],
+      "ngân sách": ["budgetMin", "budgetMax"],
+    };
+    for (const [label, keys] of Object.entries(removable)) {
+      if (
+        new RegExp(
+          `(?:bỏ|không cần)(?: giới hạn| ràng buộc| tiêu chí)?\\s*${label}`,
+          "i",
+        ).test(message)
+      )
+        for (const key of keys) delete intent[key];
     }
-    const intent = await extractIntent(message);
-    let products: any[];
-    if (dbReady && req.user?.id) {
-      await rebuildPreference(req.user.id);
-      products = await recommend(req.user.id, 5, intent);
-    } else products = await recommend("", 5, intent);
-    let answer = await explain(message, products);
-    if (personalWords.test(message) && !req.user?.id)
-      answer =
-        "Bạn chưa đăng nhập nên MIRA đang gợi ý theo nhu cầu hiện tại và sản phẩm của cửa hàng. Đăng nhập để nhận gợi ý cá nhân hóa. " +
-        answer;
-    if (dbReady && req.user?.id)
-      AIConversation.create({
+    if (isDiamond)
+      Object.assign(intent, diamondCriteria(message, switched ? {} : previous));
+    if (req.body.weights === null) delete intent.weights;
+    else if (req.body.weights !== undefined && !isDiamond)
+      intent.weights = req.body.weights;
+    if (!isDiamond) resolveWeights(intent);
+    const missingCriteria: string[] = [];
+    if (!isDiamond && !intent.category) missingCriteria.push("category");
+    if (!intent.budgetMax) missingCriteria.push("budgetMax");
+    if (isDiamond && !intent.targetCarat) missingCriteria.push("targetCarat");
+    let products: any[] = [],
+      diamonds: any[] = [],
+      answer: string;
+    if (missingCriteria.length) {
+      const questions: Record<string, string> = {
+        category:
+          "Bạn muốn tìm loại trang sức nào (nhẫn, dây chuyền, bông tai…)?",
+        budgetMax: "Ngân sách tối đa của bạn là bao nhiêu?",
+        targetCarat: "Bạn mong muốn kim cương khoảng bao nhiêu carat?",
+      };
+      answer = missingCriteria.map((key) => questions[key]).join(" ");
+    } else if (isDiamond) {
+      diamonds = await rankDiamonds({ ...intent, limit: 5 });
+      answer = diamonds.length
+        ? await explain(JSON.stringify(intent), diamonds)
+        : "Không có kim cương phù hợp. Bạn có thể tăng ngân sách hoặc điều chỉnh carat.";
+    } else {
+      if (req.user?.id) await rebuildPreference(req.user.id);
+      products = await recommend(req.user?.id || "", 5, intent);
+      answer = await explain(JSON.stringify(intent), products);
+    }
+    session.mode = mode;
+    session.intent = intent;
+    session.turns.push(
+      { role: "user", text: message },
+      { role: "assistant", text: answer },
+    );
+    session.turns = session.turns.slice(-24) as typeof session.turns;
+    session.expiresAt = new Date(Date.now() + 30 * 86400000);
+    await session.save();
+    if (req.user?.id)
+      await AIConversation.create({
         user: req.user.id,
+        sessionId: session.sessionId,
         message,
         intent,
         answer,
-        recommendedProducts: products.map((p: any) => p._id),
+        recommendedProducts: products.map((p) => p._id),
         latencyMs: Date.now() - started,
-      }).catch(() => undefined);
-    return res.json({
-      mode: personalWords.test(message) ? "recommendation" : "advisor",
+      });
+    const optionalCriteria = !isDiamond
+      ? ["material", "style", "occasion"].filter((key) => !intent[key])
+      : [];
+    res.json({
+      conversationId: session.sessionId,
+      mode,
       intent,
+      missingCriteria,
+      optionalCriteria,
       answer,
       products,
+      diamonds,
     });
-  } catch (e: any) {
-    console.error("assistant:", e);
-    return res.status(503).json({
-      message:
-        "Không tải được gợi ý từ dữ liệu cửa hàng. Vui lòng thử lại sau.",
-    });
+  } catch (error: any) {
+    if (error.name === "VersionError")
+      return res.status(409).json({
+        message: "Hội thoại vừa được cập nhật. Vui lòng gửi lại tin nhắn.",
+      });
+    next(error);
   }
 };

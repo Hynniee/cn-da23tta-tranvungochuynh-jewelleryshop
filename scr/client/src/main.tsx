@@ -14,6 +14,8 @@ import "./promotions.css";
 import "./system.css";
 import "./account-experience.css";
 import "./notifications.css";
+import "./decision-support.css";
+import "./admin-notifications.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

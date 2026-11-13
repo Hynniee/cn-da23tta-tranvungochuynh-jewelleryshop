@@ -9,6 +9,7 @@ import User from "../models/User.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { audit } from "../services/audit.service.js";
 import { quoteOrder, PromotionError } from "../services/promotion.service.js";
+import { recordPurchase } from "../services/behavior.service.js";
 
 export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
   const { items, paymentMethod, addressId } = req.body;
@@ -170,14 +171,41 @@ const updateStatus = async (
       message: "Đơn đã được xử lý, vui lòng liên hệ cửa hàng để được hỗ trợ",
     });
   if (customerCancel) req.body.status = "cancelled";
+  const manualPaymentConfirmation =
+    !customerCancel &&
+    before.paymentMethod === "BANK_QR" &&
+    before.paymentStatus !== "PAID" &&
+    req.body.status === "confirmed";
+  if (manualPaymentConfirmation && req.body.confirmPayment !== true)
+    return res.status(400).json({
+      message:
+        "Vui lòng xác nhận đã kiểm tra và nhận đủ tiền chuyển khoản trước khi xác nhận đơn.",
+    });
+  if (
+    !customerCancel &&
+    before.paymentMethod === "BANK_QR" &&
+    before.paymentStatus !== "PAID" &&
+    ["shipping", "delivered", "completed"].includes(req.body.status)
+  )
+    return res.status(400).json({
+      message:
+        "Đơn chuyển khoản cần được xác nhận đã thanh toán trước khi giao hoặc hoàn tất.",
+    });
   if (!transitions[before.status]?.includes(req.body.status))
     return res
       .status(400)
       .json({ message: "Không thể chuyển sang trạng thái này" });
   const after = await Order.findOneAndUpdate(
-    { _id: id, status: before.status },
+    { _id: id, status: before.status, paymentStatus: before.paymentStatus },
     {
       status: req.body.status,
+      ...(manualPaymentConfirmation
+        ? {
+            paymentStatus: "PAID",
+            paymentConfirmedAt: new Date(),
+            paymentConfirmationMethod: "ADMIN",
+          }
+        : {}),
       ...(req.body.status === "completed" && before.paymentMethod === "COD"
         ? { paymentStatus: "PAID" }
         : {}),
@@ -206,6 +234,9 @@ const updateStatus = async (
     before,
     after,
     req.ip,
+  );
+  await recordPurchase(after).catch((error) =>
+    console.error("purchase behavior:", error.name),
   );
   res.json(after);
 };

@@ -21,10 +21,10 @@ Kết quả `scr/server/src/ml/model.json` được Express đọc để suy lu�
 ## API
 
 - `GET /api/recommendations/ml-status`: trạng thái mô hình
-- `GET /api/recommendations/demo?category=Nhẫn&budgetMax=30000000&limit=3`: xem Top 3 demo (không cần MongoDB)
+- `GET /api/recommendations/demo?category=Nhẫn&budgetMax=30000000&limit=3`: xem Top 3 từ MongoDB đã cấu hình (đường dẫn giữ tên cũ để tương thích)
 - `GET /api/recommendations`: cá nhân hóa người đăng nhập, cần MongoDB để lưu lịch sử
 
-Điểm kết hợp = 0.6 × DSS + 0.4 × ML (khi có model). Hệ số là mặc định, chưa được tối ưu thực nghiệm. Dữ liệu thật cần chia theo thời gian hoặc người dùng để tránh rò rỉ và đánh giá Precision@K/Recall@K so với baseline DSS.
+DSS theo ngữ cảnh quyết định điểm và thứ hạng; `mlScore` là tín hiệu tham khảo, không trộn vào điểm DSS. Cách này giữ đóng góp từng tiêu chí có thể kiểm tra và cho phép người dùng điều chỉnh trọng số. Xem [AI Advisor và DSS](../../setup/advisor-dss.md). Dữ liệu thật cần chia theo thời gian hoặc người dùng để tránh rò rỉ; chưa có kết quả Precision@K/Recall@K trên hành vi khách hàng thật.
 
 ## Bộ dữ liệu demo đã huấn luyện
 

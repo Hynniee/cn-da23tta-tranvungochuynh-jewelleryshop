@@ -40,6 +40,8 @@ const schema = new mongoose.Schema(
     voucher: { id: String, code: String, name: String, discount: Number },
     total: Number,
     paymentMethod: { type: String, default: "COD" },
+    paymentConfirmedAt: Date,
+    paymentConfirmationMethod: { type: String, enum: ["ADMIN"] },
     paymentStatus: {
       type: String,
       enum: ["UNPAID", "PENDING", "PAID", "MISMATCH", "REFUNDED"],
@@ -52,6 +54,7 @@ const schema = new mongoose.Schema(
         "pending",
         "confirmed",
         "shipping",
+        "delivered",
         "completed",
         "cancelled",
       ],

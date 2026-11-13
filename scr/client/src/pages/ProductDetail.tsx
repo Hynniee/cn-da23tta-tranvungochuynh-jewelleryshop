@@ -8,6 +8,7 @@ import { freeShippingFrom } from "../lib/commerce";
 import { addCart } from "../store/cart";
 import { BUY_NOW_CHECKOUT, saveBuyNow } from "../store/buy-now";
 import { notify } from "../lib/notifications";
+import { trackBehavior } from "../lib/behavior";
 
 type Product = {
   _id: string;
@@ -65,10 +66,7 @@ export default function ProductDetail() {
       .then((data: Product) => {
         show(data);
         if (!data._id.startsWith("demo-"))
-          request("/behaviors", {
-            method: "POST",
-            body: JSON.stringify({ type: "VIEW", product: data._id }),
-          }).catch(() => undefined);
+          trackBehavior("VIEW", { product: data._id });
       })
       .catch((error) => {
         if (!active) return;
@@ -146,11 +144,6 @@ export default function ProductDetail() {
       return;
     }
     notify("Đã thêm sản phẩm vào giỏ hàng.");
-    if (!product._id.startsWith("demo-"))
-      request("/behaviors", {
-        method: "POST",
-        body: JSON.stringify({ type: "ADD_CART", product: product._id }),
-      }).catch(() => undefined);
   }
   return (
     <main className="pd-page">

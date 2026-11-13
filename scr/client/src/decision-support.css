@@ -1,0 +1,242 @@
+.decision-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 16px 0;
+}
+.decision-actions button,
+.decision-actions a,
+.comparison-choices label {
+  border: 1px solid #d6c8b7;
+  border-radius: 6px;
+  padding: 9px 13px;
+  color: #4a3b2e;
+  background: #fffdf9;
+}
+.decision-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.decision-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 16px;
+  align-items: end;
+}
+.decision-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+.decision-controls input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #d6c8b7;
+  border-radius: 5px;
+  background: #fffdf9;
+}
+.decision-controls input[type="range"] {
+  padding: 0;
+  accent-color: #8a683d;
+}
+.dss-weights {
+  border: 1px solid #d6c8b7;
+  border-radius: 8px;
+  padding: 18px;
+  width: 100%;
+  min-width: 0;
+  margin: 16px 0;
+}
+.dss-weights p {
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+.dss-form .dss-weights {
+  grid-column: 1 / -1;
+}
+.decision-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 18px 0;
+}
+.decision-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+  min-width: 560px;
+}
+.decision-table th,
+.decision-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e5dacc;
+  vertical-align: top;
+  min-width: 140px;
+  overflow-wrap: anywhere;
+}
+.decision-table th {
+  background: #f4eee4;
+  font-weight: 600;
+}
+.decision-table caption {
+  text-align: left;
+  font-size: 13px;
+  padding: 10px 0;
+  color: #65594b;
+}
+.decision-table small {
+  font-weight: 400;
+}
+.decision-table td button {
+  border: 1px solid #d6c8b7;
+  padding: 7px 12px;
+  border-radius: 4px;
+  background: #fffdf9;
+  white-space: nowrap;
+}
+.product-comparison {
+  margin-top: 32px;
+  padding: 20px 0;
+  border-top: 1px solid #d6c8b7;
+  min-width: 0;
+}
+.comparison-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.comparison-choices label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.comparison-choices input,
+.manual-weights input {
+  width: auto;
+  accent-color: #8a683d;
+}
+.customer-management {
+  min-width: 0;
+}
+.customer-management .admin-toolbar {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.customer-management .admin-search {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.customer-detail {
+  border-top: 1px solid #d6c8b7;
+  margin-top: 24px;
+  padding-top: 20px;
+}
+.advisor-history {
+  max-height: 440px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 20px 0;
+  padding: 4px;
+}
+.advisor-turn {
+  padding: 16px 20px;
+  margin: 12px 0;
+  background: #fffdf9;
+  border: 1px solid #e5dacc;
+  border-radius: 10px;
+}
+.advisor-turn.user {
+  margin-left: clamp(0px, 8vw, 80px);
+  background: #f2eadf;
+}
+.advisor-turn p {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+}
+.advisor-criteria {
+  border-left: 3px solid #9a7746;
+  padding: 12px 18px;
+  background: #f5efe5;
+  margin: 20px 0;
+}
+.advisor-criteria h2 {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+.advisor-box .manual-weights {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+  margin: 14px 0;
+}
+.advisor-box textarea {
+  width: 100%;
+  min-width: 0;
+}
+.advisor-page .smart-products article {
+  min-width: 0;
+}
+.advisor-page .smart-products article a {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.advisor-page .smart-products li {
+  font-size: 12px;
+  margin: 8px 0;
+  line-height: 1.6;
+}
+.chat-actions {
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 11px;
+  gap: 8px;
+}
+.chat-actions a,
+.chat-actions button {
+  padding: 6px 8px;
+}
+.diamond-detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 32px;
+}
+.diamond-detail img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+}
+.diamond-detail dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e5dacc;
+  padding: 12px 0;
+}
+.mira-ai-panel > .form-error {
+  padding: 8px 14px;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .decision-controls {
+    grid-template-columns: 1fr;
+  }
+  .customer-management .admin-toolbar {
+    align-items: stretch;
+  }
+  .customer-management .admin-search {
+    width: 100%;
+  }
+  .dss-weights {
+    padding: 12px;
+  }
+  .advisor-page {
+    padding-inline: 16px;
+  }
+}

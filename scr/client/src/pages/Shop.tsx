@@ -9,6 +9,7 @@ import { request } from "../lib/api";
 import type { Product } from "../types/product";
 import { categories, normalizeSearch } from "../lib/commerce";
 import { getWishlist, toggleWishlist } from "../store/wishlist";
+import { trackBehavior } from "../lib/behavior";
 
 const PAGE_SIZE = 9;
 const price = (p: Product) => Number(p.salePrice ?? p.price);
@@ -52,6 +53,14 @@ export default function Shop({
     [products],
   );
   const search = params.get("search") || "";
+  useEffect(() => {
+    if (!search.trim()) return;
+    const timer = setTimeout(
+      () => trackBehavior("SEARCH", { query: search }),
+      600,
+    );
+    return () => clearTimeout(timer);
+  }, [search]);
   const sort = params.get("sort") || "featured";
   const readPrice = (key: string, fallback: number) => {
     const value = Number(params.get(key) ?? fallback);

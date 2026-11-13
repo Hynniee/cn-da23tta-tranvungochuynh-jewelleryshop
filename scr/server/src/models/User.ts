@@ -22,6 +22,7 @@ const schema = new mongoose.Schema(
     defaultAddressId: String,
     birthday: String,
     gender: String,
+    customerNotificationsSeenAt: Date,
     role: {
       type: String,
       enum: ["customer", "staff", "product_manager", "manager", "admin"],

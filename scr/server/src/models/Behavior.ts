@@ -3,6 +3,7 @@ const schema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
     sessionId: String,
+    eventKey: { type: String, unique: true, sparse: true },
     type: {
       type: String,
       enum: ["VIEW", "SEARCH", "CLICK", "WISHLIST", "ADD_CART", "PURCHASE"],

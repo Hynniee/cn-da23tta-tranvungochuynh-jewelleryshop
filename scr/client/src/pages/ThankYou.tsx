@@ -167,7 +167,9 @@ export default function ThankYou() {
             </li>
             <li
               className={
-                ["confirmed", "shipping", "completed"].includes(order.status)
+                ["confirmed", "shipping", "delivered", "completed"].includes(
+                  order.status,
+                )
                   ? "done"
                   : "current"
               }
@@ -179,7 +181,9 @@ export default function ThankYou() {
             </li>
             <li
               className={
-                ["shipping", "completed"].includes(order.status) ? "done" : ""
+                ["shipping", "delivered", "completed"].includes(order.status)
+                  ? "done"
+                  : ""
               }
             >
               <span>

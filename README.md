@@ -3,7 +3,7 @@
 **Đề tài:** Xây dựng hệ thống thương mại điện tử bán trang sức ứng dụng mô hình ngôn ngữ lớn và hệ hỗ trợ ra quyết định.
 
 **Sinh viên:** Trần Vũ Ngọc Huỳnh  
-**Email:** 110123012@st.tvu.edu.vn 
+**Email:** 110123012@st.tvu.edu.vn
 **Điện thoại:** 0328779845
 
 ## Cấu trúc repository
@@ -59,9 +59,11 @@ npm run dev
 Lệnh tự chọn cổng trống cho API và web, đồng thời cấu hình proxy đúng cổng API. Mở địa chỉ được in trong Terminal (mặc định http://localhost:5173). Không tự nhập dữ liệu mẫu. `npm run db:check` kiểm tra kết nối đọc và primary phục vụ ghi.
 
 Hoặc chạy Docker:
+
 ```bash
 docker compose -f docker/docker-compose.yml up --build -d
 ```
+
 - Website: http://localhost:8080
 - API: http://localhost:5000/api/products
 - Product Detail: http://localhost:8080/product/solitaire-etoile-diamond-ring
@@ -86,7 +88,11 @@ Quản trị sản phẩm: mở `/admin` → Sản phẩm → Thêm sản phẩm
 
 ## Học máy + DSS
 
-ML Logistic Regression hỗ trợ dự đoán mức độ quan tâm; DSS giữ vai trò chấm điểm đa tiêu chí. Khi chưa huấn luyện, ứng dụng tự động quay về DSS. Xem `scr/ml/README.md` để huấn luyện bằng dữ liệu có nhãn và kiểm tra API demo.
+ML Logistic Regression cung cấp tín hiệu quan tâm tham khảo; DSS quyết định điểm và thứ hạng từ sáu tiêu chí: danh mục, chất liệu, ngân sách, phong cách, dịp sử dụng, đánh giá. Trọng số tự điều chỉnh theo ngữ cảnh hoặc do khách chỉnh; kết quả trả điểm thành phần và đóng góp của từng tiêu chí. Xem [AI Advisor và DSS](setup/advisor-dss.md).
+
+AI Advisor lưu ngữ cảnh nhiều lượt theo phiên, hỏi thêm loại trang sức/ngân sách còn thiếu; kim cương hỏi thêm carat. Trang `/advisor` và khung Hỏi MIRA dùng chung hội thoại trong tab. Có thể bắt đầu hội thoại mới, điều chỉnh trọng số và chọn 2–4 sản phẩm để so sánh. `/diamond-dss` hỗ trợ chỉnh trọng số 4Cs và Top-K. Admin → Khách hàng hỗ trợ tìm kiếm, xem lịch sử đơn và sửa tên/số điện thoại, có phân quyền và nhật ký thay đổi.
+
+Quản trị: Tổng quan đứng đầu menu. Huy hiệu số tròn màu hồng pastel hiển thị các việc cần chú ý ở từng mục, tự cập nhật mỗi 15 giây khi trang đang mở và khi quay lại cửa sổ. Admin/manager đổi trạng thái đơn qua danh sách chọn; hệ thống lưu thay đổi, ghi nhật ký và cập nhật huy hiệu. Xem [hướng dẫn quản trị và thông báo](setup/admin.md).
 
 ## Phát triển và kiểm thử local
 

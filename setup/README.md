@@ -3,13 +3,18 @@
 Đặt lịch Private Salon và gửi email Gmail: xem [private-salon.md](private-salon.md).
 Yêu cầu: Docker Desktop có Docker Compose hoặc Node.js 20+.
 
-## Chạy demo không cần MongoDB
+## Chạy Docker với MongoDB đã cấu hình
+
 Từ thư mục gốc:
+
 ```bash
 docker compose -f docker/docker-compose.yml up --build -d
 ```
+
 Frontend: http://localhost:8080
 Backend: http://localhost:5000/api/products
+
+Tạo `scr/server/.env` từ `.env.example`, cấu hình `MONGO_URI` trước khi chạy. Hoặc chạy cả MongoDB local bằng `docker compose -f docker/docker-compose.yml -f docker/docker-compose.local.yml up --build -d`. Xem [Docker](../docker/README.md).
 
 ## Chạy đầy đủ trên máy local
 
@@ -18,9 +23,9 @@ npm ci
 npm run dev:full
 ```
 
-Nếu chưa cấu hình MongoDB, lệnh này tự chạy MongoDB local, bổ sung 36 sản phẩm và lưu dữ liệu trong `.local-data/`. Có thể đăng ký, đăng nhập, lưu hồ sơ, đặt đơn COD, theo dõi và hủy đơn chưa xử lý. Dữ liệu local được giữ khi đóng ứng dụng; không commit `.local-data/`.
+Lệnh yêu cầu `MONGO_URI` hợp lệ trong `scr/server/.env`. Không tự tạo MongoDB, không tự nạp sản phẩm mẫu và không ghi đè database hiện có. `.local-data/` chỉ giữ cấu hình phát triển được tạo khi chạy, không commit thư mục này.
 
-Mặc định dùng frontend 5173 và API 5001; nếu cổng bận sẽ chọn cổng trống tiếp theo và in địa chỉ vào terminal. Có thể đặt `WEB_PORT` / `PORT` để chọn cổng. Nếu `.env` chứa MongoDB thật, ứng dụng dùng database đã cấu hình và không tự thêm dữ liệu vào đó.
+Mặc định dùng frontend 5173 và API 5001; nếu cổng bận sẽ chọn cổng trống tiếp theo và in địa chỉ vào terminal. Có thể đặt `WEB_PORT` / `PORT` để chọn cổng. Ứng dụng dùng database đã cấu hình và không tự thêm dữ liệu vào đó.
 
 ### Bổ sung catalog vào MongoDB đã cấu hình
 
@@ -28,22 +33,24 @@ Mặc định dùng frontend 5173 và API 5001; nếu cổng bận sẽ chọn c
 npm run catalog:import
 ```
 
-Lệnh này dùng `MONGO_URI` trong `scr/server/.env`, chỉ thêm sản phẩm chưa có theo slug và giữ nguyên dữ liệu sản phẩm, tồn kho, tài khoản và đơn hàng hiện có. `seed:catalog` có thể chạy nhiều lần. Khác với script reset demo `seed`, đây là lệnh phù hợp để thêm danh mục mà không xóa dữ liệu.
+Chỉ chạy khi chủ động muốn nạp dữ liệu thử nghiệm vào đúng database trong `MONGO_URI`. Lệnh thêm sản phẩm chưa có theo slug và giữ nguyên bản ghi hiện có; có thể chạy nhiều lần. Không dùng script reset `seed` trên database đang sử dụng.
 
-Catalog dùng chung: `scr/server/src/data/catalog.json`. Sửa file này để bổ sung mẫu demo cho cả client lẫn server. Sản phẩm đã tồn tại trong MongoDB được sửa bằng trang quản trị, không tự bị ghi đè bởi catalog mẫu.
+`scr/server/src/data/catalog.json` là dữ liệu mẫu phục vụ seed/kiểm thử. Website lấy danh mục từ MongoDB; sản phẩm đang sử dụng được sửa bằng trang quản trị.
 
 ## Chạy local
 
 Từ thư mục gốc (Node.js 20+):
+
 ```bash
 npm ci
 npm run dev
 ```
 
 Frontend: http://localhost:5173. API: http://localhost:5000/api/health.
-Vite tự chuyển các yêu cầu `/api` đến backend. MongoDB chưa được cấu hình thì danh mục, tư vấn và DSS vẫn chạy demo; đăng ký, hồ sơ, đơn hàng và quản trị cần MongoDB.
+Vite tự chuyển các yêu cầu `/api` đến đúng backend do script khởi động chọn. MongoDB chưa cấu hình hoặc mất kết nối thì API dữ liệu trả 503, không dùng sản phẩm mẫu thay thế.
 
 Nếu cổng 5000 đã được Docker hoặc ứng dụng khác dùng, chạy PowerShell:
+
 ```powershell
 $env:PORT = '5001'
 $env:API_PROXY_TARGET = 'http://127.0.0.1:5001'
@@ -57,10 +64,11 @@ npm run dev
 ```bash
 npm run build
 npm test
+npm run test:decision-support
 npm run format:check
 ```
 
-`npm test` chạy API demo, MongoDB tạm và Chrome headless trên cổng 5107/5187. Dữ liệu test được tạo riêng và xóa khi kết thúc, không đọc database trong `.env`. Cần Chrome cài sẵn; có thể đặt `TEST_BROWSER_CHANNEL=msedge` để dùng Edge. Lần chạy đầu cần Internet để tải MongoDB binary. Build trước khi chạy test. Ảnh desktop/mobile và kết quả được ghi trong `scr/test-data/results/`.
+`npm test` chạy tình huống mất database, MongoDB tạm và Chrome headless trên cổng 5107/5187. `test:decision-support` kiểm tra quản lý khách hàng, hội thoại nhiều lượt, DSS và hành vi. Dữ liệu test được tạo riêng và xóa khi kết thúc, không ghi database trong `.env`. Cần Chrome cài sẵn; có thể đặt `TEST_BROWSER_CHANNEL=msedge` để dùng Edge. Lần chạy đầu cần Internet để tải MongoDB binary. Build trước khi chạy test. Ảnh desktop/mobile và kết quả được ghi trong `scr/test-data/results/`.
 
 ```bash
 npm run format
@@ -70,8 +78,9 @@ python scr/ml/evaluate_demo.py
 Script ML chỉ đánh giá dữ liệu mô phỏng. `scr/test-data/test_cases.csv` hiện chưa có dữ liệu thực nghiệm, nên chưa thể tính độ chính xác tư vấn trên truy vấn thực tế.
 
 ## Kết nối MongoDB/Gemini
+
 Copy `scr/server/.env.example` thành `scr/server/.env`, điền MONGO_URI, JWT_SECRET, GEMINI_API_KEY (nếu có).
-Không commit .env lên GitHub. Không cần MongoDB để xem danh mục demo.
+Không commit .env lên GitHub. MongoDB bắt buộc cho danh mục, tư vấn, DSS và các luồng lưu dữ liệu. Không cấu hình Gemini thì ứng dụng dùng parser và diễn giải DSS tại server. Xem [AI Advisor và DSS](advisor-dss.md).
 
 Trong production, đặt `JWT_SECRET` ngẫu nhiên tối thiểu 32 ký tự. Không dùng giá trị mẫu. Webhook thanh toán chỉ hoạt động khi có `PAYMENT_WEBHOOK_SECRET` thật; định dạng chữ ký hiện tại là HMAC SHA-256 trên `JSON.stringify(body)` qua header `x-webhook-signature`. Cần khớp hợp đồng của nhà cung cấp trước khi tích hợp giao dịch thật.
 

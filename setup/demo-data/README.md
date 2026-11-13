@@ -2,15 +2,15 @@
 
 Mọi lệnh dưới đây chạy từ thư mục gốc repository. Dữ liệu được giữ tại nguồn để chương trình và bộ kiểm thử dùng cùng một phiên bản.
 
-| Thành phần | Tập tin | Cách sử dụng |
-| --- | --- | --- |
-| 36 sản phẩm mẫu | [catalog.json](../../scr/server/src/data/catalog.json) | Client/server cùng đọc qua module dữ liệu demo |
-| Cấu hình cửa hàng | [storeConfig.json](../../scr/server/src/data/storeConfig.json) | Phí vận chuyển, danh mục, trạng thái đơn |
-| Kim cương demo | [demoDiamonds.ts](../../scr/server/src/data/demoDiamonds.ts) | API danh sách và DSS ở chế độ demo |
-| Ảnh sản phẩm | [public/products](../../scr/client/public/products/) | Tài nguyên minh họa phục vụ demo |
-| 1.000 tương tác mô phỏng | [interactions_demo.csv](../../scr/ml/interactions_demo.csv) | Pipeline ML; không phải dữ liệu khách hàng thật |
-| Ca đánh giá thực nghiệm | [test_cases.csv](../../scr/test-data/test_cases.csv) | Hiện chỉ có header, cần ghi kết quả thực tế |
-| Fixture API/UI | [test.mjs](../../scr/test-data/test.mjs) | Tự tạo database tạm, tài khoản và đơn hàng kiểm thử |
+| Thành phần               | Tập tin                                                        | Cách sử dụng                                        |
+| ------------------------ | -------------------------------------------------------------- | --------------------------------------------------- |
+| 36 sản phẩm mẫu          | [catalog.json](../../scr/server/src/data/catalog.json)         | Dùng cho seed và kiểm thử; website đọc MongoDB      |
+| Cấu hình cửa hàng        | [storeConfig.json](../../scr/server/src/data/storeConfig.json) | Phí vận chuyển, danh mục, trạng thái đơn            |
+| Kim cương demo           | [demoDiamonds.ts](../../scr/server/src/data/demoDiamonds.ts)   | Dữ liệu seed/kiểm thử; API và DSS yêu cầu MongoDB   |
+| Ảnh sản phẩm             | [public/products](../../scr/client/public/products/)           | Tài nguyên minh họa phục vụ demo                    |
+| 1.000 tương tác mô phỏng | [interactions_demo.csv](../../scr/ml/interactions_demo.csv)    | Pipeline ML; không phải dữ liệu khách hàng thật     |
+| Ca đánh giá thực nghiệm  | [test_cases.csv](../../scr/test-data/test_cases.csv)           | Hiện chỉ có header, cần ghi kết quả thực tế         |
+| Fixture API/UI           | [test.mjs](../../scr/test-data/test.mjs)                       | Tự tạo database tạm, tài khoản và đơn hàng kiểm thử |
 
 ## Chạy thử cho Hội đồng
 

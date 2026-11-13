@@ -40,6 +40,42 @@ const CLARITY = [
 ];
 const n = (a: string[], v: string) =>
   Math.max(0, a.indexOf(v)) / (a.length - 1);
+export function diamondCriteria(message: string, previous: any = {}) {
+  const next: any = {
+    targetCarat: previous.targetCarat,
+    weights: {
+      carat: 0.4,
+      cut: 0.3,
+      color: 0.2,
+      clarity: 0.1,
+      ...previous.weights,
+    },
+  };
+  const carat = message.match(/(\d+(?:[.,]\d+)?)\s*(?:carat|ct)\b/i);
+  if (carat) next.targetCarat = Number(carat[1].replace(",", "."));
+  const priority = message
+    .match(
+      /ưu tiên\s+(carat|trọng lượng|cut|giác cắt|color|màu|clarity|độ tinh khiết)/i,
+    )?.[1]
+    .toLowerCase();
+  if (priority) {
+    const key = /carat|trọng/.test(priority)
+      ? "carat"
+      : /cut|giác/.test(priority)
+        ? "cut"
+        : /color|màu/.test(priority)
+          ? "color"
+          : "clarity";
+    next.weights = {
+      carat: 0.15,
+      cut: 0.15,
+      color: 0.15,
+      clarity: 0.15,
+      [key]: 0.55,
+    };
+  }
+  return next;
+}
 export async function rankDiamonds(input: any) {
   const w = {
     carat: Number(input.weights?.carat ?? 0.4),
@@ -56,6 +92,7 @@ export async function rankDiamonds(input: any) {
     !Number.isFinite(target) ||
     target <= 0 ||
     !Object.values(w).every((x) => Number.isFinite(x) && x >= 0) ||
+    !Number.isFinite(sum) ||
     sum <= 0
   )
     throw Object.assign(new Error("Invalid ranking criteria"), { status: 400 });
@@ -69,12 +106,38 @@ export async function rankDiamonds(input: any) {
         0,
         1 - Math.abs(d.carat - target) / Math.max(target, 1),
       );
-      const score =
-        carat * w.carat +
-        n(CUT, d.cut) * w.cut +
-        n(COLOR, d.color) * w.color +
-        n(CLARITY, d.clarity) * w.clarity;
-      return { ...d, score: Math.round((score / sum) * 100) };
+      const values = {
+        carat,
+        cut: n(CUT, d.cut),
+        color: n(COLOR, d.color),
+        clarity: n(CLARITY, d.clarity),
+      };
+      const scoreParts = (Object.keys(w) as (keyof typeof w)[]).map(
+        (criterion) => ({
+          criterion,
+          label: criterion,
+          value: values[criterion],
+          weight: w[criterion] / sum,
+          contribution: ((values[criterion] * w[criterion]) / sum) * 100,
+        }),
+      );
+      const total = scoreParts.reduce((s, part) => s + part.contribution, 0);
+      return {
+        ...d,
+        score: Math.round(total),
+        rankingValue: total,
+        scoreParts,
+        weights: Object.fromEntries(
+          Object.entries(w).map(([key, value]) => [key, value / sum]),
+        ),
+      };
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.rankingValue - a.rankingValue || a.price - b.price)
+    .slice(
+      0,
+      Number.isFinite(input.limit)
+        ? Math.max(1, Math.min(50, Math.floor(input.limit)))
+        : 5,
+    )
+    .map(({ rankingValue, ...diamond }) => diamond);
 }

@@ -1,4 +1,5 @@
 import { notify } from "../lib/notifications";
+import { trackBehavior } from "../lib/behavior";
 
 const KEY = "mira_wishlist";
 export function getWishlist(): string[] {
@@ -20,6 +21,7 @@ export function toggleWishlist(id: string) {
     ),
   );
   window.dispatchEvent(new Event("wishlistchange"));
+  if (!ids.includes(id)) trackBehavior("WISHLIST", { product: id });
   notify(
     ids.includes(id)
       ? "Đã xóa sản phẩm khỏi danh sách yêu thích."

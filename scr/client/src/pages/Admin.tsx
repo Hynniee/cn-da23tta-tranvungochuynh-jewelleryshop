@@ -1,6 +1,7 @@
-import { categories, orderTransitions } from "../lib/commerce";
+import { categories, orderLabels, orderTransitions } from "../lib/commerce";
 import Image from "../components/Image";
 import AdminPromotions from "../components/AdminPromotions";
+import AdminCustomers from "../components/AdminCustomers";
 import { readStoredObject } from "../lib/storage";
 import { notify } from "../lib/notifications";
 import {
@@ -35,7 +36,8 @@ import {
   type ProductForm,
 } from "../lib/product-editor";
 
-type Tab = "overview" | "products" | "orders" | "analytics" | "promotions";
+type Tab =
+  "overview" | "products" | "orders" | "analytics" | "promotions" | "customers";
 type Product = {
   _id: string;
   name: string;
@@ -55,6 +57,9 @@ type Order = {
   _id: string;
   total: number;
   status: string;
+  orderCode?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
   createdAt: string;
   customer?: { name?: string; email?: string };
   items?: unknown[];
@@ -72,14 +77,7 @@ const EMPTY_PRODUCT: ProductForm = {
   stock: "",
   image: "",
 };
-const ORDER_LABEL: Record<string, string> = {
-  pending_payment: "Chờ thanh toán",
-  pending: "Chờ xác nhận",
-  confirmed: "Đã xác nhận",
-  shipping: "Đang giao",
-  completed: "Hoàn tất",
-  cancelled: "Đã hủy",
-};
+const ORDER_LABEL = orderLabels;
 
 const money = (value: number) =>
   `${Number(value || 0).toLocaleString("vi-VN")}₫`;
@@ -103,6 +101,14 @@ export default function Admin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
+  const [notifications, setNotifications] = useState<
+    Partial<Record<Tab, { count: number; message: string }>>
+  >({});
+  const [notificationError, setNotificationError] = useState("");
+  const [updatingOrders, setUpdatingOrders] = useState<string[]>([]);
+  const pendingOrderUpdates = useRef(new Set<string>());
+  const orderVersion = useRef(0);
+  const refreshing = useRef(false);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -196,22 +202,67 @@ export default function Admin() {
     };
   }, [showForm]);
 
+  async function loadNotifications() {
+    try {
+      setNotifications(await request("/admin/notifications"));
+      setNotificationError("");
+    } catch (error) {
+      setNotificationError(
+        error instanceof Error
+          ? error.message
+          : "Chưa tải được thông báo quản trị.",
+      );
+    }
+  }
+  async function readCustomerNotifications() {
+    try {
+      await request("/admin/notifications/customers/read", { method: "POST" });
+      await loadNotifications();
+    } catch (error) {
+      setNotificationError(
+        error instanceof Error
+          ? error.message
+          : "Chưa ghi nhận được thông báo đã xem.",
+      );
+    }
+  }
   async function loadData() {
-    const results = await Promise.allSettled([
-      request("/products").then(setProducts),
-      request("/orders").then(setOrders),
-    ]);
-    request("/analytics")
-      .then(setAnalytics)
-      .catch(() => undefined);
-    const failure = results.find((result) => result.status === "rejected");
-    if (failure?.status === "rejected") throw failure.reason;
+    if (refreshing.current) return;
+    refreshing.current = true;
+    const version = orderVersion.current;
+    try {
+      const results = await Promise.allSettled([
+        request("/products").then(setProducts),
+        request("/orders").then((nextOrders) => {
+          if (version === orderVersion.current) setOrders(nextOrders);
+        }),
+        request("/analytics")
+          .then(setAnalytics)
+          .catch(() => undefined),
+        loadNotifications(),
+      ]);
+      const failure = results.find((result) => result.status === "rejected");
+      if (failure?.status === "rejected") throw failure.reason;
+    } finally {
+      refreshing.current = false;
+    }
   }
 
   useEffect(() => {
-    if (token() && ["admin", "manager"].includes(user.role || ""))
-      loadData().catch((e) => setError(e.message));
-  }, []);
+    if (!token() || !["admin", "manager"].includes(user.role || "")) return;
+    const refresh = () => {
+      if (!document.hidden) void loadData().catch((e) => setError(e.message));
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 15000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [tab]);
 
   const revenue = useMemo(
     () =>
@@ -323,16 +374,37 @@ export default function Admin() {
     }
   }
 
-  async function updateOrder(id: string, status: string) {
+  async function updateOrder(
+    id: string,
+    status: string,
+    confirmPayment = false,
+  ) {
+    if (pendingOrderUpdates.current.has(id)) return;
+    pendingOrderUpdates.current.add(id);
+    orderVersion.current++;
+    setUpdatingOrders((previous) => [...previous, id]);
+    setError("");
     try {
-      await request(`/orders/${id}/status`, {
+      const updated = await request(`/orders/${id}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, confirmPayment }),
       });
-      notify("Đã cập nhật trạng thái đơn hàng.");
-      await loadData();
+      orderVersion.current++;
+      setOrders((previous) =>
+        previous.map((order) => (order._id === id ? updated : order)),
+      );
+      notify(
+        `Đã chuyển đơn ${updated.orderCode || updated._id.slice(-6).toUpperCase()} sang “${ORDER_LABEL[updated.status]}”.`,
+      );
+      await loadNotifications();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể cập nhật đơn");
+    } finally {
+      orderVersion.current++;
+      pendingOrderUpdates.current.delete(id);
+      setUpdatingOrders((previous) =>
+        previous.filter((orderId) => orderId !== id),
+      );
     }
   }
 
@@ -354,39 +426,75 @@ export default function Admin() {
           MIRA<span>ADMIN CONSOLE</span>
         </Link>
         <nav className="admin-nav">
-          <button
-            className={tab === "promotions" ? "active" : ""}
-            onClick={() => setTab("promotions")}
-          >
-            <Tags size={17} /> Khuyến mãi
-          </button>
-          <button
-            className={tab === "overview" ? "active" : ""}
-            onClick={() => setTab("overview")}
-          >
-            <LayoutDashboard size={17} /> Tổng quan
-          </button>
-          <button
-            className={tab === "products" ? "active" : ""}
-            onClick={() => setTab("products")}
-          >
-            <Gem size={17} /> Sản phẩm
-          </button>
-          <button
-            className={tab === "orders" ? "active" : ""}
-            onClick={() => setTab("orders")}
-          >
-            <ShoppingBag size={17} /> Đơn hàng
-          </button>
-          <button disabled>
-            <Users size={17} /> Khách hàng <small>Soon</small>
-          </button>
-          <button
-            className={tab === "analytics" ? "active" : ""}
-            onClick={() => setTab("analytics")}
-          >
-            <BarChart3 size={17} /> AI & Gợi ý
-          </button>
+          {(
+            [
+              {
+                id: "overview",
+                label: "Tổng quan",
+                icon: <LayoutDashboard size={17} />,
+              },
+              { id: "products", label: "Sản phẩm", icon: <Gem size={17} /> },
+              {
+                id: "orders",
+                label: "Đơn hàng",
+                icon: <ShoppingBag size={17} />,
+              },
+              {
+                id: "customers",
+                label: "Khách hàng",
+                icon: <Users size={17} />,
+              },
+              {
+                id: "promotions",
+                label: "Khuyến mãi",
+                icon: <Tags size={17} />,
+              },
+              {
+                id: "analytics",
+                label: "AI & Gợi ý",
+                icon: <BarChart3 size={17} />,
+              },
+            ] as { id: Tab; label: string; icon: ReactNode }[]
+          ).map((item) => {
+            const notice =
+              item.id === "overview" ? undefined : notifications[item.id];
+            return (
+              <button
+                key={item.id}
+                className={tab === item.id ? "active" : ""}
+                onClick={() => setTab(item.id)}
+                aria-label={item.label}
+                aria-current={tab === item.id ? "page" : undefined}
+                aria-describedby={
+                  notice?.count ? `admin-notice-${item.id}` : undefined
+                }
+                title={
+                  notice?.count
+                    ? `${item.label}: ${notice.message}`
+                    : item.label
+                }
+              >
+                {item.icon}
+                <span className="admin-nav-label">{item.label}</span>
+                {!!notice?.count && (
+                  <>
+                    <span
+                      className="admin-notification-badge"
+                      aria-hidden="true"
+                    >
+                      {notice.count > 99 ? "99+" : notice.count}
+                    </span>
+                    <span
+                      className="admin-notification-description"
+                      id={`admin-notice-${item.id}`}
+                    >
+                      {notice.message}
+                    </span>
+                  </>
+                )}
+              </button>
+            );
+          })}
         </nav>
         <div className="admin-user">
           <span>{(user.name || "A").charAt(0)}</span>
@@ -416,15 +524,41 @@ export default function Admin() {
                   ? "Quản Lý Sản Phẩm"
                   : tab === "orders"
                     ? "Quản Lý Đơn Hàng"
-                    : tab === "promotions"
-                      ? "Voucher, Giảm Giá & Flash Sale"
-                      : "Phân Tích AI & Gợi Ý"}
+                    : tab === "customers"
+                      ? "Quản Lý Khách Hàng"
+                      : tab === "promotions"
+                        ? "Voucher, Giảm Giá & Flash Sale"
+                        : "Phân Tích AI & Gợi Ý"}
             </h1>
           </div>
           <Link to="/">XEM CỬA HÀNG ↗</Link>
         </header>
 
+        {notificationError && (
+          <div className="admin-notification-error" role="alert">
+            <p>{notificationError}</p>
+            <button onClick={() => void loadNotifications()}>
+              Tải lại thông báo
+            </button>
+          </div>
+        )}
+        {tab !== "overview" && !!notifications[tab]?.count && (
+          <div className="admin-section-notice" role="status">
+            <span className="admin-notification-badge" aria-hidden="true">
+              {notifications[tab]!.count > 99
+                ? "99+"
+                : notifications[tab]!.count}
+            </span>
+            <p>{notifications[tab]!.message}</p>
+          </div>
+        )}
         {tab === "promotions" && <AdminPromotions products={products} />}
+        {tab === "customers" && (
+          <AdminCustomers
+            onViewed={readCustomerNotifications}
+            refreshKey={notifications.customers?.count || 0}
+          />
+        )}
         {tab === "overview" && (
           <>
             <div className="admin-stats">
@@ -465,6 +599,7 @@ export default function Admin() {
                 <OrderTable
                   orders={orders.slice(0, 6)}
                   onStatus={updateOrder}
+                  updatingOrders={updatingOrders}
                 />
               </section>
               <section className="admin-card admin-stock">
@@ -580,7 +715,16 @@ export default function Admin() {
         {tab === "orders" && (
           <section className="admin-card admin-full">
             <CardTitle title={`${orders.length} đơn hàng`} />
-            <OrderTable orders={orders} onStatus={updateOrder} />
+            <p className="admin-order-help">
+              Chọn trạng thái mới rồi bấm Cập nhật ở từng đơn. Với đơn chuyển
+              khoản chờ thanh toán, xác nhận đã nhận đủ tiền để chuyển sang Đã
+              xác nhận.
+            </p>
+            <OrderTable
+              orders={orders}
+              onStatus={updateOrder}
+              updatingOrders={updatingOrders}
+            />
           </section>
         )}
         {tab === "analytics" && (
@@ -911,9 +1055,11 @@ function CardTitle({
 function OrderTable({
   orders,
   onStatus,
+  updatingOrders,
 }: {
   orders: Order[];
-  onStatus: (id: string, status: string) => void;
+  onStatus: (id: string, status: string, confirmPayment?: boolean) => void;
+  updatingOrders: string[];
 }) {
   return (
     <div className="order-admin-table">
@@ -926,46 +1072,114 @@ function OrderTable({
       </div>
       {orders.map((o) => (
         <div className="table-row" key={o._id}>
-          <span>
-            <b>#{o._id.slice(-6).toUpperCase()}</b>
+          <span className="admin-order-code">
+            <b title={o.orderCode || o._id}>
+              {o.orderCode || `#${o._id.slice(-6).toUpperCase()}`}
+            </b>
           </span>
-          <span>
+          <span className="admin-order-customer">
             <b>{o.customer?.name || "Khách hàng"}</b>
             <small>{o.customer?.email || ""}</small>
           </span>
-          <span>{date(o.createdAt)}</span>
-          <span>
+          <span className="admin-order-date">{date(o.createdAt)}</span>
+          <span className="admin-order-total">
             <b>{money(o.total)}</b>
           </span>
-          <span>
-            <select
-              className={`order-status ${o.status}`}
-              value={o.status}
-              onChange={(e) => onStatus(o._id, e.target.value)}
-            >
-              {[
-                "pending_payment",
-                "pending",
-                "confirmed",
-                "shipping",
-                "completed",
-                "cancelled",
-              ].map((s) => (
-                <option
-                  key={s}
-                  value={s}
-                  disabled={
-                    s !== o.status && !orderTransitions[o.status]?.includes(s)
-                  }
-                >
-                  {ORDER_LABEL[s]}
-                </option>
-              ))}
-            </select>
+          <span className="admin-order-actions">
+            <AdminOrderStatus
+              order={o}
+              busy={updatingOrders.includes(o._id)}
+              onSave={onStatus}
+            />
           </span>
         </div>
       ))}
       {orders.length === 0 && <p className="admin-empty">Chưa có đơn hàng.</p>}
+    </div>
+  );
+}
+
+function AdminOrderStatus({
+  order,
+  busy,
+  onSave,
+}: {
+  order: Order;
+  busy: boolean;
+  onSave: (id: string, status: string, confirmPayment?: boolean) => void;
+}) {
+  const [nextStatus, setNextStatus] = useState(order.status);
+  const [receivedPayment, setReceivedPayment] = useState(false);
+  const code = order.orderCode || order._id.slice(-6).toUpperCase();
+  const choices = orderTransitions[order.status] || [];
+  const needsPaymentConfirmation =
+    order.paymentMethod === "BANK_QR" &&
+    order.paymentStatus !== "PAID" &&
+    nextStatus === "confirmed";
+  useEffect(() => {
+    setNextStatus(order.status);
+    setReceivedPayment(false);
+  }, [order.status, order.paymentStatus]);
+  if (!choices.length)
+    return (
+      <strong className={`order-status-label ${order.status}`}>
+        {ORDER_LABEL[order.status] || order.status}
+      </strong>
+    );
+  return (
+    <div className="admin-order-status-editor">
+      <select
+        className={`order-status ${order.status}`}
+        value={nextStatus}
+        aria-label={`Trạng thái đơn ${code}`}
+        disabled={busy}
+        aria-busy={busy}
+        onChange={(event) => {
+          setNextStatus(event.target.value);
+          setReceivedPayment(false);
+        }}
+      >
+        {Object.keys(ORDER_LABEL).map((status) => (
+          <option
+            key={status}
+            value={status}
+            disabled={status !== order.status && !choices.includes(status)}
+          >
+            {ORDER_LABEL[status]}
+          </option>
+        ))}
+      </select>
+      {needsPaymentConfirmation && (
+        <label className="admin-payment-confirmation">
+          <input
+            type="checkbox"
+            checked={receivedPayment}
+            disabled={busy}
+            onChange={(event) => setReceivedPayment(event.target.checked)}
+            aria-label={`Xác nhận đã nhận đủ tiền đơn ${code}`}
+          />
+          <span>Đã kiểm tra và nhận đủ {money(order.total)} chuyển khoản.</span>
+        </label>
+      )}
+      <button
+        type="button"
+        className="admin-save-order"
+        disabled={
+          busy ||
+          nextStatus === order.status ||
+          (needsPaymentConfirmation && !receivedPayment)
+        }
+        onClick={() =>
+          onSave(
+            order._id,
+            nextStatus,
+            needsPaymentConfirmation && receivedPayment,
+          )
+        }
+        aria-label={`Cập nhật đơn ${code}`}
+      >
+        {busy ? "Đang lưu…" : "Cập nhật"}
+      </button>
     </div>
   );
 }

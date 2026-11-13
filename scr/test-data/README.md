@@ -9,9 +9,13 @@ npm run build
 npm run test:cart
 npm run test:appointments
 npm test
+npm run test:decision-support
+npm run test:admin-notifications
 ```
 
 - `test.mjs`: kiểm thử API demo, MongoDB tạm và giao diện Chrome/Edge.
+- `decision-support.test.mjs`: quản trị khách hàng và phân quyền; phiên tư vấn nhiều lượt và cách ly người dùng; thiếu/đổi tiêu chí; DSS đổi trọng số, chuẩn hóa, điểm thành phần và Top-K; 4Cs; hành vi và purchase chống trùng; Gemini mô phỏng thành công/lỗi; giao diện quản trị, tư vấn, so sánh desktop/mobile. Không gọi Gemini thật hoặc ghi database `.env`. Chạy sau build.
+- `admin-notifications.test.mjs`: thứ tự menu, số thông báo theo từng mục, huy hiệu tròn hồng pastel, mốc đọc riêng từng admin, nút Cập nhật đơn, lưu trạng thái COD và xác nhận thủ công đơn chuyển khoản, xác nhận đã nhận tiền, bảo toàn chứng từ ngân hàng, khóa khi đang lưu, tự cập nhật và mobile. Chạy sau build với MongoDB kiểm thử riêng.
 - `cart-model.test.ts`: quy tắc số lượng, tồn kho giữa các biến thể và phí vận chuyển.
 - `appointments.test.mjs`: đặt lịch Private Salon, email qua SMTP giả lập và giao diện xác nhận desktop/mobile.
 - `promotions.test.mjs`: voucher, giảm giá, flash sale, báo giá và tạo đơn trên MongoDB kiểm thử riêng. Chạy `npm run test:promotions` sau build.

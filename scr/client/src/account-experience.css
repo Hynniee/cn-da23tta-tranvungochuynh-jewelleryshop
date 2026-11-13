@@ -252,6 +252,7 @@
   padding: 5px 8px;
 }
 .account-status.order-status-completed,
+.account-status.order-status-delivered,
 .account-status.order-status-confirmed {
   background: #e9f3ec;
   color: #256645;

@@ -1420,30 +1420,6 @@ body {
   align-items: center;
   gap: 5px;
 }
-.concierge {
-  position: fixed;
-  right: 28px;
-  bottom: 18px;
-  z-index: 50;
-  border: 1px solid #eee;
-  background: #fff;
-  border-radius: 24px;
-  height: 42px;
-  padding: 0 17px;
-  box-shadow: 0 4px 20px #0002;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-}
-.concierge span {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #f0d18c;
-}
 @media (max-width: 1180px) {
   .lux-header {
     grid-template-columns: 220px 1fr 330px;
@@ -3696,11 +3672,18 @@ body {
 }
 .admin-grid {
   margin-top: 15px;
-  display: grid;
-  grid-template-columns: 1.6fr 0.7fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 15px;
 }
+.admin-grid > .admin-card {
+  flex: 1 1 240px;
+}
+.admin-grid > .admin-card:first-child {
+  flex: 3 1 930px;
+}
 .admin-card {
+  min-width: 0;
   padding: 20px;
   background: #fff;
   border: 1px solid #e7e3dd;
@@ -3733,9 +3716,42 @@ body {
   align-items: center;
   gap: 12px;
 }
+.order-admin-table {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
 .order-admin-table .table-head,
 .order-admin-table .table-row {
-  grid-template-columns: 0.8fr 1.4fr 0.8fr 1fr 1.05fr;
+  grid-template-columns:
+    minmax(190px, 1.25fr) minmax(190px, 1.45fr)
+    100px minmax(120px, 1fr) minmax(180px, 1.2fr);
+  min-width: 880px;
+  column-gap: 20px;
+}
+.order-admin-table .table-row > span {
+  min-width: 0;
+  line-height: 1.65;
+}
+.admin-order-code,
+.admin-order-customer {
+  overflow-wrap: anywhere;
+}
+.admin-order-code b,
+.admin-order-customer b {
+  display: block;
+}
+.admin-order-code,
+.admin-order-date,
+.admin-order-total {
+  font-variant-numeric: tabular-nums;
+}
+.admin-order-date,
+.admin-order-total {
+  white-space: nowrap;
+}
+.admin-order-actions .order-status {
+  min-width: 0;
 }
 .product-admin-table .table-head,
 .product-admin-table .table-row {
@@ -4029,9 +4045,6 @@ body {
   }
   .admin-stats {
     grid-template-columns: 1fr 1fr;
-  }
-  .admin-grid {
-    grid-template-columns: 1fr;
   }
   .table-row,
   .table-head {
@@ -5566,9 +5579,6 @@ body {
     flex-wrap: wrap;
     gap: 10px;
     padding: 20px;
-  }
-  .concierge {
-    display: none;
   }
   .filters {
     display: block;
