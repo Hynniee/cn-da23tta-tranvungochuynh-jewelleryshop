@@ -33,11 +33,11 @@ export default function Appointment() {
         <h1>
           Hẹn một khoảnh khắc
           <br />
-          <em>dành riêng cho bạn.</em>
+          <em>dành riêng cho bạn</em>
         </h1>
         <p>
           Trải nghiệm trang sức MIRA trong không gian riêng tư. Chia sẻ mong
-          muốn để chuyên viên chuẩn bị cho buổi gặp của bạn.
+          muốn để chuyên viên chuẩn bị cho buổi gặp của bạn
         </p>
       </div>
       <div className="appointment-layout">
@@ -46,11 +46,11 @@ export default function Appointment() {
           <h2>
             Mỗi lựa chọn,
             <br />
-            một câu chuyện riêng.
+            một câu chuyện riêng
           </h2>
           <p>
             Từ một món quà ý nghĩa đến dấu mốc trọn đời, MIRA cùng bạn tìm thiết
-            kế phù hợp.
+            kế phù hợp
           </p>
           <ul>
             <li>
@@ -65,7 +65,7 @@ export default function Appointment() {
           </ul>
           <p className="appointment-aside-note">
             Tất cả thời gian hiển thị theo giờ Việt Nam (UTC+7). Vui lòng kiểm
-            tra email và số điện thoại trước khi đặt lịch.
+            tra email và số điện thoại trước khi đặt lịch
           </p>
           <Link to="/advisor">Tham khảo MIRA AI trước buổi hẹn →</Link>
         </aside>
@@ -74,7 +74,7 @@ export default function Appointment() {
           <h2>Đặt lịch tư vấn riêng</h2>
           <p className="appointment-hint">
             Các trường có dấu * là bắt buộc. Bạn có thể đặt lịch mà không cần
-            đăng nhập.
+            đăng nhập
           </p>
           <div className="appointment-fields">
             <label className="appointment-wide">
@@ -267,7 +267,7 @@ export default function Appointment() {
           </button>
           <p className="appointment-hint">
             MIRA sử dụng thông tin bạn cung cấp để chuẩn bị buổi tư vấn và gửi
-            email xác nhận lịch hẹn.
+            email xác nhận lịch hẹn
           </p>
         </form>
       </div>

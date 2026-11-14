@@ -5,13 +5,13 @@ const emailPattern = new RegExp(config.emailPattern);
 
 export function appointmentEmailInputError(value: string) {
   const email = value.trim();
-  if (!email) return "Vui lòng nhập email.";
+  if (!email) return "Vui lòng nhập email";
   if (
     email.length > 254 ||
     email.split("@")[0].length > 64 ||
     !emailPattern.test(email)
   )
-    return "Email chưa đúng định dạng. Ví dụ: ten@gmail.com.";
+    return "Email chưa đúng định dạng. Ví dụ: ten@gmail.com";
   return "";
 }
 export type AppointmentForm = {
@@ -61,26 +61,26 @@ export function parseAppointmentDateInput(value: string) {
 }
 
 export function appointmentDateInputError(value: string) {
-  if (!value) return "Vui lòng nhập ngày tư vấn.";
+  if (!value) return "Vui lòng nhập ngày tư vấn";
   const iso = parseAppointmentDateInput(value);
   if (!iso)
-    return "Vui lòng nhập ngày hợp lệ theo dạng ngày/tháng/năm (dd/mm/yyyy).";
+    return "Vui lòng nhập ngày hợp lệ theo dạng ngày/tháng/năm (dd/mm/yyyy)";
   if (iso < appointmentDate())
-    return "Không thể chọn ngày tư vấn trong quá khứ.";
+    return "Không thể chọn ngày tư vấn trong quá khứ";
   if (iso > appointmentDate(config.maxDaysAhead))
-    return `Vui lòng chọn ngày trong ${config.maxDaysAhead} ngày tới.`;
+    return `Vui lòng chọn ngày trong ${config.maxDaysAhead} ngày tới`;
   return "";
 }
 export function emailStatusText(appointment: Appointment) {
   switch (appointment.emailStatus) {
     case "sent":
-      return `Email xác nhận đã được gửi tới ${appointment.email}. Bạn vui lòng kiểm tra cả mục thư rác.`;
+      return `Email xác nhận đã được gửi tới ${appointment.email}. Bạn vui lòng kiểm tra cả mục thư rác`;
     case "not_configured":
-      return "Lịch hẹn đã được lưu. Dịch vụ email chưa được cấu hình; vui lòng giữ mã hẹn bên dưới.";
+      return "Lịch hẹn đã được lưu. Dịch vụ email chưa được cấu hình; vui lòng giữ mã hẹn bên dưới";
     case "failed":
-      return "Lịch hẹn đã được lưu nhưng chưa gửi được email xác nhận. Bạn có thể thử gửi lại sau một phút.";
+      return "Lịch hẹn đã được lưu nhưng chưa gửi được email xác nhận. Bạn có thể thử gửi lại sau một phút";
     default:
-      return "Lịch hẹn đã được lưu. Email xác nhận đang được xử lý.";
+      return "Lịch hẹn đã được lưu. Email xác nhận đang được xử lý";
   }
 }
 

@@ -19,7 +19,7 @@ export default function RingSizer() {
     try {
       setResult(estimateRingSize(measurement, method));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không tính được size.");
+      setError(e instanceof Error ? e.message : "Không tính được size");
     }
   }
   return (
@@ -31,7 +31,7 @@ export default function RingSizer() {
         <Ruler size={30} />
         <span>HƯỚNG DẪN ĐO SIZE</span>
         <h1>Tìm size nhẫn của bạn</h1>
-        <p>Đo bằng thước thật, nhập số đo và xem size tham khảo.</p>
+        <p>Đo bằng thước thật, nhập số đo và xem size tham khảo</p>
       </div>
       <div className="personal-tool-layout">
         <form className="personal-tool-panel" onSubmit={calculate}>
@@ -65,22 +65,22 @@ export default function RingSizer() {
               <>
                 <li>
                   Quấn một dải giấy mảnh quanh ngón tay, vừa khít và không siết
-                  chặt.
+                  chặt
                 </li>
                 <li>
                   Đánh dấu điểm hai đầu gặp nhau, trải giấy ra và đo chiều dài
-                  bằng thước.
+                  bằng thước
                 </li>
-                <li>Nhập số đo theo milimét (1 cm = 10 mm).</li>
+                <li>Nhập số đo theo milimét (1 cm = 10 mm)</li>
               </>
             ) : (
               <>
-                <li>Chọn chiếc nhẫn đang đeo vừa ngón tay bạn muốn đo.</li>
+                <li>Chọn chiếc nhẫn đang đeo vừa ngón tay bạn muốn đo</li>
                 <li>
                   Đo đường kính bên trong, từ mép trong bên này đến mép trong
-                  đối diện, không tính độ dày thành nhẫn.
+                  đối diện, không tính độ dày thành nhẫn
                 </li>
-                <li>Nhập số đo theo milimét.</li>
+                <li>Nhập số đo theo milimét</li>
               </>
             )}
           </ol>
@@ -130,8 +130,8 @@ export default function RingSizer() {
               </dl>
               <p>
                 {result.size
-                  ? "Nếu số đo nằm giữa hai size, kết quả chọn size lớn hơn trong bảng."
-                  : "Công cụ không tự gán size ngoài phạm vi bảng. Bạn có thể đặt lịch để đo trực tiếp."}
+                  ? "Nếu số đo nằm giữa hai size, kết quả chọn size lớn hơn trong bảng"
+                  : "Công cụ không tự gán size ngoài phạm vi bảng. Bạn có thể đặt lịch để đo trực tiếp"}
               </p>
               <Link to="/appointments">
                 Đặt lịch xác nhận size tại cửa hàng →
@@ -154,7 +154,7 @@ export default function RingSizer() {
             </span>
           </div>
           <p className="tool-muted">
-            Hình minh họa, không dùng kích thước trên màn hình để đo.
+            Hình minh họa, không dùng kích thước trên màn hình để đo
           </p>
           <details>
             <summary>Bảng size tham khảo</summary>

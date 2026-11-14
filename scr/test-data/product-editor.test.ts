@@ -88,10 +88,22 @@ test(
       response = await send({ stock: 2 }, customer);
       assert.equal(response.status, 403);
       await response.json();
-      response = await send({ category: "Nhẫn cưới" });
+      response = await send({
+        category: "Nhẫn cưới",
+        sizes: ["12", "14"],
+        sizeStocks: [
+          { size: "12", stock: 4 },
+          { size: "14", stock: 3 },
+        ],
+      });
       assert.equal(response.status, 200);
       await response.json();
-      response = await send({ stock: 0 });
+      response = await send({
+        sizeStocks: [
+          { size: "12", stock: 0 },
+          { size: "14", stock: 0 },
+        ],
+      });
       assert.equal(response.status, 200);
       assert.equal((await response.json()).stock, 0);
     } finally {

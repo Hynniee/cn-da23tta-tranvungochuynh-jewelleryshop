@@ -47,7 +47,7 @@ export default function DiamondDSS() {
         <h1>Chọn kim cương theo 4Cs</h1>
         <p>
           Điều chỉnh mức ưu tiên 4Cs và so sánh các lựa chọn trong ngân sách của
-          bạn.
+          bạn
         </p>
       </header>
       <form className="dss-form" onSubmit={run}>
@@ -94,7 +94,7 @@ export default function DiamondDSS() {
         </button>
       </form>
       {error && <p role="alert">{error}</p>}
-      {done && !rows.length && <p>Không có kim cương trong ngân sách này.</p>}
+      {done && !rows.length && <p>Không có kim cương trong ngân sách này</p>}
       <div className="diamond-table">
         {rows.map((d: any) => (
           <article key={d._id}>

@@ -75,8 +75,8 @@ export default function ProductFitGuide({
               <p>
                 Size có thể chọn cho sản phẩm này: {sizes.join(", ")}.
                 {selectedSize
-                  ? ` Bạn đang chọn size ${selectedSize}.`
-                  : " Bạn chưa chọn size."}
+                  ? ` Bạn đang chọn size ${selectedSize}`
+                  : " Bạn chưa chọn size"}
               </p>
               <RingSizeTable selectedSize={selectedSize} />
               <Link to="/ring-sizer">Xem hướng dẫn đo và tính size nhẫn →</Link>
@@ -91,14 +91,14 @@ export default function ProductFitGuide({
               <p>
                 Kích cỡ có thể chọn: {sizes.join(" · ")}.
                 {selectedSize
-                  ? ` Bạn đang chọn ${selectedSize}.`
-                  : " Bạn chưa chọn kích cỡ."}
+                  ? ` Bạn đang chọn ${selectedSize}`
+                  : " Bạn chưa chọn kích cỡ"}
               </p>
             </>
           ) : (
             <p>
               Sản phẩm theo kích thước thiết kế, không cần chọn size. Xem phần
-              thông tin sản phẩm để biết thêm chi tiết.
+              thông tin sản phẩm để biết thêm chi tiết
             </p>
           )}
         </section>

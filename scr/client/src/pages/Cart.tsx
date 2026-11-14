@@ -1,3 +1,4 @@
+import { selectedStock } from "../lib/inventory";
 import Image from "../components/Image";
 import { Link } from "react-router-dom";
 import { ArrowLeft, LockKeyhole, ShieldCheck, Trash2 } from "lucide-react";
@@ -33,7 +34,7 @@ export default function Cart() {
       <div className="cart-title-row">
         <div>
           <h1>Giỏ hàng của bạn</h1>
-          <p>{cart.length} tuyệt tác đang chờ được sở hữu.</p>
+          <p>{cart.length} tuyệt tác đang chờ được sở hữu</p>
         </div>
         <Link to="/products">
           <ArrowLeft size={14} /> Tiếp tục khám phá
@@ -44,20 +45,20 @@ export default function Cart() {
       {!checking && !validSizes && (
         <p className="pd-size-error" role="alert">
           Vui lòng chọn lại kích cỡ cho các sản phẩm trong giỏ trước khi thanh
-          toán.
+          toán
         </p>
       )}
       {!inStock && (
         <p role="alert">
           Một số sản phẩm đã hết hàng hoặc vượt tồn kho. Vui lòng giảm số lượng
-          hoặc xóa sản phẩm trước khi thanh toán.
+          hoặc xóa sản phẩm trước khi thanh toán
         </p>
       )}
       {!cart.length ? (
         <section className="lux-empty">
           <span>◇</span>
           <h2>Giỏ hàng đang trống</h2>
-          <p>Khám phá những tuyệt tác kim hoàn được tuyển chọn bởi MIRA.</p>
+          <p>Khám phá những tuyệt tác kim hoàn được tuyển chọn bởi MIRA</p>
           <Link to="/products" className="gold-btn">
             KHÁM PHÁ BỘ SƯU TẬP
           </Link>
@@ -97,8 +98,23 @@ export default function Cart() {
                           Chọn kích cỡ
                         </option>
                         {item.sizeOptions.map((value) => (
-                          <option key={value} value={value}>
+                          <option
+                            key={value}
+                            value={value}
+                            disabled={
+                              selectedStock(
+                                {
+                                  stock: item.stock ?? 0,
+                                  sizeStocks: item.sizeStocks,
+                                },
+                                value,
+                              ) <= 0
+                            }
+                          >
                             {value}
+                            {item.sizeStocks?.length
+                              ? ` · Còn ${selectedStock({ stock: item.stock ?? 0, sizeStocks: item.sizeStocks }, value)}`
+                              : ""}
                           </option>
                         ))}
                       </select>
@@ -161,7 +177,7 @@ export default function Cart() {
               <span>Tổng thanh toán</span>
               <b>{money(total)}</b>
             </div>
-            <small>Đã bao gồm VAT và hồ sơ giám định đi kèm sản phẩm.</small>
+            <small>Đã bao gồm VAT và hồ sơ giám định đi kèm sản phẩm</small>
             {validSizes &&
             inStock &&
             !checking &&

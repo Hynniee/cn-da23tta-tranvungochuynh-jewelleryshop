@@ -33,7 +33,7 @@ export default function ProductComparison({
   return (
     <section className="product-comparison" aria-label="So sánh sản phẩm">
       <h3>So sánh lựa chọn</h3>
-      <p>Chọn từ 2 đến 4 sản phẩm để đối chiếu thông số và điểm DSS.</p>
+      <p>Chọn từ 2 đến 4 sản phẩm để đối chiếu thông số và điểm DSS</p>
       <div className="comparison-choices">
         {products.map((product) => (
           <label key={product._id}>

@@ -19,7 +19,7 @@ export default function Recommendations() {
       })
       .catch(() => {
         if (!controller.signal.aborted)
-          setError("Chưa tải được gợi ý cá nhân. Vui lòng thử lại.");
+          setError("Chưa tải được gợi ý cá nhân. Vui lòng thử lại");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -33,14 +33,14 @@ export default function Recommendations() {
         <h1>Dành riêng cho bạn</h1>
         <p>
           Được xếp hạng từ hành vi xem, tìm kiếm, yêu thích, giỏ hàng và mua
-          hàng.
+          hàng
         </p>
       </header>
       {!token() && (
         <section className="lux-empty">
           <h2>Khám phá lựa chọn dành riêng cho bạn</h2>
           <p>
-            Đăng nhập để nhận gợi ý từ sở thích và những thiết kế bạn quan tâm.
+            Đăng nhập để nhận gợi ý từ sở thích và những thiết kế bạn quan tâm
           </p>
           <Link className="gold-btn" to="/login?next=%2Ffor-you">
             Đăng nhập
@@ -58,7 +58,7 @@ export default function Recommendations() {
       )}
       {!loading && !error && token() && data?.products?.length === 0 && (
         <p>
-          Chưa có thiết kế phù hợp.{" "}
+          Chưa có thiết kế phù hợp{" "}
           <Link to="/products">Khám phá bộ sưu tập</Link>
         </p>
       )}

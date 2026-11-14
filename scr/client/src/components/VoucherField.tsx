@@ -51,7 +51,7 @@ export default function VoucherField({
           Bỏ mã ưu đãi
         </button>
       )}
-      <small>Ưu đãi được kiểm tra lại khi đặt hàng.</small>
+      <small>Ưu đãi được kiểm tra lại khi đặt hàng</small>
     </section>
   );
 }

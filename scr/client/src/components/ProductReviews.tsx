@@ -61,7 +61,7 @@ export default function ProductReviews({ slug }: { slug: string }) {
       setComment("");
       setPage(1);
       setRevision((value) => value + 1);
-      notify("Cảm ơn bạn! Đánh giá đã được đăng.");
+      notify("Cảm ơn bạn! Đánh giá đã được đăng");
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -115,7 +115,7 @@ export default function ProductReviews({ slug }: { slug: string }) {
             {data.canReview && token() ? (
               <form className="review-form" onSubmit={submit}>
                 <h3>Chia sẻ trải nghiệm của bạn</h3>
-                <p>Bạn đã mua sản phẩm này trong đơn hàng đã hoàn tất.</p>
+                <p>Bạn đã mua sản phẩm này trong đơn hàng đã hoàn tất</p>
                 <fieldset disabled={sending}>
                   <legend>Số sao</legend>
                   <div className="review-stars">
@@ -158,7 +158,7 @@ export default function ProductReviews({ slug }: { slug: string }) {
                 {data.hasReviewed ? (
                   "Bạn đã đánh giá sản phẩm này. Cảm ơn bạn đã chia sẻ!"
                 ) : token() ? (
-                  "Bạn chỉ có thể đánh giá khi đơn hàng chứa sản phẩm này đã hoàn tất."
+                  "Bạn chỉ có thể đánh giá khi đơn hàng chứa sản phẩm này đã hoàn tất"
                 ) : (
                   <>
                     <Link
@@ -167,7 +167,7 @@ export default function ProductReviews({ slug }: { slug: string }) {
                       Đăng nhập
                     </Link>{" "}
                     để kiểm tra quyền đánh giá. Chỉ khách đã mua sản phẩm trong
-                    đơn hàng hoàn tất được gửi đánh giá.
+                    đơn hàng hoàn tất được gửi đánh giá
                   </>
                 )}
               </p>
@@ -194,7 +194,7 @@ export default function ProductReviews({ slug }: { slug: string }) {
               ))}
             </div>
             {!data.total && (
-              <p>Chưa có nhận xét từ khách hàng đã mua sản phẩm này.</p>
+              <p>Chưa có nhận xét từ khách hàng đã mua sản phẩm này</p>
             )}
             {data.pages > 1 && (
               <nav className="pagination" aria-label="Phân trang đánh giá">

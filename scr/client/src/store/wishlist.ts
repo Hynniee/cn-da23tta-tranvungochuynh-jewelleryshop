@@ -24,7 +24,7 @@ export function toggleWishlist(id: string) {
   if (!ids.includes(id)) trackBehavior("WISHLIST", { product: id });
   notify(
     ids.includes(id)
-      ? "Đã xóa sản phẩm khỏi danh sách yêu thích."
-      : "Đã thêm sản phẩm vào danh sách yêu thích.",
+      ? "Đã xóa sản phẩm khỏi danh sách yêu thích"
+      : "Đã thêm sản phẩm vào danh sách yêu thích",
   );
 }

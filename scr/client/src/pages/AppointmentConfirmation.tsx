@@ -32,7 +32,7 @@ export default function AppointmentConfirmation() {
       </div>
       <span className="page-kicker">MIRA PRIVATE SALON</span>
       <h1>Đặt lịch hẹn thành công</h1>
-      <p>Cảm ơn {appointment.name}. MIRA rất mong được đón tiếp bạn.</p>
+      <p>Cảm ơn {appointment.name}. MIRA rất mong được đón tiếp bạn</p>
       <section className="appointment-ticket" aria-label="Chi tiết lịch hẹn">
         <div className="appointment-ticket-head">
           <CalendarCheck size={27} />
@@ -104,7 +104,7 @@ export default function AppointmentConfirmation() {
         )}
       </section>
       <p className="appointment-hint">
-        Vui lòng lưu mã hẹn để cung cấp khi đến Salon.
+        Vui lòng lưu mã hẹn để cung cấp khi đến Salon
       </p>
       <div className="appointment-actions">
         <Link className="gold-btn" to="/products">

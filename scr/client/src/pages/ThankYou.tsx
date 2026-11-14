@@ -69,7 +69,7 @@ export default function ThankYou() {
     return (
       <section className="lux-empty">
         <h1>Chưa xem được đơn hàng</h1>
-        <p role="alert">{error || "Không tìm thấy mã đơn hàng."}</p>
+        <p role="alert">{error || "Không tìm thấy mã đơn hàng"}</p>
         {id && (
           <button
             className="ui-secondary"
@@ -97,9 +97,9 @@ export default function ThankYou() {
         <span className="page-kicker">MIRA · WITH LOVE</span>
         <h1>Cảm ơn bạn đã chọn MIRA</h1>
         <p>
-          Mỗi món trang sức đều mang một câu chuyện.
+          Mỗi món trang sức đều mang một câu chuyện
           <br />
-          MIRA rất vui được trở thành một phần trong câu chuyện của bạn.
+          MIRA rất vui được trở thành một phần trong câu chuyện của bạn
         </p>
         <div className="thankyou-order-code">
           Đơn hàng <strong>{code}</strong>
@@ -137,14 +137,14 @@ export default function ThankYou() {
             ) : (
               <p>
                 {refunded
-                  ? "Khoản thanh toán của đơn hàng đã được hoàn lại."
+                  ? "Khoản thanh toán của đơn hàng đã được hoàn lại"
                   : mismatch
-                    ? "Vui lòng liên hệ MIRA để đối soát. Không chuyển thêm tiền trước khi được hỗ trợ."
+                    ? "Vui lòng liên hệ MIRA để đối soát. Không chuyển thêm tiền trước khi được hỗ trợ"
                     : paid
-                      ? "MIRA đã nhận thanh toán. Bạn có thể theo dõi tiến độ xử lý trong chi tiết đơn hàng."
+                      ? "MIRA đã nhận thanh toán. Bạn có thể theo dõi tiến độ xử lý trong chi tiết đơn hàng"
                       : order.paymentMethod === "BANK_QR"
-                        ? "Nếu đã chuyển khoản thành công, bạn không cần chuyển lại. Trạng thái sẽ tự cập nhật khi MIRA xác nhận giao dịch."
-                        : "MIRA sẽ liên hệ xác nhận trước khi giao hàng. Bạn thanh toán khi nhận sản phẩm."}
+                        ? "Nếu đã chuyển khoản thành công, bạn không cần chuyển lại. Trạng thái sẽ tự cập nhật khi MIRA xác nhận giao dịch"
+                        : "MIRA sẽ liên hệ xác nhận trước khi giao hàng. Bạn thanh toán khi nhận sản phẩm"}
               </p>
             )}
           </div>
@@ -225,7 +225,7 @@ export default function ThankYou() {
         </div>
       </section>
       <p className="thankyou-signature">
-        Được chọn bởi bạn. Được trân trọng bởi MIRA.
+        Được chọn bởi bạn. Được trân trọng bởi MIRA
       </p>
       <p className="transfer-support">
         Cần hỗ trợ?{" "}

@@ -62,7 +62,7 @@ export default function Profile() {
         <p>MIRA PRIVATE CLIENT</p>
         <h1>Hồ Sơ Cá Nhân</h1>
         <span>
-          Quản lý thông tin và đặc quyền dành riêng cho khách hàng MIRA.
+          Quản lý thông tin và đặc quyền dành riêng cho khách hàng MIRA
         </span>
       </section>
 
@@ -169,7 +169,7 @@ export default function Profile() {
                 </div>
               </label>
               <div className="profile-save">
-                <span>{saved ? "Thông tin đã được cập nhật." : ""}</span>
+                <span>{saved ? "Thông tin đã được cập nhật" : ""}</span>
                 <button>LƯU THAY ĐỔI</button>
               </div>
             </form>
@@ -188,13 +188,13 @@ export default function Profile() {
                 <b>MẶC ĐỊNH</b>
                 <strong>{name || "Khách hàng MIRA"}</strong>
                 <p>{phone || "Chưa cập nhật số điện thoại"}</p>
-                <p>Chưa cập nhật địa chỉ giao hàng.</p>
+                <p>Chưa cập nhật địa chỉ giao hàng</p>
                 <button>Chỉnh sửa</button>
               </article>
               <article className="add-address">
                 <i>＋</i>
                 <strong>Thêm địa chỉ mới</strong>
-                <p>Lưu địa chỉ để thanh toán nhanh hơn ở lần mua tiếp theo.</p>
+                <p>Lưu địa chỉ để thanh toán nhanh hơn ở lần mua tiếp theo</p>
               </article>
             </div>
           </section>
@@ -203,19 +203,19 @@ export default function Profile() {
             <article>
               <span>01</span>
               <strong>Private Salon Priority</strong>
-              <p>Ưu tiên lịch hẹn riêng cùng chuyên gia kim hoàn MIRA.</p>
+              <p>Ưu tiên lịch hẹn riêng cùng chuyên gia kim hoàn MIRA</p>
             </article>
             <article>
               <span>02</span>
               <strong>Lifetime Jewelry Spa</strong>
               <p>
-                Vệ sinh và chăm sóc tác phẩm định kỳ theo chính sách thành viên.
+                Vệ sinh và chăm sóc tác phẩm định kỳ theo chính sách thành viên
               </p>
             </article>
             <article>
               <span>03</span>
               <strong>Birthday Privilege</strong>
-              <p>Đặc quyền cá nhân hóa dành riêng trong tháng sinh nhật.</p>
+              <p>Đặc quyền cá nhân hóa dành riêng trong tháng sinh nhật</p>
             </article>
           </section>
         </div>

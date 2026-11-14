@@ -1,3 +1,4 @@
+import { sameStock, selectedStock, type SizeStock } from "../lib/inventory";
 import { trackBehavior } from "../lib/behavior";
 import { productSizes } from "../lib/product-sizes";
 export type CartItem = {
@@ -13,6 +14,7 @@ export type CartItem = {
   slug?: string;
   stone?: string;
   stock?: number;
+  sizeStocks?: SizeStock[];
   engraving?: string;
 };
 
@@ -53,10 +55,11 @@ export function addCart(item: CartItem) {
       x.engraving === item.engraving,
   );
   const productQuantity = cart
-    .filter((x) => x._id === item._id)
+    .filter((x) => sameStock(item, x))
     .reduce((sum, x) => sum + x.quantity, 0);
   if (item.stock !== undefined && productQuantity + item.quantity > item.stock)
     return false;
+  if (index >= 0 && cart[index].quantity + item.quantity > 100) return false;
   if (index >= 0) cart[index].quantity += item.quantity;
   else cart.push(item);
   saveCart(cart);
@@ -73,6 +76,7 @@ export function reconcileItems(
     price: number;
     salePrice?: number;
     stock: number;
+    sizeStocks?: SizeStock[];
     material: string;
     stone?: string;
     images?: string[];
@@ -100,7 +104,8 @@ export function reconcileItems(
           : ""
         : "",
       price: product.salePrice ?? product.price,
-      stock: product.stock,
+      stock: selectedStock(product, item.size),
+      sizeStocks: product.sizeStocks,
       material: product.material,
       stone: product.stone,
       image: product.images?.[0] || item.image,
@@ -115,12 +120,13 @@ export function reconcileCart(
   return items;
 }
 export function cartHasStock(items: CartItem[]): boolean {
-  const totals = new Map<string, number>();
-  for (const item of items)
-    totals.set(item._id, (totals.get(item._id) || 0) + item.quantity);
   return items.every(
     (item) =>
-      item.stock === undefined || item.stock >= (totals.get(item._id) || 0),
+      item.stock === undefined ||
+      item.stock >=
+        items
+          .filter((other) => sameStock(item, other))
+          .reduce((sum, other) => sum + other.quantity, 0),
   );
 }
 export function cartHasValidSizes(items: CartItem[]): boolean {

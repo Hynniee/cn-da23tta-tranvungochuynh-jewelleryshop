@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { request } from "../lib/api";
 import {
   appointmentToken,
+  appointmentConfig,
   appointmentDateInputError,
   appointmentEmailInputError,
   formatAppointmentDateInput,
@@ -14,6 +15,15 @@ import {
 
 export function useAppointmentController() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const serviceLabels: Record<string, string> = {
+    bespoke: "Dịch vụ chế tác riêng",
+    maintenance: "Bảo dưỡng trang sức",
+    exchange: "Tư vấn thu đổi trang sức",
+  };
+  const requestedService = serviceLabels[params.get("service") || ""];
+  const requestedInterest = params.get("interest") || "";
   const token = useRef(crypto.randomUUID());
   const submitting = useRef(false);
   const [form, setForm] = useState<AppointmentForm>({
@@ -23,9 +33,11 @@ export function useAppointmentController() {
     salonId: "",
     date: "",
     time: "",
-    interest: "Chưa xác định",
+    interest: appointmentConfig.interests.includes(requestedInterest)
+      ? requestedInterest
+      : "Chưa xác định",
     budget: "Chưa xác định",
-    notes: "",
+    notes: requestedService ? `Nhu cầu: ${requestedService}` : "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -71,7 +83,7 @@ export function useAppointmentController() {
       setError(
         error instanceof Error
           ? error.message
-          : "Chưa đặt được lịch. Vui lòng thử lại.",
+          : "Chưa đặt được lịch. Vui lòng thử lại",
       );
     } finally {
       setLoading(false);
@@ -141,7 +153,7 @@ export function useAppointmentConfirmation() {
     setAppointment(null);
     if (!token) {
       setError(
-        "Vui lòng mở trang xác nhận trên trình duyệt đã đặt lịch. Nếu không còn phiên, hãy giữ mã hẹn trong email xác nhận.",
+        "Vui lòng mở trang xác nhận trên trình duyệt đã đặt lịch. Nếu không còn phiên, hãy giữ mã hẹn trong email xác nhận",
       );
       setLoading(false);
       return;
@@ -174,7 +186,7 @@ export function useAppointmentConfirmation() {
         }),
       );
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Chưa gửi được email.");
+      setError(error instanceof Error ? error.message : "Chưa gửi được email");
     } finally {
       setSending(false);
     }

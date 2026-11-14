@@ -47,7 +47,7 @@ export default function AdminMessages() {
       } catch (error) {
         if (!controller.signal.aborted)
           setError(
-            error instanceof Error ? error.message : "Chưa tải được hộp thư.",
+            error instanceof Error ? error.message : "Chưa tải được hộp thư",
           );
       } finally {
         busy = false;
@@ -94,7 +94,7 @@ export default function AdminMessages() {
       window.dispatchEvent(new Event("supportchange"));
     } catch (error) {
       setStatusError(
-        error instanceof Error ? error.message : "Chưa đổi được trạng thái.",
+        error instanceof Error ? error.message : "Chưa đổi được trạng thái",
       );
     } finally {
       setStatusBusy(false);
@@ -142,8 +142,8 @@ export default function AdminMessages() {
         {!loading && !error && !items.length && (
           <p className="support-empty">
             {search || filter
-              ? "Không tìm thấy hội thoại phù hợp."
-              : "Chưa có tin nhắn từ khách hàng."}
+              ? "Không tìm thấy hội thoại phù hợp"
+              : "Chưa có tin nhắn từ khách hàng"}
           </p>
         )}
         <div className="support-conversations">
@@ -244,7 +244,7 @@ export default function AdminMessages() {
           <div className="support-empty support-select">
             <MessageCircle size={36} />
             <h2>Hộp thư hỗ trợ khách hàng</h2>
-            <p>Chọn một hội thoại để xem lịch sử và trả lời khách hàng.</p>
+            <p>Chọn một hội thoại để xem lịch sử và trả lời khách hàng</p>
           </div>
         )}
       </section>

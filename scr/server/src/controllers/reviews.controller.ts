@@ -79,7 +79,7 @@ export const createReview: RequestHandler = async (req: AuthRequest, res) => {
     comment.trim().length > 2000
   )
     return res.status(400).json({
-      message: "Chọn từ 1 đến 5 sao và nhập nội dung từ 1 đến 2.000 ký tự.",
+      message: "Chọn từ 1 đến 5 sao và nhập nội dung từ 1 đến 2.000 ký tự",
     });
   const product = await Product.findOne(productLookup(slugOf(req)))
     .select("_id")
@@ -89,7 +89,7 @@ export const createReview: RequestHandler = async (req: AuthRequest, res) => {
   const order = await purchased(req.user!.id, product._id);
   if (!order)
     return res.status(403).json({
-      message: "Bạn chỉ được đánh giá sản phẩm trong đơn hàng đã hoàn tất.",
+      message: "Bạn chỉ được đánh giá sản phẩm trong đơn hàng đã hoàn tất",
     });
   try {
     const review = await Review.create({
@@ -102,7 +102,7 @@ export const createReview: RequestHandler = async (req: AuthRequest, res) => {
     return res.status(201).json({ _id: review._id });
   } catch (error) {
     if ((error as { code?: number }).code === 11000)
-      return res.status(409).json({ message: "Bạn đã đánh giá sản phẩm này." });
+      return res.status(409).json({ message: "Bạn đã đánh giá sản phẩm này" });
     throw error;
   }
 };

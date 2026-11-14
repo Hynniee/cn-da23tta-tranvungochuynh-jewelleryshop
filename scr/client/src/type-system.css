@@ -4,12 +4,12 @@
   /* Hide browsing carets on static content throughout storefront and admin. */
   caret-color: transparent;
   --size-error: #923d32;
-  --text-body: 15px;
-  --text-small: 13px;
+  --text-body: 16px;
+  --text-small: 14px;
   --text-caption: 12px;
   --text-label: 14px;
-  --text-title: clamp(28px, 3vw, 40px);
-  --text-section: clamp(24px, 2.5vw, 32px);
+  --text-title: clamp(28px, 2.8vw, 38px);
+  --text-section: clamp(24px, 2.4vw, 30px);
   --text-card: clamp(20px, 1.8vw, 24px);
   --text-display: clamp(36px, 4.4vw, 60px);
 }
@@ -83,7 +83,7 @@ h6 {
   font-family: var(--font-ui);
   line-height: 1.35;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
 }
 
 .shop-intro h1,
@@ -104,13 +104,13 @@ h6 {
   font-size: var(--text-title);
   font-weight: 600;
   line-height: 1.35;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
 }
 .hero-copy h1 {
   font-size: var(--text-display);
   font-weight: 600;
   line-height: 1.3;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
 }
 .center-title h2,
 .split-title h2,
@@ -120,7 +120,7 @@ h6 {
   font-size: var(--text-section);
   font-weight: 600;
   line-height: 1.4;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
 }
 .tool-card h3,
 .lux-summary h2,

@@ -31,13 +31,13 @@ export default function useAddressBook(enabled = true) {
     request("/auth/me/addresses", { signal: controller.signal })
       .then((result) => {
         if (!Array.isArray(result))
-          throw new Error("Chưa tải được sổ địa chỉ.");
+          throw new Error("Chưa tải được sổ địa chỉ");
         if (!controller.signal.aborted) setAddresses(result);
       })
       .catch((e) => {
         if (!controller.signal.aborted)
           setError(
-            e instanceof Error ? e.message : "Chưa tải được sổ địa chỉ.",
+            e instanceof Error ? e.message : "Chưa tải được sổ địa chỉ",
           );
       })
       .finally(() => {

@@ -476,6 +476,9 @@ try {
     },
   ]);
   await checkout.goto(web + "/cart");
+  await expect(
+    checkout.getByRole("link", { name: "Tiến hành thanh toán", exact: true }),
+  ).toBeVisible();
   await checkout.getByLabel("Mã ưu đãi", { exact: true }).fill("MIRA10");
   await checkout.getByRole("button", { name: "Áp dụng", exact: true }).click();
   await expect(checkout.locator(".lux-total")).toContainText("580.000₫");

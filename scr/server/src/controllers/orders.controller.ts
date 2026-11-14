@@ -1,3 +1,7 @@
+import {
+  reserveInventory,
+  restoreInventory,
+} from "../services/inventory.service.js";
 import type { RequestHandler } from "express";
 import { bankTransferAvailable } from "../config.js";
 import storeConfig from "../data/storeConfig.json" with { type: "json" };
@@ -16,7 +20,7 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
   let customer = req.body.customer;
   if (addressId != null) {
     if (typeof addressId !== "string" || !addressId || addressId.length > 100)
-      return res.status(400).json({ message: "Địa chỉ đã lưu không hợp lệ." });
+      return res.status(400).json({ message: "Địa chỉ đã lưu không hợp lệ" });
     const user = await User.findById(req.user!.id)
       .select("addresses")
       .read("primary")
@@ -25,7 +29,7 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
     if (!saved)
       return res.status(404).json({
         message:
-          "Địa chỉ đã lưu không còn tồn tại. Vui lòng chọn lại hoặc nhập địa chỉ mới.",
+          "Địa chỉ đã lưu không còn tồn tại. Vui lòng chọn lại hoặc nhập địa chỉ mới",
       });
     customer = {
       ...customer,
@@ -48,20 +52,20 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
   if (typeof customer.name !== "string" || !customer.name.trim())
     return res
       .status(400)
-      .json({ message: "Vui lòng nhập họ tên người nhận." });
+      .json({ message: "Vui lòng nhập họ tên người nhận" });
   if (typeof customer.phone !== "string" || !customer.phone.trim())
     return res
       .status(400)
-      .json({ message: "Vui lòng nhập số điện thoại người nhận." });
+      .json({ message: "Vui lòng nhập số điện thoại người nhận" });
   if (customer.email != null && typeof customer.email !== "string")
     return res
       .status(400)
-      .json({ message: "Email không hợp lệ. Bạn có thể để trống trường này." });
+      .json({ message: "Email không hợp lệ. Bạn có thể để trống trường này" });
   const deliveryAddress = shippingAddress(customer);
   if (paymentMethod === "BANK_QR" && !bankTransferAvailable())
     return res.status(503).json({
       message:
-        "Chuyển khoản chưa sẵn sàng. Vui lòng chọn thanh toán khi nhận hàng.",
+        "Chuyển khoản chưa sẵn sàng. Vui lòng chọn thanh toán khi nhận hàng",
     });
   const calculation = await quoteOrder(
     items,
@@ -70,40 +74,45 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
     "primary",
   );
   const normalized = calculation.items;
-  const quantities = new Map<string, number>();
-  for (const item of items)
-    quantities.set(
-      item.product,
-      (quantities.get(item.product) || 0) + item.quantity,
-    );
+  const quantities = new Map<
+    string,
+    { id: string; size: string; quantity: number }
+  >();
+  for (const item of normalized) {
+    const id = String(item.product);
+    const size = item.size || "";
+    const key = JSON.stringify([id, size]);
+    const previous = quantities.get(key);
+    quantities.set(key, {
+      id,
+      size,
+      quantity: (previous?.quantity || 0) + item.quantity,
+    });
+  }
   const { subtotal, shippingFee, discountTotal, voucher, total } = calculation;
   if (req.body.quotedTotal != null) {
     if (!Number.isSafeInteger(req.body.quotedTotal) || req.body.quotedTotal < 0)
-      throw new PromotionError("Số tiền xác nhận không hợp lệ.");
+      throw new PromotionError("Số tiền xác nhận không hợp lệ");
     if (req.body.quotedTotal !== total)
       throw new PromotionError(
-        "Giá hoặc ưu đãi đã thay đổi. Vui lòng kiểm tra lại tổng tiền trước khi xác nhận đơn hàng.",
+        "Giá hoặc ưu đãi đã thay đổi. Vui lòng kiểm tra lại tổng tiền trước khi xác nhận đơn hàng",
         409,
       );
   }
   if (paymentMethod === "BANK_QR" && total <= 0)
     throw new PromotionError(
-      "Đơn hàng miễn phí không cần chuyển khoản. Vui lòng chọn thanh toán khi nhận hàng.",
+      "Đơn hàng miễn phí không cần chuyển khoản. Vui lòng chọn thanh toán khi nhận hàng",
     );
-  const reserved: { id: string; quantity: number }[] = [];
+  const reserved: { id: string; size: string; quantity: number }[] = [];
   try {
-    for (const [id, quantity] of quantities) {
-      const available = await Product.findOneAndUpdate(
-        { _id: id, stock: { $gte: quantity } },
-        { $inc: { stock: -quantity } },
-        { new: true },
-      );
+    for (const { id, size, quantity } of quantities.values()) {
+      const available = await reserveInventory(id, size, quantity);
       if (!available) {
         throw Object.assign(new Error("Sản phẩm không đủ tồn kho"), {
           status: 409,
         });
       }
-      reserved.push({ id, quantity });
+      reserved.push({ id, size, quantity });
     }
     const order = await Order.create({
       orderCode: `MIRA${randomUUID().replaceAll("-", "").slice(0, 16).toUpperCase()}`,
@@ -129,8 +138,8 @@ export const createOrder: RequestHandler = async (req: AuthRequest, res) => {
     res.status(201).json(order);
   } catch (error) {
     await Promise.all(
-      reserved.map(({ id, quantity }) =>
-        Product.updateOne({ _id: id }, { $inc: { stock: quantity } }),
+      reserved.map(({ id, size, quantity }) =>
+        restoreInventory(id, size, quantity),
       ),
     );
     if (error instanceof Error && "status" in error && error.status === 409)
@@ -144,7 +153,7 @@ export const getMyOrder: RequestHandler = async (req: AuthRequest, res) => {
   if (!order)
     return res
       .status(404)
-      .json({ message: "Không tìm thấy đơn hàng trong tài khoản của bạn." });
+      .json({ message: "Không tìm thấy đơn hàng trong tài khoản của bạn" });
   res.json(order);
 };
 
@@ -179,7 +188,7 @@ const updateStatus = async (
   if (manualPaymentConfirmation && req.body.confirmPayment !== true)
     return res.status(400).json({
       message:
-        "Vui lòng xác nhận đã kiểm tra và nhận đủ tiền chuyển khoản trước khi xác nhận đơn.",
+        "Vui lòng xác nhận đã kiểm tra và nhận đủ tiền chuyển khoản trước khi xác nhận đơn",
     });
   if (
     !customerCancel &&
@@ -189,7 +198,7 @@ const updateStatus = async (
   )
     return res.status(400).json({
       message:
-        "Đơn chuyển khoản cần được xác nhận đã thanh toán trước khi giao hoặc hoàn tất.",
+        "Đơn chuyển khoản cần được xác nhận đã thanh toán trước khi giao hoặc hoàn tất",
     });
   if (!transitions[before.status]?.includes(req.body.status))
     return res
@@ -219,9 +228,10 @@ const updateStatus = async (
   if (req.body.status === "cancelled") {
     await Promise.all(
       before.items.map((item) =>
-        Product.updateOne(
-          { _id: item.product },
-          { $inc: { stock: item.quantity || 0 } },
+        restoreInventory(
+          String(item.product),
+          item.size || "",
+          item.quantity || 0,
         ),
       ),
     );

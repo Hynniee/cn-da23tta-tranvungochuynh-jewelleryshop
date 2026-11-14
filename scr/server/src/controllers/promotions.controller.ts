@@ -18,7 +18,7 @@ async function checkedInput(body: any) {
     (await Product.countDocuments({ _id: { $in: value.productIds } })) !==
       value.productIds.length
   )
-    throw new PromotionError("Có sản phẩm áp dụng không còn tồn tại.");
+    throw new PromotionError("Có sản phẩm áp dụng không còn tồn tại");
   return value;
 }
 export const create: RequestHandler = async (req: AuthRequest, res) => {
@@ -38,7 +38,7 @@ export const update: RequestHandler = async (req: AuthRequest, res) => {
   const input = await checkedInput(req.body);
   const before = await Promotion.findById(req.params.id).lean();
   if (!before)
-    return res.status(404).json({ message: "Không tìm thấy chương trình." });
+    return res.status(404).json({ message: "Không tìm thấy chương trình" });
   const value = await Promotion.findByIdAndUpdate(
     req.params.id,
     {
@@ -60,10 +60,10 @@ export const update: RequestHandler = async (req: AuthRequest, res) => {
 };
 export const toggle: RequestHandler = async (req: AuthRequest, res) => {
   if (typeof req.body.active !== "boolean")
-    throw new PromotionError("Trạng thái không hợp lệ.");
+    throw new PromotionError("Trạng thái không hợp lệ");
   const before = await Promotion.findById(req.params.id).lean();
   if (!before)
-    return res.status(404).json({ message: "Không tìm thấy chương trình." });
+    return res.status(404).json({ message: "Không tìm thấy chương trình" });
   const value = await Promotion.findByIdAndUpdate(
     req.params.id,
     { $set: { active: req.body.active } },

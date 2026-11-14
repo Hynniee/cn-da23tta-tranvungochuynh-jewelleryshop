@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import Notifications from "./components/Notifications";
 import "@fontsource/be-vietnam-pro/400.css";
+import "@fontsource/be-vietnam-pro/400-italic.css";
+import "@fontsource/be-vietnam-pro/600-italic.css";
 import "@fontsource/be-vietnam-pro/500.css";
 import "@fontsource/be-vietnam-pro/600.css";
 import "@fontsource/be-vietnam-pro/700.css";
@@ -18,6 +20,8 @@ import "./decision-support.css";
 import "./admin-notifications.css";
 import "./support.css";
 import "./type-system.css";
+import "./ui-consistency.css";
+import "./services.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

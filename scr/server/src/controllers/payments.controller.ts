@@ -13,7 +13,7 @@ export const createPayment: RequestHandler = async (req: AuthRequest, res) => {
   if (!bankTransferAvailable())
     return res.status(503).json({
       message:
-        "Chuyển khoản chưa sẵn sàng. Vui lòng liên hệ cửa hàng để được hỗ trợ.",
+        "Chuyển khoản chưa sẵn sàng. Vui lòng liên hệ cửa hàng để được hỗ trợ",
     });
   const order = await Order.findOne({
     _id: req.params.orderId,

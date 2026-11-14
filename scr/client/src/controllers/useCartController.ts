@@ -1,3 +1,4 @@
+import { selectedStock } from "../lib/inventory";
 import { useEffect, useState } from "react";
 import { request } from "../lib/api";
 import { getCart, saveCart, reconcileCart, cartHasStock } from "../store/cart";
@@ -21,7 +22,7 @@ export function useCartController() {
       .catch(() => {
         if (active)
           setNotice(
-            "Chưa kiểm tra được giá và tồn kho. Vui lòng thử lại trước khi thanh toán.",
+            "Chưa kiểm tra được giá và tồn kho. Vui lòng thử lại trước khi thanh toán",
           );
       })
       .finally(() => {
@@ -41,7 +42,16 @@ export function useCartController() {
   const updateSize = (index: number, size: string) => {
     if (!cart[index]?.sizeOptions?.includes(size)) return;
     const next = cart.map((item, row) =>
-      row === index ? { ...item, size } : item,
+      row === index
+        ? {
+            ...item,
+            size,
+            stock: selectedStock(
+              { stock: item.stock ?? 0, sizeStocks: item.sizeStocks },
+              size,
+            ),
+          }
+        : item,
     );
     saveCart(next);
     setCart(next);

@@ -21,6 +21,8 @@
     "test:promotions": "node scr/test-data/promotions.test.mjs",
     "test:appointments": "node --test scr/test-data/appointments.test.mjs",
     "test:support": "node scr/test-data/support.test.mjs",
+    "test:layout": "node scr/test-data/layout-audit.mjs",
+    "test:inventory": "node --import tsx scr/test-data/variant-inventory.test.mjs",
     "test:sizes": "node --import tsx scr/test-data/product-sizes.test.mjs",
     "test:advisor-reset": "node scr/test-data/advisor-reset.test.mjs",
     "format": "prettier --write \"scr/**/*.{ts,tsx,css,html,json}\" \"*.json\" \"setup/scripts/*.mjs\"",

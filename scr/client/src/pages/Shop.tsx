@@ -1,3 +1,4 @@
+import { collections, matchesCollection } from "../lib/collections";
 import CatalogFilters from "../components/CatalogFilters";
 import { MAX_BUDGET } from "../lib/catalogFilters";
 import Image from "../components/Image";
@@ -33,12 +34,10 @@ export default function Shop({
   const stone = params.get("stone") || "";
   const collection = params.get("collection") || "";
   const offersOnly = params.get("promotion") === "active";
-  const collectionLabels: Record<string, string> = {
-    bac: "Trang sức bạc",
-    vang: "Trang sức vàng",
-    "ngoc-trai": "Trang sức ngọc trai",
-    "da-mau": "Trang sức đá màu",
-  };
+  const collectionInfo = collections[collection];
+  const collectionLabels = Object.fromEntries(
+    Object.entries(collections).map(([key, value]) => [key, value.title]),
+  );
   const materials = useMemo(
     () =>
       [...new Set(products.map((p) => p.material))].sort((a, b) =>
@@ -88,7 +87,7 @@ export default function Shop({
         if (active) {
           setProducts([]);
           setNotice(
-            "Không tải được sản phẩm từ cửa hàng. Vui lòng thử lại sau.",
+            "Không tải được sản phẩm từ cửa hàng. Vui lòng thử lại sau",
           );
         }
       })
@@ -136,18 +135,7 @@ export default function Shop({
         (!selectedMaterials.length || selectedMaterials.includes(p.material)) &&
         (!stone || (p.stone || "Không đính đá") === stone) &&
         (!offersOnly || (p.salePrice != null && p.salePrice < p.price)) &&
-        (!collection ||
-          (collection === "bac"
-            ? p.material === "Bạc 925"
-            : collection === "vang"
-              ? p.material.startsWith("Vàng")
-              : collection === "ngoc-trai"
-                ? p.stone === "Ngọc trai"
-                : collection === "da-mau"
-                  ? !["Không đính đá", "Ngọc trai", "Kim cương"].includes(
-                      p.stone || "Không đính đá",
-                    )
-                  : true)) &&
+        matchesCollection(p, collection) &&
         price(p) <= maxPrice &&
         normalizeSearch(
           `${p.name} ${p.category} ${p.material} ${p.stone || ""} ${p.description || ""}`,
@@ -201,16 +189,36 @@ export default function Shop({
         </h1>
         <p>
           {offersOnly
-            ? "Khám phá các sản phẩm đang có giá ưu đãi tại MIRA. Giá hiển thị theo chương trình hiện hành của từng sản phẩm."
+            ? "Khám phá các sản phẩm đang có giá ưu đãi tại MIRA. Giá hiển thị theo chương trình hiện hành của từng sản phẩm"
             : allProducts
-              ? "Khám phá toàn bộ nhẫn, dây chuyền, bông tai, vòng tay, lắc chân, charm và bộ trang sức MIRA."
-              : "Chọn thiết kế theo danh mục, chất liệu và ngân sách của bạn."}
+              ? "Khám phá toàn bộ nhẫn, dây chuyền, bông tai, vòng tay, lắc chân, charm và bộ trang sức MIRA"
+              : collectionInfo?.description ||
+                "Chọn thiết kế theo danh mục, chất liệu và ngân sách của bạn"}
         </p>
         <div>
           <b>{filtered.length}</b>
           <small>SẢN PHẨM</small>
         </div>
       </section>
+      {!allProducts && collectionInfo && (
+        <aside className="collection-guide">
+          <span>{collectionInfo.note}</span>
+          <Link
+            to={
+              collection === "cuoi"
+                ? "/appointments?interest=Trang%20s%E1%BB%A9c%20c%C6%B0%E1%BB%9Bi"
+                : collection === "bac" || collection === "ngoc-trai"
+                  ? "/jewelry-care"
+                  : "/appointments"
+            }
+          >
+            {collection === "bac" || collection === "ngoc-trai"
+              ? "Cẩm nang bảo quản"
+              : "Đặt lịch tư vấn"}{" "}
+            →
+          </Link>
+        </aside>
+      )}
       {allProducts && (
         <nav className="product-categories" aria-label="Danh mục sản phẩm">
           <button

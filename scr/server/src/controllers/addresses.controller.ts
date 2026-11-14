@@ -37,7 +37,7 @@ function values(body: Record<string, unknown>) {
       body[field].length > max
     )
       throw Object.assign(
-        new Error(`Vui lòng nhập ${label} người nhận hợp lệ.`),
+        new Error(`Vui lòng nhập ${label} người nhận hợp lệ`),
         { status: 400 },
       );
   }
@@ -45,7 +45,7 @@ function values(body: Record<string, unknown>) {
     body.label != null &&
     (typeof body.label !== "string" || body.label.length > 40)
   )
-    throw Object.assign(new Error("Tên gợi nhớ địa chỉ không hợp lệ."), {
+    throw Object.assign(new Error("Tên gợi nhớ địa chỉ không hợp lệ"), {
       status: 400,
     });
   return {
@@ -64,7 +64,7 @@ export const listAddresses: RequestHandler = async (req: AuthRequest, res) => {
     .select("addresses defaultAddressId")
     .lean();
   if (!user)
-    return res.status(404).json({ message: "Tài khoản không tồn tại." });
+    return res.status(404).json({ message: "Tài khoản không tồn tại" });
   res.json(present(user));
 };
 export const createAddress: RequestHandler = async (req: AuthRequest, res) => {
@@ -73,11 +73,11 @@ export const createAddress: RequestHandler = async (req: AuthRequest, res) => {
     address = { _id: randomUUID(), ...values(req.body) };
   } catch (e) {
     return res.status(400).json({
-      message: e instanceof Error ? e.message : "Địa chỉ không hợp lệ.",
+      message: e instanceof Error ? e.message : "Địa chỉ không hợp lệ",
     });
   }
   if (req.body.isDefault != null && typeof req.body.isDefault !== "boolean")
-    return res.status(400).json({ message: "Lựa chọn mặc định không hợp lệ." });
+    return res.status(400).json({ message: "Lựa chọn mặc định không hợp lệ" });
   const user = await User.findOneAndUpdate(
     {
       _id: req.user!.id,
@@ -105,7 +105,7 @@ export const createAddress: RequestHandler = async (req: AuthRequest, res) => {
   if (!user)
     return res
       .status(409)
-      .json({ message: "Không thể thêm địa chỉ. Sổ địa chỉ tối đa 20 mục." });
+      .json({ message: "Không thể thêm địa chỉ. Sổ địa chỉ tối đa 20 mục" });
   res.status(201).json(present(user));
 };
 export const updateAddress: RequestHandler = async (req: AuthRequest, res) => {
@@ -114,7 +114,7 @@ export const updateAddress: RequestHandler = async (req: AuthRequest, res) => {
     address = { _id: String(req.params.id), ...values(req.body) };
   } catch (e) {
     return res.status(400).json({
-      message: e instanceof Error ? e.message : "Địa chỉ không hợp lệ.",
+      message: e instanceof Error ? e.message : "Địa chỉ không hợp lệ",
     });
   }
   const user = await User.findOneAndUpdate(
@@ -127,7 +127,7 @@ export const updateAddress: RequestHandler = async (req: AuthRequest, res) => {
   if (!user)
     return res
       .status(404)
-      .json({ message: "Không tìm thấy địa chỉ trong tài khoản của bạn." });
+      .json({ message: "Không tìm thấy địa chỉ trong tài khoản của bạn" });
   res.json(present(user));
 };
 export const setDefaultAddress: RequestHandler = async (
@@ -145,7 +145,7 @@ export const setDefaultAddress: RequestHandler = async (
   if (!user)
     return res
       .status(404)
-      .json({ message: "Không tìm thấy địa chỉ trong tài khoản của bạn." });
+      .json({ message: "Không tìm thấy địa chỉ trong tài khoản của bạn" });
   res.json(present(user));
 };
 export const deleteAddress: RequestHandler = async (req: AuthRequest, res) => {
@@ -183,6 +183,6 @@ export const deleteAddress: RequestHandler = async (req: AuthRequest, res) => {
   if (!user)
     return res
       .status(404)
-      .json({ message: "Không tìm thấy địa chỉ trong tài khoản của bạn." });
+      .json({ message: "Không tìm thấy địa chỉ trong tài khoản của bạn" });
   res.json(present(user));
 };

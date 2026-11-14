@@ -30,7 +30,7 @@ export default function useOrderPayment(
         setError("");
         onUpdate(id!, result);
         if (result.paymentStatus === "PAID")
-          notify("Đã xác nhận thanh toán đơn hàng.");
+          notify("Đã xác nhận thanh toán đơn hàng");
         else if (
           result.status === "pending_payment" &&
           ["PENDING", "UNPAID"].includes(result.paymentStatus)
@@ -41,7 +41,7 @@ export default function useOrderPayment(
           setError(
             e instanceof Error
               ? e.message
-              : "Chưa cập nhật được trạng thái thanh toán.",
+              : "Chưa cập nhật được trạng thái thanh toán",
           );
       }
     }

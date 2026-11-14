@@ -33,7 +33,7 @@ export default function Advisor() {
         <h1>Tìm thiết kế dành riêng cho bạn</h1>
         <p>
           Chia sẻ nhu cầu, bổ sung hoặc thay đổi tiêu chí trong cùng cuộc trò
-          chuyện.
+          chuyện
         </p>
       </header>
       <div className="decision-actions">
@@ -84,7 +84,7 @@ export default function Advisor() {
                 };
                 return `${labels[key] || key}: ${typeof value === "number" && key.startsWith("budget") ? `${value.toLocaleString("vi-VN")}₫` : value}`;
               })
-              .join(" · ") || "Chưa có tiêu chí. Hãy chia sẻ nhu cầu của bạn."}
+              .join(" · ") || "Chưa có tiêu chí. Hãy chia sẻ nhu cầu của bạn"}
           </p>
         </section>
       )}
@@ -109,7 +109,7 @@ export default function Advisor() {
         <textarea
           id="advisor-message"
           aria-label="Nhu cầu tư vấn trang sức"
-          placeholder="Ví dụ: Nhẫn cầu hôn vàng trắng dưới 30 triệu. Sau đó: Giảm ngân sách xuống 20 triệu."
+          placeholder="Ví dụ: Nhẫn cầu hôn vàng trắng dưới 30 triệu. Sau đó: Giảm ngân sách xuống 20 triệu"
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           rows={3}
@@ -146,7 +146,7 @@ export default function Advisor() {
           <h2>Top-{data.products.length} theo DSS</h2>
           <p>
             Điểm thể hiện mức phù hợp theo tiêu chí, không phải xác suất hài
-            lòng.
+            lòng
           </p>
           <div className="smart-products">
             {data.products.map((product: any) => (

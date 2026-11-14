@@ -210,6 +210,7 @@ export default function Header() {
               label: "Bộ sưu tập",
               items: [
                 { label: "Trang sức vàng", to: "/shop?collection=vang" },
+                { label: "Trang sức cưới", to: "/shop?collection=cuoi" },
                 { label: "Bạc 925", to: "/shop?collection=bac" },
                 { label: "Ngọc trai", to: "/shop?collection=ngoc-trai" },
                 { label: "Đá màu", to: "/shop?collection=da-mau" },
@@ -247,6 +248,21 @@ export default function Header() {
             }
             onClose={() => setOpenMenu(null)}
             items={[
+              {
+                label: "Dịch vụ chế tác riêng",
+                to: "/services/bespoke",
+                description: "Trao đổi ý tưởng và tư vấn thiết kế",
+              },
+              {
+                label: "Bảo dưỡng trang sức",
+                to: "/services/maintenance",
+                description: "Kiểm tra và chăm sóc món trang sức",
+              },
+              {
+                label: "Chính sách thu đổi",
+                to: "/policies/exchange",
+                description: "Quy trình và thông tin cần chuẩn bị",
+              },
               {
                 label: "Đặt lịch tại salon",
                 to: "/appointments",

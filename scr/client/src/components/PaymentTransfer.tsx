@@ -40,10 +40,10 @@ export default function PaymentTransfer({
   async function copy(value: string) {
     try {
       await navigator.clipboard.writeText(value);
-      notify("Đã sao chép thông tin chuyển khoản.");
+      notify("Đã sao chép thông tin chuyển khoản");
     } catch {
       notify(
-        "Chưa sao chép được. Bạn có thể chọn và sao chép thông tin bên dưới.",
+        "Chưa sao chép được. Bạn có thể chọn và sao chép thông tin bên dưới",
         "info",
       );
     }
@@ -69,7 +69,7 @@ export default function PaymentTransfer({
         <h1>{paid ? "Thanh toán thành công" : "Hoàn tất thanh toán"}</h1>
         <p>
           Đơn hàng <strong>{code}</strong>
-          {!paid && " · Quét QR hoặc chuyển khoản theo thông tin bên dưới."}
+          {!paid && " · Quét QR hoặc chuyển khoản theo thông tin bên dưới"}
         </p>
       </div>
       <section className="transfer-card" aria-label="Thông tin chuyển khoản">
@@ -91,7 +91,7 @@ export default function PaymentTransfer({
               <h2>MIRA đã nhận thanh toán</h2>
               <p>
                 Bạn có thể theo dõi tiến độ chuẩn bị và giao hàng trong tài
-                khoản.
+                khoản
               </p>
             </div>
           ) : (
@@ -113,7 +113,7 @@ export default function PaymentTransfer({
                   <div className="qr-image-error" role="status">
                     <QrCode size={40} />
                     <b>Chưa tải được mã QR</b>
-                    <p>Bạn vẫn có thể chuyển khoản theo thông tin bên cạnh.</p>
+                    <p>Bạn vẫn có thể chuyển khoản theo thông tin bên cạnh</p>
                     {details.qrUrl && (
                       <button
                         type="button"
@@ -179,7 +179,7 @@ export default function PaymentTransfer({
           {status === "MISMATCH" && (
             <p className="form-error" role="alert">
               Thông tin giao dịch cần được đối soát. Vui lòng liên hệ MIRA trước
-              khi chuyển thêm tiền.
+              khi chuyển thêm tiền
             </p>
           )}
           <div className="transfer-actions">

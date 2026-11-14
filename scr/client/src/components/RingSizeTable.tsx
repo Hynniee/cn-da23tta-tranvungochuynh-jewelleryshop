@@ -49,7 +49,7 @@ export default function RingSizeTable({
         >
           bảng ni nhẫn DOJI
         </a>
-        . Size có thể khác giữa các hãng và kiểu nhẫn.
+        . Size có thể khác giữa các hãng và kiểu nhẫn
       </p>
     </div>
   );

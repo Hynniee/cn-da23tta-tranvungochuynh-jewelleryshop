@@ -152,7 +152,7 @@ export default function AdminCustomers({
         </table>
       </div>
       {!loading && !data?.customers.length && (
-        <p>Không có khách hàng phù hợp.</p>
+        <p>Không có khách hàng phù hợp</p>
       )}
       <nav className="decision-actions" aria-label="Phân trang khách hàng">
         <button
@@ -213,7 +213,7 @@ export default function AdminCustomers({
                   {saving ? "Đang lưu…" : "Lưu thông tin"}
                 </button>
               </form>
-              {saved && <p role="status">Đã lưu thông tin khách hàng.</p>}
+              {saved && <p role="status">Đã lưu thông tin khách hàng</p>}
               <h3>Lịch sử đơn hàng (tối đa 100 đơn gần nhất)</h3>
               <div className="decision-table-scroll">
                 <table className="decision-table">
@@ -241,7 +241,7 @@ export default function AdminCustomers({
                   </tbody>
                 </table>
               </div>
-              {!detail.orders.length && <p>Khách hàng chưa có đơn hàng.</p>}
+              {!detail.orders.length && <p>Khách hàng chưa có đơn hàng</p>}
             </>
           )}
         </section>

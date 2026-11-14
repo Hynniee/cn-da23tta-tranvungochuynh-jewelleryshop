@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { orderLabels } from "../lib/commerce";
 import { readStoredObject } from "../lib/storage";
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -31,6 +32,7 @@ type AccountTab = "profile" | "orders" | "address" | "wishlist";
 
 export default function Account() {
   const nav = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const [params, setParams] = useSearchParams();
   const selectedOrderId = params.get("order");
@@ -42,6 +44,7 @@ export default function Account() {
       : "profile";
   function setTab(value: AccountTab) {
     setParams({ tab: value });
+    setMenuOpen(false);
   }
   function closeOrder() {
     const next = new URLSearchParams(params);
@@ -76,7 +79,7 @@ export default function Account() {
       await request(`/orders/${id}/cancel`, { method: "PATCH" });
       setOrders(await request("/orders/mine"));
       setMessage("");
-      notify("Đã hủy đơn hàng.");
+      notify("Đã hủy đơn hàng");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể hủy đơn");
     } finally {
@@ -137,7 +140,7 @@ export default function Account() {
       setUser(updated);
       setForm(updated);
       setMessage("");
-      notify("Đã lưu thông tin cá nhân.");
+      notify("Đã lưu thông tin cá nhân");
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Không thể lưu hồ sơ");
     }
@@ -154,11 +157,11 @@ export default function Account() {
         <p>MIRA PRIVATE CLIENT</p>
         <h1>Tài khoản của tôi</h1>
         <span>
-          Quản lý hồ sơ, đơn hàng và những đặc quyền dành riêng cho bạn.
+          Quản lý hồ sơ, đơn hàng và những đặc quyền dành riêng cho bạn
         </span>
       </section>
       <div className="account-shell">
-        <aside className="account-side">
+        <aside className={`account-side ${menuOpen ? "is-open" : ""}`}>
           <div className="account-person">
             <div className="account-avatar">{initials}</div>
             <div>
@@ -166,27 +169,44 @@ export default function Account() {
               <span>{user.email}</span>
             </div>
           </div>
-          <nav className="account-menu">
+          <button
+            type="button"
+            className="account-navigation-toggle"
+            aria-expanded={menuOpen}
+            aria-controls="account-navigation"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            Mục tài khoản <ChevronDown size={17} aria-hidden="true" />
+          </button>
+          <nav
+            className="account-menu"
+            id="account-navigation"
+            aria-label="Mục tài khoản"
+          >
             <button
               className={tab === "profile" ? "active" : ""}
+              aria-current={tab === "profile" ? "page" : undefined}
               onClick={() => setTab("profile")}
             >
               Thông tin cá nhân
             </button>
             <button
               className={tab === "orders" ? "active" : ""}
+              aria-current={tab === "orders" ? "page" : undefined}
               onClick={() => setTab("orders")}
             >
               Đơn hàng của tôi <b>{orders.length}</b>
             </button>
             <button
               className={tab === "address" ? "active" : ""}
+              aria-current={tab === "address" ? "page" : undefined}
               onClick={() => setTab("address")}
             >
               Sổ địa chỉ
             </button>
             <button
               className={tab === "wishlist" ? "active" : ""}
+              aria-current={tab === "wishlist" ? "page" : undefined}
               onClick={() => setTab("wishlist")}
             >
               Danh sách yêu thích
@@ -308,7 +328,7 @@ export default function Account() {
               ) : !orders.length ? (
                 <div className="account-empty">
                   <h3>Chưa có đơn hàng nào</h3>
-                  <p>Khám phá những thiết kế Fine Jewelry của MIRA.</p>
+                  <p>Khám phá những thiết kế Fine Jewelry của MIRA</p>
                   <Link to="/shop">KHÁM PHÁ BỘ SƯU TẬP</Link>
                 </div>
               ) : (
@@ -318,7 +338,7 @@ export default function Account() {
                   aria-label="Danh sách đơn hàng"
                 >
                   <p className="account-orders-hint">
-                    Vuốt ngang để xem đầy đủ thông tin và thao tác.
+                    Vuốt ngang để xem đầy đủ thông tin và thao tác
                   </p>
                   <table className="account-orders-table">
                     <colgroup>
@@ -397,7 +417,7 @@ export default function Account() {
                 selectedOrderId &&
                 !selectedOrder && (
                   <p role="alert">
-                    Không tìm thấy đơn hàng này trong tài khoản của bạn.
+                    Không tìm thấy đơn hàng này trong tài khoản của bạn
                   </p>
                 )}
             </div>
@@ -427,17 +447,17 @@ export default function Account() {
             <article>
               <b>01</b>
               <h3>Hẹn gặp tại salon</h3>
-              <p>Chọn địa điểm và thời gian tư vấn phù hợp.</p>
+              <p>Chọn địa điểm và thời gian tư vấn phù hợp</p>
             </article>
             <article>
               <b>02</b>
               <h3>Chăm sóc trang sức</h3>
-              <p>Xem hướng dẫn vệ sinh và bảo quản theo chất liệu.</p>
+              <p>Xem hướng dẫn vệ sinh và bảo quản theo chất liệu</p>
             </article>
             <article>
               <b>03</b>
               <h3>Hỗ trợ từ nhân viên</h3>
-              <p>Nhắn cho MIRA khi cần hỗ trợ về đơn hàng.</p>
+              <p>Nhắn cho MIRA khi cần hỗ trợ về đơn hàng</p>
             </article>
           </div>
         </section>

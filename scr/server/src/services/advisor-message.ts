@@ -56,11 +56,11 @@ export function classifyAdvisorMessage(message: string): {
 export function freshAdvisorAnswer(message: string) {
   const text = normalize(message);
   if (/\b(?:cam on|thank you|thanks|thank u)\b/.test(text))
-    return "Rất vui được hỗ trợ bạn! Bạn có thể hỏi thêm hoặc điều chỉnh nhu cầu ngay trong cuộc trò chuyện này.";
+    return "Rất vui được hỗ trợ bạn! Bạn có thể hỏi thêm hoặc điều chỉnh nhu cầu ngay trong cuộc trò chuyện này";
   if (/\b(?:ban la ai|mira la ai|who are you)\b/.test(text))
     return "Mình là MIRA AI, trợ lý tư vấn trang sức của MIRA. Bạn đang tìm loại trang sức nào và ngân sách khoảng bao nhiêu?";
   if (/\b(?:tam biet|bye|goodbye)\b/.test(text))
-    return "Tạm biệt bạn! Khi quay lại, bạn có thể tiếp tục cuộc trò chuyện này nhé.";
+    return "Tạm biệt bạn! Khi quay lại, bạn có thể tiếp tục cuộc trò chuyện này nhé";
   if (restart.test(text))
     return "Để bắt đầu lại với tiêu chí mới, bạn hãy bấm nút Hội thoại mới. Mình vẫn giữ nội dung cuộc trò chuyện hiện tại cho đến khi bạn bấm nút đó.";
   return "Xin chào! Mình là MIRA AI. Bạn muốn mình hỗ trợ thêm điều gì về trang sức?";

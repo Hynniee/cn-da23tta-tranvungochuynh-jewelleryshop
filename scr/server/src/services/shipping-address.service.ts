@@ -13,7 +13,7 @@ export function shippingAddress(input: {
   if (!province || !ward || !line || line.length > 250)
     throw Object.assign(
       new Error(
-        "Vui lòng chọn đúng tỉnh/thành, phường/xã và nhập địa chỉ cụ thể (tối đa 250 ký tự).",
+        "Vui lòng chọn đúng tỉnh/thành, phường/xã và nhập địa chỉ cụ thể (tối đa 250 ký tự)",
       ),
       { status: 400 },
     );

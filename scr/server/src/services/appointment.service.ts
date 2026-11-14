@@ -23,18 +23,18 @@ export function validateAppointment(
     budget = text("budget"),
     notes = text("notes");
   if (!name || name.length > 100 || /[\r\n]/.test(name))
-    throw new Error("Vui lòng nhập họ tên hợp lệ (tối đa 100 ký tự).");
+    throw new Error("Vui lòng nhập họ tên hợp lệ (tối đa 100 ký tự)");
   if (
     email.length > 254 ||
     email.split("@")[0].length > 64 ||
     !emailPattern.test(email)
   )
-    throw new Error("Vui lòng nhập địa chỉ email hợp lệ.");
+    throw new Error("Vui lòng nhập địa chỉ email hợp lệ");
   if (!/^(?:0\d{9}|\+84\d{9})$/.test(phone))
-    throw new Error("Vui lòng nhập số điện thoại Việt Nam hợp lệ.");
-  if (!salon) throw new Error("Vui lòng chọn Salon.");
+    throw new Error("Vui lòng nhập số điện thoại Việt Nam hợp lệ");
+  if (!salon) throw new Error("Vui lòng chọn Salon");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !config.times.includes(time))
-    throw new Error("Ngày hoặc khung giờ tư vấn không hợp lệ.");
+    throw new Error("Ngày hoặc khung giờ tư vấn không hợp lệ");
   const startsAt = new Date(`${date}T${time}:00${config.utcOffset}`);
   const dateLimit = vietnamDate(
     new Date(now.getTime() + config.maxDaysAhead * 86400000),
@@ -46,11 +46,11 @@ export function validateAppointment(
     date > dateLimit
   )
     throw new Error(
-      `Vui lòng chọn thời gian trong tương lai, tối đa ${config.maxDaysAhead} ngày tới.`,
+      `Vui lòng chọn thời gian trong tương lai, tối đa ${config.maxDaysAhead} ngày tới`,
     );
   if (!config.interests.includes(interest) || !config.budgets.includes(budget))
-    throw new Error("Vui lòng chọn nhu cầu và khoảng ngân sách hợp lệ.");
-  if (notes.length > 1000) throw new Error("Ghi chú tối đa 1.000 ký tự.");
+    throw new Error("Vui lòng chọn nhu cầu và khoảng ngân sách hợp lệ");
+  if (notes.length > 1000) throw new Error("Ghi chú tối đa 1.000 ký tự");
   return {
     name,
     email,
@@ -78,7 +78,7 @@ export function appointmentEmail(appointment: AppointmentDetails) {
     text: [
       `Xin chào ${appointment.name},`,
       "",
-      "MIRA đã ghi nhận lịch tư vấn riêng của bạn.",
+      "MIRA đã ghi nhận lịch tư vấn riêng của bạn",
       `Mã hẹn: ${appointment.code}`,
       `Salon: ${appointment.salonName}`,
       `Thời gian: ${appointment.time}, ngày ${date} (giờ Việt Nam, UTC+7)`,
@@ -89,8 +89,8 @@ export function appointmentEmail(appointment: AppointmentDetails) {
       `Ngân sách: ${appointment.budget}`,
       `Ghi chú: ${appointment.notes || "Không có"}`,
       "",
-      "Vui lòng giữ mã hẹn để cung cấp cho chuyên viên khi đến Salon.",
-      "Cảm ơn bạn đã lựa chọn MIRA Private Salon.",
+      "Vui lòng giữ mã hẹn để cung cấp cho chuyên viên khi đến Salon",
+      "Cảm ơn bạn đã lựa chọn MIRA Private Salon",
     ].join("\n"),
   };
 }

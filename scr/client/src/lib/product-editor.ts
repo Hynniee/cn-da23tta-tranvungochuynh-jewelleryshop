@@ -6,6 +6,7 @@ export type EditableProduct = {
   material: string;
   price: number;
   stock: number;
+  sizeStocks?: { size: string; stock: number }[];
   images?: string[];
   stone?: string;
   sizes?: string[];
@@ -19,6 +20,7 @@ export type ProductForm = {
   material: string;
   price: string;
   stock: string;
+  sizeStocks?: Record<string, string>;
   image: string;
   stone: string;
   sizes: string;
@@ -33,6 +35,17 @@ export function productForm(product: EditableProduct): ProductForm {
     material: product.material,
     price: String(product.price),
     stock: String(product.stock),
+    sizeStocks: Object.fromEntries(
+      (
+        product.sizeStocks ||
+        productSizes(product).map((size, index, sizes) => ({
+          size,
+          stock:
+            Math.floor(product.stock / sizes.length) +
+            (index < product.stock % sizes.length ? 1 : 0),
+        }))
+      ).map((row) => [row.size, String(row.stock)]),
+    ),
     image: product.images?.[0] || "",
     stone: product.stone || "Không đính đá",
     sizes: productSizes(product).join(", "),
@@ -41,13 +54,34 @@ export function productForm(product: EditableProduct): ProductForm {
   };
 }
 function serialize(form: ProductForm) {
+  const sizes = [
+    ...new Set(
+      form.sizes
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ];
+  const sizeStocks =
+    form.sizeStocks &&
+    sizes.map((size) => ({
+      size,
+      stock: Number(form.sizeStocks?.[size] ?? 0),
+    }));
+  if (
+    sizeStocks?.some((row) => !Number.isSafeInteger(row.stock) || row.stock < 0)
+  )
+    throw new Error("Tồn kho mỗi size phải là số nguyên không âm");
   return {
     name: form.name.trim(),
     slug: form.slug.trim(),
     category: form.category,
     material: form.material.trim(),
     price: Number(form.price),
-    stock: Number(form.stock),
+    stock: sizeStocks?.length
+      ? sizeStocks.reduce((sum, row) => sum + row.stock, 0)
+      : Number(form.stock),
+    ...(sizeStocks ? { sizeStocks } : {}),
     images: form.image.trim() ? [form.image.trim()] : [],
     stone: form.stone,
     sizes: form.sizes
@@ -61,7 +95,7 @@ function serialize(form: ProductForm) {
 export function productChanges(form: ProductForm, original?: ProductForm) {
   if (form.sizes.split(",").some((value) => isGenericSize(value.trim())))
     throw new Error(
-      "Nhập kích cỡ cụ thể, ví dụ 12, 14 hoặc 40 cm, 45 cm; không dùng size tiêu chuẩn.",
+      "Nhập kích cỡ cụ thể, ví dụ 12, 14 hoặc 40 cm, 45 cm; không dùng size tiêu chuẩn",
     );
   const values = serialize(form);
   if (
@@ -69,9 +103,9 @@ export function productChanges(form: ProductForm, original?: ProductForm) {
     !Number.isSafeInteger(values.stock) ||
     values.stock < 0
   )
-    throw new Error("Tồn kho phải là số nguyên không âm.");
+    throw new Error("Tồn kho phải là số nguyên không âm");
   if (!form.price.trim() || !Number.isFinite(values.price) || values.price < 0)
-    throw new Error("Giá bán phải là số không âm.");
+    throw new Error("Giá bán phải là số không âm");
   if (!original) return values;
   const previous = serialize(original);
   return Object.fromEntries(

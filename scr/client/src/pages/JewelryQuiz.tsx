@@ -43,7 +43,7 @@ export default function JewelryQuiz() {
       })
       .catch(() => {
         if (!controller.signal.aborted)
-          setLoadError("Không tải được danh mục cửa hàng. Vui lòng thử lại.");
+          setLoadError("Không tải được danh mục cửa hàng. Vui lòng thử lại");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -79,7 +79,7 @@ export default function JewelryQuiz() {
     event.preventDefault();
     setError("");
     if (!preferences.occasion) {
-      setError("Chọn dịp sử dụng để tiếp tục.");
+      setError("Chọn dịp sử dụng để tiếp tục");
       return;
     }
     try {
@@ -92,7 +92,7 @@ export default function JewelryQuiz() {
       }
       setStep((n) => Math.min(3, n + 1));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không tìm được gợi ý.");
+      setError(e instanceof Error ? e.message : "Không tìm được gợi ý");
     }
   }
   return (
@@ -148,7 +148,7 @@ export default function JewelryQuiz() {
                   ))}
                 </div>
                 <p className="tool-muted">
-                  Dịp sử dụng giúp ưu tiên danh mục phù hợp trong kết quả.
+                  Dịp sử dụng giúp ưu tiên danh mục phù hợp trong kết quả
                 </p>
               </fieldset>
             )}
@@ -281,8 +281,8 @@ export default function JewelryQuiz() {
                 <>
                   <p>
                     Lọc theo ngân sách và các sở thích đã chọn; ưu tiên mẫu còn
-                    hàng, sau đó đến dịp sử dụng.{" "}
-                    {results.length > 9 && "Hiển thị 9 gợi ý đầu tiên."}
+                    hàng, sau đó đến dịp sử dụng{" "}
+                    {results.length > 9 && "Hiển thị 9 gợi ý đầu tiên"}
                   </p>
                   <div className="quiz-product-grid">
                     {results.slice(0, 9).map(({ product, reasons }) => (
@@ -326,7 +326,7 @@ export default function JewelryQuiz() {
               ) : (
                 <p>
                   Thử tăng ngân sách, đổi chất liệu hoặc bật hiển thị mẫu tạm
-                  hết hàng. Công cụ giữ nguyên tiêu chí của bạn.
+                  hết hàng. Công cụ giữ nguyên tiêu chí của bạn
                 </p>
               )}
               <div className="tool-form-actions">

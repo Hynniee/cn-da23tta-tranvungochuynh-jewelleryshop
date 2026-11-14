@@ -1,3 +1,4 @@
+import { inventoryInput } from "../services/inventory.service.js";
 import type { RequestHandler } from "express";
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
@@ -63,7 +64,7 @@ export const getProduct: RequestHandler = async (req, res, next) => {
 export const createProduct: RequestHandler = async (req: AuthRequest, res) => {
   if (!db())
     return res.status(503).json({ message: "Quản trị cần MongoDB Atlas" });
-  const p = await Product.create(req.body);
+  const p = await Product.create(inventoryInput(req.body));
   await audit(
     req.user?.id,
     "CREATE_PRODUCT",
@@ -83,10 +84,14 @@ export const updateProduct: RequestHandler = async (req: AuthRequest, res) => {
   const before = await Product.findById(id).lean();
   if (!before)
     return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
-  const after = await Product.findByIdAndUpdate(id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const after = await Product.findByIdAndUpdate(
+    id,
+    inventoryInput(req.body, before),
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
   await audit(
     req.user?.id,
     "UPDATE_PRODUCT",

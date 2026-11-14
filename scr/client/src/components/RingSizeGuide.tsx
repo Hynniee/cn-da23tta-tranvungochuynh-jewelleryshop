@@ -39,12 +39,12 @@ export default function RingSizeGuide({
         </div>
         <p>
           Đo đường kính bên trong chiếc nhẫn đang đeo vừa, không tính độ dày
-          thành nhẫn, rồi đối chiếu bảng dưới đây.
+          thành nhẫn, rồi đối chiếu bảng dưới đây
         </p>
         <RingSizeTable selectedSize={selectedSize} />
         <p>
           Nếu số đo nằm giữa hai size, nên chọn size lớn hơn và xác nhận lại với
-          cửa hàng.
+          cửa hàng
         </p>
         <Link to="/ring-sizer">Xem cách đo và tính size nhẫn →</Link>
       </dialog>

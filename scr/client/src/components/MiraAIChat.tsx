@@ -155,7 +155,7 @@ export default function MiraAIChat() {
           {!token() && (
             <div className="mira-ai-login">
               AI gợi ý từ sản phẩm của cửa hàng. Đăng nhập để MIRA ghi nhớ hành
-              vi và cá nhân hóa sâu hơn.{" "}
+              vi và cá nhân hóa sâu hơn{" "}
               <Link to="/login" onClick={() => setOpen(false)}>
                 Đăng nhập
               </Link>

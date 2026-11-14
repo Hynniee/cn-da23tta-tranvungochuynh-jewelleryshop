@@ -288,7 +288,7 @@ nav a:hover {
   font-size: 12px;
   color: var(--muted);
 }
-footer {
+.lux-footer {
   background: #262321;
   color: #ddd;
   padding: 65px 6vw;
@@ -296,7 +296,7 @@ footer {
   grid-template-columns: 2fr 1fr 1fr 1.5fr;
   gap: 50px;
 }
-footer > div {
+.lux-footer > div {
   display: flex;
   flex-direction: column;
   gap: 10px;

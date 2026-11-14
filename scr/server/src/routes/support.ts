@@ -116,7 +116,7 @@ async function send(
         status: 409,
         data: {
           message:
-            "Mã gửi đã được sử dụng cho tin nhắn khác. Vui lòng tải lại hội thoại.",
+            "Mã gửi đã được sử dụng cho tin nhắn khác. Vui lòng tải lại hội thoại",
         },
       };
     }

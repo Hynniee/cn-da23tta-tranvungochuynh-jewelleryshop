@@ -1,3 +1,4 @@
+import { sizeInventory } from "./inventory.service.js";
 import mongoose from "mongoose";
 import { productSizes } from "./product-sizes.js";
 
@@ -16,6 +17,9 @@ export function catalogProduct(product: any) {
         ? [product.imageUrl]
         : [],
     sizes: productSizes(product),
+    sizeStocks: sizeInventory(product),
+    inventoryEstimated:
+      productSizes(product).length > 0 && !Array.isArray(product.sizeStocks),
   };
 }
 

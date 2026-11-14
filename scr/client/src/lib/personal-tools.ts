@@ -5,11 +5,11 @@ export { ringSizeChart };
 export type MeasureMethod = "circumference" | "diameter";
 export function estimateRingSize(raw: string, method: MeasureMethod) {
   if (!/^\d+(?:[.,]\d+)?$/.test(raw.trim()))
-    throw new Error("Nhập số đo bằng mm, ví dụ 53,4 hoặc 17.");
+    throw new Error("Nhập số đo bằng mm, ví dụ 53,4 hoặc 17");
   const value = Number(raw.trim().replace(",", "."));
   const diameter = method === "diameter" ? value : value / Math.PI;
   if (!Number.isFinite(value) || diameter < 10 || diameter > 30)
-    throw new Error("Số đo chưa hợp lệ. Hãy kiểm tra đơn vị mm và đo lại.");
+    throw new Error("Số đo chưa hợp lệ. Hãy kiểm tra đơn vị mm và đo lại");
   const inRange =
     diameter >= ringSizeChart[0].diameter &&
     diameter <= ringSizeChart[ringSizeChart.length - 1].diameter + 0.0001;
@@ -48,7 +48,7 @@ export function matchJewelry(
     min > max
   )
     throw new Error(
-      "Ngân sách tối đa phải lớn hơn 0 và không nhỏ hơn ngân sách tối thiểu.",
+      "Ngân sách tối đa phải lớn hơn 0 và không nhỏ hơn ngân sách tối thiểu",
     );
   const preferredCategories: Record<string, string[]> = {
     "Cầu hôn": ["Nhẫn", "Nhẫn cưới"],

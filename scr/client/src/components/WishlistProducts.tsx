@@ -19,7 +19,7 @@ export default function WishlistProducts() {
       })
       .catch(() => {
         if (!controller.signal.aborted)
-          setError("Chưa tải được sản phẩm yêu thích. Vui lòng thử lại.");
+          setError("Chưa tải được sản phẩm yêu thích. Vui lòng thử lại");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -54,7 +54,7 @@ export default function WishlistProducts() {
         </div>
       )}
       {!loading && !error && !shown.length && (
-        <p>Chưa có sản phẩm yêu thích.</p>
+        <p>Chưa có sản phẩm yêu thích</p>
       )}
       <Link className="btn" to="/shop">
         Khám phá sản phẩm

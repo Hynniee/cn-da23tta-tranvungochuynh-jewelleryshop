@@ -63,7 +63,7 @@ export default function AdminPromotions({
     try {
       setList(await request("/promotions"));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không tải được khuyến mãi.");
+      setError(e instanceof Error ? e.message : "Không tải được khuyến mãi");
     } finally {
       setLoading(false);
     }
@@ -105,13 +105,13 @@ export default function AdminPromotions({
     setError("");
     try {
       if (new Date(form.endsAt) <= new Date(form.startsAt))
-        throw Error("Thời gian kết thúc phải sau thời gian bắt đầu.");
+        throw Error("Thời gian kết thúc phải sau thời gian bắt đầu");
       if (
         form.type !== "voucher" &&
         !form.allProducts &&
         !form.productIds.length
       )
-        throw Error("Chọn ít nhất một sản phẩm áp dụng.");
+        throw Error("Chọn ít nhất một sản phẩm áp dụng");
       const saved: Promotion = await request(
         editing ? `/promotions/${editing}` : "/promotions",
         {
@@ -135,12 +135,12 @@ export default function AdminPromotions({
       setForm(null);
       notify(
         editing
-          ? "Đã cập nhật chương trình."
-          : "Đã thêm chương trình khuyến mãi.",
+          ? "Đã cập nhật chương trình"
+          : "Đã thêm chương trình khuyến mãi",
       );
       setEditing(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không lưu được chương trình.");
+      setError(e instanceof Error ? e.message : "Không lưu được chương trình");
     } finally {
       setBusy(false);
     }
@@ -158,12 +158,12 @@ export default function AdminPromotions({
       );
       notify(
         saved.active
-          ? "Đã bật chương trình khuyến mãi."
-          : "Đã tắt chương trình khuyến mãi.",
+          ? "Đã bật chương trình khuyến mãi"
+          : "Đã tắt chương trình khuyến mãi",
       );
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Không thay đổi được trạng thái.",
+        e instanceof Error ? e.message : "Không thay đổi được trạng thái",
       );
     } finally {
       setBusy(false);
@@ -175,7 +175,7 @@ export default function AdminPromotions({
         <div>
           <span className="page-kicker">MIRA OFFERS</span>
           <h2>Ưu đãi cho từng khoảnh khắc</h2>
-          <p>Quản lý mã ưu đãi, giá giảm và những khung giờ flash sale.</p>
+          <p>Quản lý mã ưu đãi, giá giảm và những khung giờ flash sale</p>
         </div>
         <button
           className="admin-primary"
@@ -385,7 +385,7 @@ export default function AdminPromotions({
                             </label>
                           ))}
                       </div>
-                      <small>Đã chọn {form.productIds.length} sản phẩm.</small>
+                      <small>Đã chọn {form.productIds.length} sản phẩm</small>
                     </>
                   )}
                 </div>
@@ -479,7 +479,7 @@ export default function AdminPromotions({
       {!loading && !list.some((p) => p.type === kind) && (
         <div className="admin-card promotion-empty">
           <h3>Chưa có {labels[kind].toLowerCase()}</h3>
-          <p>Tạo chương trình đầu tiên để chuẩn bị ưu đãi cho khách hàng.</p>
+          <p>Tạo chương trình đầu tiên để chuẩn bị ưu đãi cho khách hàng</p>
         </div>
       )}
     </section>

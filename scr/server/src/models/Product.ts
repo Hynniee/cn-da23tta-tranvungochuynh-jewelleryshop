@@ -43,6 +43,26 @@ const schema = new mongoose.Schema(
     gender: { type: String, default: "Nữ" },
     occasion: [String],
     sizes: [String],
+    sizeStocks: {
+      type: [
+        new mongoose.Schema(
+          {
+            size: { type: String, required: true },
+            stock: {
+              type: Number,
+              required: true,
+              min: 0,
+              validate: {
+                validator: Number.isSafeInteger,
+                message: "Tồn kho phải là số nguyên không âm",
+              },
+            },
+          },
+          { _id: false },
+        ),
+      ],
+      default: undefined,
+    },
     price: { type: Number, required: true, min: 0 },
     salePrice: { type: Number, min: 0 },
     rating: { type: Number, default: 0 },

@@ -30,7 +30,7 @@ export default function DSSWeights({
     <fieldset className="dss-weights">
       <legend>Mức ưu tiên các tiêu chí</legend>
       <p>
-        Điều chỉnh mức ưu tiên; hệ thống tự chuẩn hóa tổng trọng số về 100%.
+        Điều chỉnh mức ưu tiên; hệ thống tự chuẩn hóa tổng trọng số về 100%
       </p>
       <div className="decision-controls">
         {Object.entries(weights).map(([key, value]) => (
@@ -51,7 +51,7 @@ export default function DSSWeights({
         ))}
       </div>
       {!sum && (
-        <p role="alert">Cần ít nhất một tiêu chí có mức ưu tiên lớn hơn 0.</p>
+        <p role="alert">Cần ít nhất một tiêu chí có mức ưu tiên lớn hơn 0</p>
       )}
     </fieldset>
   );

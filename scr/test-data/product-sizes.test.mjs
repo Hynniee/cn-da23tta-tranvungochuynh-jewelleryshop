@@ -235,6 +235,12 @@ try {
     "legacy placeholder sizes are removed from fixed-accessory order data",
   );
 
+  await api(`/orders/${order._id}/cancel`, { method: "PATCH", body: {} });
+  check(
+    (await Product.findById(ring._id)).stock === 20,
+    "cancelling restores the selected size before further browser purchases",
+  );
+
   process.env.API_PROXY_TARGET = base;
   vite = await createServer({
     configFile: path.join(root, "scr/client/vite.config.ts"),

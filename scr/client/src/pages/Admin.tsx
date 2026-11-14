@@ -1,3 +1,4 @@
+import { compareProductStock } from "../lib/inventory";
 import { categories, orderLabels, orderTransitions } from "../lib/commerce";
 import Image from "../components/Image";
 import AdminPromotions from "../components/AdminPromotions";
@@ -8,6 +9,7 @@ import { readStoredObject } from "../lib/storage";
 import { notify } from "../lib/notifications";
 import {
   FormEvent,
+  Fragment,
   ReactNode,
   useEffect,
   useMemo,
@@ -17,6 +19,7 @@ import {
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   BarChart3,
+  ChevronDown,
   Boxes,
   Gem,
   LayoutDashboard,
@@ -55,6 +58,8 @@ type Product = {
   material: string;
   price: number;
   stock: number;
+  sizeStocks?: { size: string; stock: number }[];
+  inventoryEstimated?: boolean;
   images?: string[];
   featured?: boolean;
   stone?: string;
@@ -83,7 +88,8 @@ const EMPTY_PRODUCT: ProductForm = {
   category: "Nhẫn",
   material: "Vàng Trắng 18K",
   price: "",
-  stock: "",
+  stock: "0",
+  sizeStocks: {},
   image: "",
 };
 const ORDER_LABEL = orderLabels;
@@ -111,6 +117,14 @@ export default function Admin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
+  const navigationRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    const navigation = navigationRef.current;
+    const active = navigation?.querySelector<HTMLElement>("button.active");
+    if (navigation && active)
+      navigation.scrollLeft = active.offsetLeft - navigation.offsetLeft - 16;
+  }, [tab]);
   useEffect(() => {
     const requested = params.get("tab");
     if (
@@ -201,7 +215,7 @@ export default function Admin() {
       setWriteWarning(
         error instanceof Error
           ? error.message
-          : "Chưa kiểm tra được kết nối ghi vào cơ sở dữ liệu.",
+          : "Chưa kiểm tra được kết nối ghi vào cơ sở dữ liệu",
       );
     } finally {
       setCheckingWrite(false);
@@ -215,6 +229,9 @@ export default function Admin() {
     )
       void checkWriteStatus();
   }, [tab]);
+  const [expandedInventory, setExpandedInventory] = useState<string | null>(
+    null,
+  );
   const [analytics, setAnalytics] = useState<any>(null);
   const productFormRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -267,7 +284,7 @@ export default function Admin() {
       setNotificationError(
         error instanceof Error
           ? error.message
-          : "Chưa tải được thông báo quản trị.",
+          : "Chưa tải được thông báo quản trị",
       );
     }
   }
@@ -279,7 +296,7 @@ export default function Admin() {
       setNotificationError(
         error instanceof Error
           ? error.message
-          : "Chưa ghi nhận được thông báo đã xem.",
+          : "Chưa ghi nhận được thông báo đã xem",
       );
     }
   }
@@ -332,9 +349,9 @@ export default function Admin() {
     () => products.filter((p) => Number(p.stock) <= 5).length,
     [products],
   );
-  const visibleProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const visibleProducts = products
+    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    .sort(compareProductStock);
 
   function logout() {
     localStorage.removeItem("mira_token");
@@ -380,6 +397,11 @@ export default function Admin() {
         submittedForm,
         existing ? productForm(existing) : undefined,
       );
+      if (existing?.inventoryEstimated && !("sizeStocks" in changes)) {
+        const confirmed = productChanges(submittedForm);
+        changes.sizeStocks = confirmed.sizeStocks;
+        changes.stock = confirmed.stock;
+      }
       if (existing && "images" in changes) {
         changes.images = submittedForm.image.trim()
           ? [submittedForm.image.trim(), ...(existing.images?.slice(1) || [])]
@@ -407,8 +429,8 @@ export default function Admin() {
       );
       notify(
         editingId
-          ? `Đã cập nhật sản phẩm. Tồn kho: ${Number(form.stock)}.`
-          : `Đã thêm sản phẩm vào kho. Tồn kho: ${savedProduct.stock}.`,
+          ? `Đã cập nhật sản phẩm · Tồn kho: ${savedProduct.stock}`
+          : `Đã thêm sản phẩm vào kho · Tồn kho: ${savedProduct.stock}`,
       );
       setForm(EMPTY_PRODUCT);
       setEditingId(null);
@@ -424,7 +446,7 @@ export default function Admin() {
     if (!window.confirm("Xóa sản phẩm này khỏi cửa hàng?")) return;
     try {
       await request(`/products/${id}`, { method: "DELETE" });
-      notify("Đã xóa sản phẩm.");
+      notify("Đã xóa sản phẩm");
       await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể xóa sản phẩm");
@@ -451,7 +473,7 @@ export default function Admin() {
         previous.map((order) => (order._id === id ? updated : order)),
       );
       notify(
-        `Đã chuyển đơn ${updated.orderCode || updated._id.slice(-6).toUpperCase()} sang “${ORDER_LABEL[updated.status]}”.`,
+        `Đã chuyển đơn ${updated.orderCode || updated._id.slice(-6).toUpperCase()} sang “${ORDER_LABEL[updated.status]}”`,
       );
       await loadNotifications();
     } catch (e) {
@@ -470,7 +492,7 @@ export default function Admin() {
       <section className="admin-locked">
         <Gem size={38} />
         <h1>Khu Vực Quản Trị MIRA</h1>
-        <p>Vui lòng đăng nhập bằng tài khoản quản trị để tiếp tục.</p>
+        <p>Vui lòng đăng nhập bằng tài khoản quản trị để tiếp tục</p>
         <Link to="/login">Đăng nhập ADMIN</Link>
       </section>
     );
@@ -482,7 +504,11 @@ export default function Admin() {
         <Link to="/" className="admin-logo">
           MIRA<span>QUẢN TRỊ CỬA HÀNG</span>
         </Link>
-        <nav className="admin-nav">
+        <nav
+          className="admin-nav"
+          ref={navigationRef}
+          aria-label="Quản trị cửa hàng"
+        >
           {(
             [
               {
@@ -513,7 +539,7 @@ export default function Admin() {
               },
               {
                 id: "analytics",
-                label: "AI & Gợi ý",
+                label: "Thống kê",
                 icon: <BarChart3 size={17} />,
               },
             ] as { id: Tab; label: string; icon: ReactNode }[]
@@ -522,7 +548,7 @@ export default function Admin() {
               item.id === "messages"
                 ? {
                     count: unreadMessages,
-                    message: `${unreadMessages} tin nhắn khách hàng chưa đọc.`,
+                    message: `${unreadMessages} tin nhắn khách hàng chưa đọc`,
                   }
                 : item.id === "overview"
                   ? undefined
@@ -574,7 +600,11 @@ export default function Admin() {
             <b>{user.name || "Administrator"}</b>
             <small>{user.email}</small>
           </div>
-          <button onClick={logout}>
+          <button
+            onClick={logout}
+            aria-label="Đăng xuất quản trị"
+            title="Đăng xuất"
+          >
             <LogOut size={16} />
           </button>
         </div>
@@ -602,7 +632,7 @@ export default function Admin() {
                         ? "Tin nhắn khách hàng"
                         : tab === "promotions"
                           ? "Khuyến mãi & mã giảm giá"
-                          : "Phân tích AI & gợi ý"}
+                          : "Thống kê kinh doanh"}
             </h1>
           </div>
           <Link to="/">XEM CỬA HÀNG ↗</Link>
@@ -685,6 +715,7 @@ export default function Admin() {
                 />
                 {products
                   .filter((p) => p.stock <= 5)
+                  .sort(compareProductStock)
                   .slice(0, 6)
                   .map((p) => (
                     <div key={p._id}>
@@ -699,7 +730,7 @@ export default function Admin() {
                     </div>
                   ))}
                 {lowStock === 0 && (
-                  <p className="admin-empty">Tồn kho đang ổn định.</p>
+                  <p className="admin-empty">Tồn kho đang ổn định</p>
                 )}
               </section>
             </div>
@@ -711,7 +742,7 @@ export default function Admin() {
             {writeWarning && (
               <div className="catalog-notice" role="status">
                 <p>
-                  <b>Chưa thể thêm hoặc sửa sản phẩm.</b> {writeWarning}
+                  <b>Chưa thể thêm hoặc sửa sản phẩm</b> {writeWarning}
                 </p>
                 <button
                   type="button"
@@ -743,6 +774,9 @@ export default function Admin() {
                 <Plus size={15} /> THÊM SẢN PHẨM
               </button>
             </div>
+            <p className="admin-inventory-order">
+              Ưu tiên sản phẩm hết hàng, sau đó đến tồn kho thấp
+            </p>
             <div className="product-admin-table">
               <div className="table-head">
                 <span>Sản phẩm</span>
@@ -752,36 +786,87 @@ export default function Admin() {
                 <span></span>
               </div>
               {visibleProducts.map((p) => (
-                <div className="table-row" key={p._id}>
-                  <span className="product-cell">
-                    <Image src={p.images?.[0] || "/placeholder.svg"} />
-                    <span>
-                      <b>{p.name}</b>
-                      <small>{p.slug}</small>
+                <Fragment key={p._id}>
+                  <div className="table-row">
+                    <span className="product-cell">
+                      <Image src={p.images?.[0] || "/placeholder.svg"} />
+                      <span>
+                        <b>{p.name}</b>
+                        <small>{p.slug}</small>
+                      </span>
                     </span>
-                  </span>
-                  <span>{p.category}</span>
-                  <span>{money(p.price)}</span>
-                  <span>
-                    <b className={p.stock <= 5 ? "stock-low" : ""}>{p.stock}</b>
-                  </span>
-                  <span className="row-actions">
-                    <Link to={`/product/${p.slug}`}>Xem</Link>
-                    <button
-                      onClick={() => {
-                        setEditingId(p._id);
-                        setForm(productForm(p));
-                        setError("");
-                        setShowForm(true);
-                      }}
+                    <span>{p.category}</span>
+                    <span>{money(p.price)}</span>
+                    <div className="inventory-cell">
+                      <div className="inventory-total">
+                        <b className={p.stock <= 5 ? "stock-low" : ""}>
+                          {p.stock}
+                        </b>
+                        <span>SP</span>
+                      </div>
+                      {!!p.sizeStocks?.length && (
+                        <button
+                          type="button"
+                          className="inventory-toggle"
+                          aria-expanded={expandedInventory === p._id}
+                          aria-controls={`inventory-${p._id}`}
+                          onClick={() =>
+                            setExpandedInventory((current) =>
+                              current === p._id ? null : p._id,
+                            )
+                          }
+                        >
+                          {p.sizeStocks.length} kích cỡ{" "}
+                          <ChevronDown size={14} aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
+                    <span className="row-actions">
+                      <Link to={`/product/${p.slug}`}>Xem</Link>
+                      <button
+                        onClick={() => {
+                          setEditingId(p._id);
+                          setForm(productForm(p));
+                          setError("");
+                          setShowForm(true);
+                        }}
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        aria-label={`Xóa ${p.name}`}
+                        title="Xóa sản phẩm"
+                        onClick={() => deleteProduct(p._id)}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </span>
+                  </div>
+                  {expandedInventory === p._id && (
+                    <div
+                      className="product-inventory-panel"
+                      id={`inventory-${p._id}`}
                     >
-                      Sửa
-                    </button>
-                    <button onClick={() => deleteProduct(p._id)}>
-                      <Trash2 size={15} />
-                    </button>
-                  </span>
-                </div>
+                      <div className="inventory-panel-heading">
+                        <b>Tồn kho theo kích cỡ</b>
+                        <span>{p.name}</span>
+                      </div>
+                      <div className="inventory-size-grid">
+                        {p.sizeStocks?.map((row) => (
+                          <div
+                            key={row.size}
+                            className={`inventory-size-item ${row.stock === 0 ? "is-empty" : row.stock <= 2 ? "is-low" : ""}`}
+                          >
+                            <span>Size {row.size}</span>
+                            <b>
+                              {row.stock === 0 ? "Hết hàng" : `${row.stock} SP`}
+                            </b>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Fragment>
               ))}
             </div>
           </section>
@@ -813,7 +898,98 @@ export default function Admin() {
         )}
         {tab === "analytics" && (
           <section className="admin-card admin-full">
-            <CardTitle title="Hiệu quả hệ thống thông minh" />
+            <CardTitle title="Thống kê kinh doanh" />
+            {analytics ? (
+              <>
+                <p>
+                  Toàn bộ thời gian · Doanh thu gồm phí giao hàng, sau giảm giá;
+                  chỉ tính đơn đã thanh toán và chưa hủy
+                </p>
+                <div className="admin-stats">
+                  <Stat
+                    icon={<ShoppingBag />}
+                    label="Tổng đơn hàng"
+                    value={String(analytics.commerce?.totalOrders || 0)}
+                    note="Tất cả trạng thái"
+                  />
+                  <Stat
+                    icon={<BarChart3 />}
+                    label="Doanh thu đã thanh toán"
+                    value={money(analytics.commerce?.revenue || 0)}
+                    note={`${analytics.commerce?.revenueOrders || 0} đơn được ghi nhận`}
+                  />
+                  <Stat
+                    icon={<PackageCheck />}
+                    label="Giá trị trung bình đơn"
+                    value={money(analytics.commerce?.averageOrderValue || 0)}
+                    note="Trên đơn ghi nhận doanh thu"
+                  />
+                  <Stat
+                    icon={<Boxes />}
+                    label="Tổng tồn kho"
+                    value={String(analytics.commerce?.inventory?.units || 0)}
+                    note={`${analytics.commerce?.inventory?.lowStock || 0} sản phẩm còn ≤ 5; ${analytics.commerce?.inventory?.soldOut || 0} hết hàng`}
+                  />
+                </div>
+                <div className="commerce-reports">
+                  <section>
+                    <h3>Đơn hàng theo trạng thái</h3>
+                    {Object.entries(ORDER_LABEL).map(([status, label]) => (
+                      <div className="report-row" key={status}>
+                        <span>{label}</span>
+                        <b>
+                          {analytics.commerce?.statusCounts?.find(
+                            (row: any) => row._id === status,
+                          )?.count || 0}
+                        </b>
+                      </div>
+                    ))}
+                  </section>
+                  <section>
+                    <h3>Doanh thu theo tháng</h3>
+                    <small>
+                      12 tháng tạo đơn gần nhất có doanh thu · Giờ Việt Nam
+                    </small>
+                    {analytics.commerce?.monthlyRevenue?.length ? (
+                      analytics.commerce.monthlyRevenue.map((row: any) => (
+                        <div className="report-row" key={row._id}>
+                          <span>
+                            {row._id} · {row.orders} đơn
+                          </span>
+                          <b>{money(row.revenue)}</b>
+                        </div>
+                      ))
+                    ) : (
+                      <p>Chưa có doanh thu</p>
+                    )}
+                  </section>
+                  <section>
+                    <h3>Sản phẩm bán chạy</h3>
+                    <small>
+                      Theo số lượng trong đơn đã hoàn tất · Doanh số sản phẩm
+                      trước voucher và phí giao hàng
+                    </small>
+                    {analytics.commerce?.bestSellers?.length ? (
+                      analytics.commerce.bestSellers.map((row: any) => (
+                        <div className="report-row" key={row._id}>
+                          <span>
+                            {row.name} · {row.quantity} SP
+                          </span>
+                          <b>{money(row.revenue)}</b>
+                        </div>
+                      ))
+                    ) : (
+                      <p>Chưa có đơn hoàn tất</p>
+                    )}
+                  </section>
+                </div>
+              </>
+            ) : (
+              <p role="status">
+                Chưa tải được thống kê. Vui lòng tải lại trang
+              </p>
+            )}
+            <h3>Hiệu quả hệ thống thông minh</h3>
             <div className="admin-stats">
               <Stat
                 icon={<BarChart3 />}
@@ -936,11 +1112,27 @@ export default function Admin() {
               <label>
                 Tồn kho
                 <input
-                  required
+                  required={!form.sizes.trim()}
+                  readOnly={!!form.sizes.trim()}
                   type="number"
                   min="0"
                   step="1"
-                  value={form.stock}
+                  value={
+                    form.sizes.trim()
+                      ? [
+                          ...new Set(
+                            form.sizes
+                              .split(",")
+                              .map((s) => s.trim())
+                              .filter(Boolean),
+                          ),
+                        ].reduce(
+                          (sum, size) =>
+                            sum + Number(form.sizeStocks?.[size] || 0),
+                          0,
+                        )
+                      : form.stock
+                  }
                   onChange={(e) => setForm({ ...form, stock: e.target.value })}
                 />
               </label>
@@ -979,9 +1171,57 @@ export default function Admin() {
                 />
                 <small>
                   Nhập số size hoặc số đo cụ thể. Phụ kiện không phân size có
-                  thể để trống.
+                  thể để trống
                 </small>
               </label>
+              {!!form.sizes.trim() && (
+                <fieldset className="form-wide size-inventory-editor">
+                  <legend>Tồn kho theo kích cỡ / phân loại</legend>
+                  {editingId &&
+                    products.find((p) => p._id === editingId)
+                      ?.inventoryEstimated && (
+                      <p role="status">
+                        Tồn kho cũ đang tạm chia đều cho các size. Hãy kiểm kê,
+                        nhập số lượng thực tế và lưu sản phẩm
+                      </p>
+                    )}
+                  <p>
+                    Tổng tồn kho tự tính từ từng size. Size có tồn kho 0 sẽ tạm
+                    hết hàng
+                  </p>
+                  <div>
+                    {[
+                      ...new Set(
+                        form.sizes
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      ),
+                    ].map((size) => (
+                      <label key={size}>
+                        Size {size}
+                        <input
+                          aria-label={`Tồn kho size ${size}`}
+                          type="number"
+                          min="0"
+                          step="1"
+                          required
+                          value={form.sizeStocks?.[size] ?? "0"}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              sizeStocks: {
+                                ...form.sizeStocks,
+                                [size]: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
               <label className="form-wide">
                 Mô tả
                 <textarea
@@ -1037,7 +1277,7 @@ export default function Admin() {
                       !file.size
                     ) {
                       setError(
-                        "Vui lòng chọn ảnh JPG, PNG hoặc WebP, dung lượng tối đa 5 MB.",
+                        "Vui lòng chọn ảnh JPG, PNG hoặc WebP, dung lượng tối đa 5 MB",
                       );
                       return;
                     }
@@ -1077,7 +1317,7 @@ export default function Admin() {
                 )}
                 <small>
                   Ảnh được tải lên khi bạn bấm Lưu sản phẩm và dùng làm ảnh đại
-                  diện.
+                  diện
                 </small>
               </div>
             </div>
@@ -1186,7 +1426,7 @@ function OrderTable({
           </span>
         </div>
       ))}
-      {orders.length === 0 && <p className="admin-empty">Chưa có đơn hàng.</p>}
+      {orders.length === 0 && <p className="admin-empty">Chưa có đơn hàng</p>}
     </div>
   );
 }
@@ -1250,7 +1490,7 @@ function AdminOrderStatus({
             onChange={(event) => setReceivedPayment(event.target.checked)}
             aria-label={`Xác nhận đã nhận đủ tiền đơn ${code}`}
           />
-          <span>Đã kiểm tra và nhận đủ {money(order.total)} chuyển khoản.</span>
+          <span>Đã kiểm tra và nhận đủ {money(order.total)} chuyển khoản</span>
         </label>
       )}
       <button

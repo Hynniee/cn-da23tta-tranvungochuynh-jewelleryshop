@@ -38,23 +38,23 @@ router.get("/", async (req: AuthRequest, res) => {
   const entries = {
     orders: {
       count: pending + pendingPayment,
-      message: `${pending} đơn chờ xác nhận, ${pendingPayment} đơn chờ thanh toán.`,
+      message: `${pending} đơn chờ xác nhận, ${pendingPayment} đơn chờ thanh toán`,
     },
     products: {
       count: products,
-      message: `${products} sản phẩm còn từ 5 sản phẩm trở xuống, cần kiểm tra tồn kho.`,
+      message: `${products} sản phẩm còn từ 5 sản phẩm trở xuống, cần kiểm tra tồn kho`,
     },
     customers: {
       count: customers,
-      message: `${customers} khách hàng đăng ký mới kể từ lần bạn xem gần nhất.`,
+      message: `${customers} khách hàng đăng ký mới kể từ lần bạn xem gần nhất`,
     },
     promotions: {
       count: promotions,
-      message: `${promotions} khuyến mãi đang chạy sẽ kết thúc trong 24 giờ tới.`,
+      message: `${promotions} khuyến mãi đang chạy sẽ kết thúc trong 24 giờ tới`,
     },
     analytics: {
       count: analytics,
-      message: `${analytics} giao dịch có số tiền chưa khớp, cần đối soát.`,
+      message: `${analytics} giao dịch có số tiền chưa khớp, cần đối soát`,
     },
   };
   res.json(entries);

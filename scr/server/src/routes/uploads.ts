@@ -21,7 +21,7 @@ router.post(
     const buffer = req.body;
     if (!Buffer.isBuffer(buffer) || !buffer.length) {
       return res.status(400).json({
-        message: "Vui lòng chọn ảnh JPG, PNG hoặc WebP (tối đa 5 MB).",
+        message: "Vui lòng chọn ảnh JPG, PNG hoặc WebP (tối đa 5 MB)",
       });
     }
     const mime = req.get("Content-Type")?.split(";")[0].trim();
@@ -42,7 +42,7 @@ router.post(
     if (!valid)
       return res
         .status(400)
-        .json({ message: "Nội dung tệp không đúng định dạng ảnh đã chọn." });
+        .json({ message: "Nội dung tệp không đúng định dạng ảnh đã chọn" });
     const extension =
       mime === "image/jpeg" ? "jpg" : mime === "image/png" ? "png" : "webp";
     const filename = `${randomUUID()}.${extension}`;

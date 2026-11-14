@@ -1,3 +1,4 @@
+import { selectedStock } from "../lib/inventory";
 import ProductReviews from "../components/ProductReviews";
 import Image from "../components/Image";
 import ProductCard from "../components/ProductCard";
@@ -22,6 +23,7 @@ type Product = {
   description?: string;
   rating?: number;
   stock: number;
+  sizeStocks?: { size: string; stock: number }[];
   price: number;
   salePrice?: number;
   promotion?: { name: string; type: string; endsAt: string };
@@ -38,6 +40,7 @@ export default function ProductDetail() {
   const [related, setRelated] = useState<Product[]>([]);
   const [error, setError] = useState("");
   const [activeImage, setActiveImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const [size, setSize] = useState("");
   const [sizeError, setSizeError] = useState("");
   const [engraving, setEngraving] = useState("");
@@ -59,6 +62,7 @@ export default function ProductDetail() {
     setProduct(null);
     setError("");
     setEngraving("");
+    setQuantity(1);
     setSizeError("");
     setActiveImage(0);
     const show = (data: Product) => {
@@ -77,8 +81,8 @@ export default function ProductDetail() {
         if (!active) return;
         setError(
           error.status === 404
-            ? "Không tìm thấy sản phẩm."
-            : "Không tải được sản phẩm. Vui lòng thử lại.",
+            ? "Không tìm thấy sản phẩm"
+            : "Không tải được sản phẩm. Vui lòng thử lại",
         );
       });
     request("/products")
@@ -108,7 +112,11 @@ export default function ProductDetail() {
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
   const sizes = productSizes(product);
   const price = product.salePrice ?? product.price;
-  const soldOut = product.stock <= 0;
+  const availableStock = size ? selectedStock(product, size) : product.stock;
+  const soldOut = availableStock <= 0;
+  const needsSize = sizes.length > 0 && !size;
+  const quantityDisabled = needsSize || soldOut;
+  const maxQuantity = Math.min(100, availableStock);
   const matches = related
     .filter(
       (p) =>
@@ -119,10 +127,18 @@ export default function ProductDetail() {
   function add(buyNow = false) {
     if (!product || soldOut) return;
     if (sizes.length && !sizes.includes(size)) {
-      setSizeError("Vui lòng chọn kích cỡ trước khi mua sản phẩm.");
+      setSizeError("Vui lòng chọn kích cỡ trước khi mua sản phẩm");
       document
         .getElementById("product-size-options")
         ?.focus({ preventScroll: true });
+      return;
+    }
+    if (
+      !Number.isSafeInteger(quantity) ||
+      quantity < 1 ||
+      quantity > maxQuantity
+    ) {
+      notify("Số lượng vượt quá tồn kho của lựa chọn hiện tại", "info");
       return;
     }
     const selection = {
@@ -133,11 +149,12 @@ export default function ProductDetail() {
       image: images[activeImage],
       size,
       sizeOptions: sizes,
-      quantity: 1,
+      quantity,
       material: product.material,
       stone: product.stone,
       engraving: product.engravingAllowed ? engraving.trim() : "",
-      stock: product.stock,
+      stock: availableStock,
+      sizeStocks: product.sizeStocks,
     };
     if (buyNow) {
       try {
@@ -145,7 +162,7 @@ export default function ProductDetail() {
         navigate(BUY_NOW_CHECKOUT);
       } catch {
         notify(
-          "Chưa thể bắt đầu mua ngay. Vui lòng cho phép lưu dữ liệu trên trình duyệt rồi thử lại.",
+          "Chưa thể bắt đầu mua ngay. Vui lòng cho phép lưu dữ liệu trên trình duyệt rồi thử lại",
           "info",
         );
       }
@@ -153,10 +170,10 @@ export default function ProductDetail() {
     }
     const added = addCart(selection);
     if (!added) {
-      notify("Số lượng trong giỏ đã đạt tồn kho hiện tại.", "info");
+      notify("Số lượng trong giỏ đã đạt tồn kho hiện tại", "info");
       return;
     }
-    notify("Đã thêm sản phẩm vào giỏ hàng.");
+    notify("Đã thêm sản phẩm vào giỏ hàng");
   }
   return (
     <main className="pd-page">
@@ -209,7 +226,7 @@ export default function ProductDetail() {
                 {new Date(product.promotion.endsAt).toLocaleString("vi-VN")}
               </p>
             )}
-            <p>Giá theo chất liệu và kích cỡ sản phẩm đã chọn.</p>
+            <p>Đơn giá / sản phẩm</p>
             <span className="pd-ship">
               MIỄN PHÍ VẬN CHUYỂN TỪ {money(freeShippingFrom)}
             </span>
@@ -222,12 +239,6 @@ export default function ProductDetail() {
             <div>
               <dt>Loại đá / điểm nhấn</dt>
               <dd>{product.stone || "Không đính đá"}</dd>
-            </div>
-            <div>
-              <dt>Tình trạng</dt>
-              <dd>
-                {soldOut ? "Tạm hết hàng" : `Còn ${product.stock} sản phẩm`}
-              </dd>
             </div>
           </dl>
           {sizes.length > 0 ? (
@@ -257,10 +268,18 @@ export default function ProductDetail() {
                 {sizes.map((value) => (
                   <button
                     key={value}
+                    disabled={selectedStock(product, value) <= 0}
+                    title={`Size ${value}: còn ${selectedStock(product, value)} sản phẩm`}
                     aria-pressed={size === value}
                     className={size === value ? "active" : ""}
                     onClick={() => {
                       setSize(value);
+                      setQuantity((q) =>
+                        Math.max(
+                          1,
+                          Math.min(q, 100, selectedStock(product, value)),
+                        ),
+                      );
                       setSizeError("");
                     }}
                   >
@@ -284,17 +303,17 @@ export default function ProductDetail() {
                     Chưa rõ size? Xem hướng dẫn đo size nhẫn →
                   </Link>
                 ) : (
-                  "Chọn chiều dài phù hợp với số đo của bạn."
+                  "Chọn chiều dài phù hợp với số đo của bạn"
                 )}
               </p>
             </>
           ) : (
             <p className="pd-size-note">
               {product.category === "Bông tai"
-                ? "Bông tai được bán theo đôi."
+                ? "Bông tai được bán theo đôi"
                 : product.category === "Charm"
-                  ? "Charm được bán riêng; chưa bao gồm dây hoặc vòng."
-                  : "Sản phẩm theo kích thước thiết kế, không cần chọn size."}
+                  ? "Charm được bán riêng; chưa bao gồm dây hoặc vòng"
+                  : "Sản phẩm theo kích thước thiết kế, không cần chọn size"}
             </p>
           )}
           {product.engravingAllowed && (
@@ -316,6 +335,84 @@ export default function ProductDetail() {
               </small>
             </div>
           )}
+          <section
+            className="pd-purchase-summary"
+            aria-label="Số lượng và thành tiền"
+          >
+            <div className="pd-stock-line" aria-live="polite">
+              <span>{size ? `Kích cỡ ${size}` : "Tình trạng kho"}</span>
+              <span
+                className={`pd-stock-status ${soldOut ? "is-empty" : needsSize ? "is-pending" : "is-available"}`}
+              >
+                {soldOut
+                  ? "Tạm hết hàng"
+                  : needsSize
+                    ? "Chọn size để xem tồn kho"
+                    : `Còn ${availableStock} sản phẩm`}
+              </span>
+            </div>
+            <div className="pd-purchase-row">
+              <div className="pd-quantity">
+                <label htmlFor="purchase-quantity">Số lượng</label>
+                <div className="quantity-stepper">
+                  <button
+                    type="button"
+                    aria-label="Giảm số lượng"
+                    disabled={quantity <= 1 || quantityDisabled}
+                    onClick={() => setQuantity((q) => q - 1)}
+                  >
+                    −
+                  </button>
+                  <input
+                    id="purchase-quantity"
+                    type="number"
+                    min="1"
+                    max={maxQuantity}
+                    step="1"
+                    value={quantity}
+                    disabled={quantityDisabled}
+                    aria-describedby="purchase-quantity-note"
+                    onChange={(e) =>
+                      setQuantity(
+                        Math.max(
+                          1,
+                          Math.min(
+                            maxQuantity || 1,
+                            Math.trunc(Number(e.target.value) || 1),
+                          ),
+                        ),
+                      )
+                    }
+                  />
+                  <button
+                    type="button"
+                    aria-label="Tăng số lượng"
+                    disabled={quantity >= maxQuantity || quantityDisabled}
+                    onClick={() => setQuantity((q) => q + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div
+                className="pd-subtotal"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <span>Thành tiền</span>
+                <strong>
+                  {quantityDisabled ? "—" : money(price * quantity)}
+                </strong>
+              </div>
+            </div>
+            <p className="pd-purchase-note" id="purchase-quantity-note">
+              {soldOut
+                ? "Vui lòng chọn kích cỡ khác hoặc liên hệ cửa hàng"
+                : needsSize
+                  ? "Chọn kích cỡ phù hợp trước khi điều chỉnh số lượng"
+                  : "Chưa gồm phí vận chuyển và ưu đãi tại thanh toán"}
+            </p>
+          </section>
           <div className="pd-actions">
             <button className="pd-add" disabled={soldOut} onClick={() => add()}>
               {soldOut ? "TẠM HẾT HÀNG" : "THÊM VÀO GIỎ HÀNG"}
@@ -415,7 +512,7 @@ function ProductGallery({
           <b>ĐÓNG GÓI & CHĂM SÓC TRANG SỨC</b>
           <p>
             Sản phẩm được đóng gói cẩn thận, kèm hướng dẫn bảo quản theo chất
-            liệu.
+            liệu
           </p>
         </div>
         <span>MIRA CARE</span>
@@ -456,18 +553,18 @@ function ServiceSection() {
     [
       "◇",
       "Hộp Đựng Trang Sức",
-      "Đóng gói bảo vệ sản phẩm khi vận chuyển và bảo quản.",
+      "Đóng gói bảo vệ sản phẩm khi vận chuyển và bảo quản",
     ],
-    ["⌕", "Hướng Dẫn Làm Sạch", "Bộ chăm sóc phù hợp với chất liệu trang sức."],
+    ["⌕", "Hướng Dẫn Làm Sạch", "Bộ chăm sóc phù hợp với chất liệu trang sức"],
     [
       "♢",
       "Tư Vấn Chăm Sóc Trang Sức",
-      "Hướng dẫn bảo quản vàng, bạc, ngọc trai và đá quý.",
+      "Hướng dẫn bảo quản vàng, bạc, ngọc trai và đá quý",
     ],
     [
       "∞",
       "Hỗ Trợ Sau Mua",
-      "Vệ sinh, đánh bóng và hỗ trợ chỉnh size tại MIRA Salon.",
+      "Vệ sinh, đánh bóng và hỗ trợ chỉnh size tại MIRA Salon",
     ],
   ];
 

@@ -42,7 +42,7 @@ export const chat: RequestHandler = async (req: AuthRequest, res, next) => {
     if (requestedId && !session)
       return res.status(404).json({
         message:
-          "Phiên tư vấn hết hạn hoặc không thuộc tài khoản này. Hãy bắt đầu hội thoại mới.",
+          "Phiên tư vấn hết hạn hoặc không thuộc tài khoản này. Hãy bắt đầu hội thoại mới",
       });
     const messageType = classifyAdvisorMessage(message);
     session ||= new AdvisorSession({
@@ -154,7 +154,7 @@ export const chat: RequestHandler = async (req: AuthRequest, res, next) => {
       diamonds = await rankDiamonds({ ...intent, limit: 5 });
       answer = diamonds.length
         ? await explain(JSON.stringify(intent), diamonds)
-        : "Không có kim cương phù hợp. Bạn có thể tăng ngân sách hoặc điều chỉnh carat.";
+        : "Không có kim cương phù hợp. Bạn có thể tăng ngân sách hoặc điều chỉnh carat";
     } else {
       if (req.user?.id) await rebuildPreference(req.user.id);
       products = await recommend(req.user?.id || "", 5, intent);
@@ -195,7 +195,7 @@ export const chat: RequestHandler = async (req: AuthRequest, res, next) => {
   } catch (error: any) {
     if (error.name === "VersionError")
       return res.status(409).json({
-        message: "Hội thoại vừa được cập nhật. Vui lòng gửi lại tin nhắn.",
+        message: "Hội thoại vừa được cập nhật. Vui lòng gửi lại tin nhắn",
       });
     next(error);
   }

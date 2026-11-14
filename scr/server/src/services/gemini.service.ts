@@ -220,7 +220,7 @@ export async function extractIntent(
 }
 export async function explain(message: string, products: any[]) {
   if (!products.length)
-    return "Chưa có sản phẩm khớp nhu cầu hiện tại. Bạn có thể tăng ngân sách hoặc thử chất liệu, loại đá khác.";
+    return "Chưa có sản phẩm khớp nhu cầu hiện tại. Bạn có thể tăng ngân sách hoặc thử chất liệu, loại đá khác";
   const first = products[0];
   const reasons =
     first.reasons ||

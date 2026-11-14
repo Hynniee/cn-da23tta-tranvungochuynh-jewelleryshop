@@ -67,9 +67,9 @@ export default function AddressBook({
       );
       book.setAddresses(result);
       setEditing(null);
-      notify("Đã lưu địa chỉ giao hàng.");
+      notify("Đã lưu địa chỉ giao hàng");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không lưu được địa chỉ.");
+      setError(e instanceof Error ? e.message : "Không lưu được địa chỉ");
     } finally {
       setBusy(false);
     }
@@ -90,9 +90,9 @@ export default function AddressBook({
           { method: remove ? "DELETE" : "PATCH" },
         ),
       );
-      notify(remove ? "Đã xóa địa chỉ." : "Đã đổi địa chỉ mặc định.");
+      notify(remove ? "Đã xóa địa chỉ" : "Đã đổi địa chỉ mặc định");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Chưa cập nhật được địa chỉ.");
+      setError(e instanceof Error ? e.message : "Chưa cập nhật được địa chỉ");
     } finally {
       setBusy(false);
     }
@@ -121,7 +121,7 @@ export default function AddressBook({
         )}
       </header>
       <p className="address-book-help">
-        Địa chỉ đã lưu có thể chọn ngay khi thanh toán.
+        Địa chỉ đã lưu có thể chọn ngay khi thanh toán
       </p>
       {book.loading ? (
         <p role="status">Đang tải sổ địa chỉ…</p>
@@ -223,7 +223,7 @@ export default function AddressBook({
                 <MapPin size={30} />
                 <h3>Chưa có địa chỉ đã lưu</h3>
                 <p>
-                  Thêm địa chỉ để đặt hàng nhanh hơn trong lần mua tiếp theo.
+                  Thêm địa chỉ để đặt hàng nhanh hơn trong lần mua tiếp theo
                 </p>
               </div>
             )}
@@ -268,7 +268,7 @@ export default function AddressBook({
             {!!legacyAddress && !book.addresses.length && (
               <p className="address-book-legacy">
                 Địa chỉ trước đây: {legacyAddress}. Vui lòng thêm địa chỉ vào sổ
-                và chọn tỉnh/phường để sử dụng khi đặt hàng.
+                và chọn tỉnh/phường để sử dụng khi đặt hàng
               </p>
             )}
           </>

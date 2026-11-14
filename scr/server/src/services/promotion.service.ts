@@ -1,3 +1,4 @@
+import { sizeInventory } from "./inventory.service.js";
 import mongoose from "mongoose";
 import Promotion from "../models/Promotion.js";
 import Product from "../models/Product.js";
@@ -19,15 +20,15 @@ const fail = (message: string): never => {
 export function promotionInput(input: any) {
   const { type, discountType } = input;
   if (!["voucher", "discount", "flash_sale"].includes(type))
-    fail("Loại khuyến mãi không hợp lệ.");
+    fail("Loại khuyến mãi không hợp lệ");
   if (
     typeof input.name !== "string" ||
     !input.name.trim() ||
     input.name.trim().length > 120
   )
-    fail("Tên chương trình phải từ 1 đến 120 ký tự.");
+    fail("Tên chương trình phải từ 1 đến 120 ký tự");
   if (!["percent", "amount"].includes(discountType))
-    fail("Chọn giảm theo phần trăm hoặc số tiền.");
+    fail("Chọn giảm theo phần trăm hoặc số tiền");
   const value = input.value;
   if (
     !Number.isSafeInteger(value) ||
@@ -35,7 +36,7 @@ export function promotionInput(input: any) {
     value > 1e12 ||
     (discountType === "percent" && value > 100)
   )
-    fail("Mức giảm phải là số nguyên dương; phần trăm không vượt quá 100%.");
+    fail("Mức giảm phải là số nguyên dương; phần trăm không vượt quá 100%");
   const minSubtotal = input.minSubtotal ?? 0,
     maxDiscount = input.maxDiscount ?? 0;
   if (
@@ -43,9 +44,9 @@ export function promotionInput(input: any) {
       (v) => Number.isSafeInteger(v) && v >= 0 && v <= 1e12,
     )
   )
-    fail("Điều kiện đơn hàng và giảm tối đa phải là số tiền không âm.");
+    fail("Điều kiện đơn hàng và giảm tối đa phải là số tiền không âm");
   if (typeof input.startsAt !== "string" || typeof input.endsAt !== "string")
-    fail("Thời gian bắt đầu và kết thúc không hợp lệ.");
+    fail("Thời gian bắt đầu và kết thúc không hợp lệ");
   const startsAt = new Date(input.startsAt),
     endsAt = new Date(input.endsAt);
   if (
@@ -53,12 +54,12 @@ export function promotionInput(input: any) {
     !Number.isFinite(endsAt.getTime()) ||
     endsAt <= startsAt
   )
-    fail("Thời gian kết thúc phải sau thời gian bắt đầu.");
+    fail("Thời gian kết thúc phải sau thời gian bắt đầu");
   if (
     typeof input.active !== "boolean" ||
     typeof input.allProducts !== "boolean"
   )
-    fail("Trạng thái chương trình không hợp lệ.");
+    fail("Trạng thái chương trình không hợp lệ");
   const productIds = input.productIds ?? [];
   if (
     !Array.isArray(productIds) ||
@@ -67,14 +68,14 @@ export function promotionInput(input: any) {
       (id) => typeof id === "string" && mongoose.isValidObjectId(id),
     )
   )
-    fail("Danh sách sản phẩm không hợp lệ (tối đa 500).");
+    fail("Danh sách sản phẩm không hợp lệ (tối đa 500)");
   if (type !== "voucher" && !input.allProducts && !productIds.length)
-    fail("Chọn sản phẩm áp dụng hoặc chọn tất cả sản phẩm.");
+    fail("Chọn sản phẩm áp dụng hoặc chọn tất cả sản phẩm");
   const code =
     typeof input.code === "string" ? input.code.trim().toUpperCase() : "";
   if (type === "voucher" && !/^[A-Z0-9][A-Z0-9_-]{2,31}$/.test(code))
     fail(
-      "Mã voucher gồm 3–32 chữ cái không dấu, chữ số, dấu gạch ngang hoặc gạch dưới.",
+      "Mã voucher gồm 3–32 chữ cái không dấu, chữ số, dấu gạch ngang hoặc gạch dưới",
     );
   return {
     name: input.name.trim(),
@@ -172,14 +173,15 @@ export async function quoteOrder(
   readPreference: "primary" | "primaryPreferred" = "primaryPreferred",
 ) {
   if (!Array.isArray(items) || !items.length || items.length > 100)
-    fail("Giỏ hàng không hợp lệ.");
+    fail("Giỏ hàng không hợp lệ");
   if (
     voucherCode != null &&
     (typeof voucherCode !== "string" || voucherCode.length > 32)
   )
-    fail("Mã voucher không hợp lệ.");
+    fail("Mã voucher không hợp lệ");
   const promotions = await activeProductPromotions(now, readPreference);
   const quantities = new Map<string, number>();
+  const sizeQuantities = new Map<string, number>();
   const normalized: any[] = [];
   for (const item of items) {
     if (
@@ -190,29 +192,41 @@ export async function quoteOrder(
       item.quantity < 1 ||
       item.quantity > 100
     )
-      fail("Sản phẩm hoặc số lượng không hợp lệ.");
+      fail("Sản phẩm hoặc số lượng không hợp lệ");
     const raw = await Product.findById(item.product)
       .read(readPreference)
       .lean();
     const quantity = (quantities.get(item.product) || 0) + item.quantity;
     if (!raw || !Number.isFinite(raw.stock) || raw.stock < quantity)
-      throw new PromotionError("Sản phẩm không đủ tồn kho.", 409);
+      throw new PromotionError("Sản phẩm không đủ tồn kho", 409);
     const product = promotedProduct(raw, promotions, now);
     if (
       !Number.isSafeInteger(product.salePrice ?? product.price) ||
       (product.salePrice ?? product.price) < 0
     )
-      fail("Giá sản phẩm không hợp lệ. Vui lòng liên hệ cửa hàng.");
+      fail("Giá sản phẩm không hợp lệ. Vui lòng liên hệ cửa hàng");
     quantities.set(item.product, quantity);
     if (product.sizes?.length && !product.sizes.includes(item.size))
-      fail(`Vui lòng chọn kích cỡ hợp lệ cho ${product.name}.`);
+      fail(`Vui lòng chọn kích cỡ hợp lệ cho ${product.name}`);
     if (
       !product.sizes?.length &&
       item.size != null &&
       item.size !== "" &&
       !isGenericSize(item.size)
     )
-      fail(`Sản phẩm ${product.name} không có lựa chọn kích cỡ này.`);
+      fail(`Sản phẩm ${product.name} không có lựa chọn kích cỡ này`);
+    const sizeKey = JSON.stringify([item.product, item.size || ""]);
+    const sizeQuantity = (sizeQuantities.get(sizeKey) || 0) + item.quantity;
+    sizeQuantities.set(sizeKey, sizeQuantity);
+    if (
+      product.sizes?.length &&
+      (sizeInventory(raw).find((row) => row.size === item.size)?.stock ?? 0) <
+        sizeQuantity
+    )
+      throw new PromotionError(
+        `Kích cỡ ${item.size} của ${product.name} không đủ tồn kho`,
+        409,
+      );
     normalized.push({
       product: product._id,
       name: product.name,
@@ -234,7 +248,7 @@ export async function quoteOrder(
     0,
   );
   if (!Number.isSafeInteger(subtotal))
-    fail("Tổng giá trị giỏ hàng vượt giới hạn cho phép.");
+    fail("Tổng giá trị giỏ hàng vượt giới hạn cho phép");
   const code =
     typeof voucherCode === "string" ? voucherCode.trim().toUpperCase() : "";
   let voucher: any = null;
@@ -249,10 +263,10 @@ export async function quoteOrder(
       .read(readPreference)
       .lean();
     if (!promotion)
-      fail("Voucher không tồn tại, đã tắt hoặc ngoài thời gian áp dụng.");
+      fail("Voucher không tồn tại, đã tắt hoặc ngoài thời gian áp dụng");
     if (subtotal < promotion!.minSubtotal)
       fail(
-        `Voucher yêu cầu đơn từ ${promotion!.minSubtotal.toLocaleString("vi-VN")}₫.`,
+        `Voucher yêu cầu đơn từ ${promotion!.minSubtotal.toLocaleString("vi-VN")}₫`,
       );
     voucher = {
       id: String(promotion!._id),

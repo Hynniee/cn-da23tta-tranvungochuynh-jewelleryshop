@@ -30,7 +30,7 @@ export default function ShippingAddressFields({
       })
       .catch(() => {
         if (!controller.signal.aborted)
-          setError("Không tải được danh mục tỉnh/thành. Vui lòng thử lại.");
+          setError("Không tải được danh mục tỉnh/thành. Vui lòng thử lại");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -53,7 +53,7 @@ export default function ShippingAddressFields({
       })
       .catch(() => {
         if (!controller.signal.aborted)
-          setError("Không tải được danh mục phường/xã. Vui lòng thử lại.");
+          setError("Không tải được danh mục phường/xã. Vui lòng thử lại");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoadingWards(false);
@@ -63,7 +63,7 @@ export default function ShippingAddressFields({
   return (
     <div className="shipping-address-fields">
       <p className="shipping-address-help">
-        Địa chỉ giao hàng theo đơn vị hành chính sau sáp nhập.
+        Địa chỉ giao hàng theo đơn vị hành chính sau sáp nhập
       </p>
       <div className="field-grid">
         <label>

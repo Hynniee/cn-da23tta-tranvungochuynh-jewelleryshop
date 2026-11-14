@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import RingSizer from "./pages/RingSizer";
 import JewelryCare from "./pages/JewelryCare";
+import ServicePage from "./pages/ServicePage";
 import Support from "./pages/Support";
 import JewelryQuiz from "./pages/JewelryQuiz";
 import Shop from "./pages/Shop";
@@ -40,6 +41,12 @@ const router = createBrowserRouter([
       { path: "/advisor", element: <Advisor /> },
       { path: "/ring-sizer", element: <RingSizer /> },
       { path: "/jewelry-care", element: <JewelryCare /> },
+      { path: "/services/bespoke", element: <ServicePage kind="bespoke" /> },
+      {
+        path: "/services/maintenance",
+        element: <ServicePage kind="maintenance" />,
+      },
+      { path: "/policies/exchange", element: <ServicePage kind="exchange" /> },
       { path: "/support", element: <Support /> },
       { path: "/jewelry-quiz", element: <JewelryQuiz /> },
       { path: "/appointments", element: <Appointment /> },

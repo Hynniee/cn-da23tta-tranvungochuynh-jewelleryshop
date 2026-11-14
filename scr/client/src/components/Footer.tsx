@@ -9,7 +9,7 @@ export default function Footer() {
           <h2>Đặt lịch tư vấn tại salon</h2>
           <p>
             Trải nghiệm trang sức MIRA trong không gian riêng tư và nhận tư vấn
-            trực tiếp từ chuyên viên.
+            trực tiếp từ chuyên viên
           </p>
           <div className="salon-points">
             <span>
@@ -36,7 +36,7 @@ export default function Footer() {
           <div className="footer-logo">MIRA</div>
           <p>
             Nhà chế tác kim hoàn và trang sức tuyển chọn, tôn vinh vẻ đẹp vượt
-            thời gian bằng ngôn ngữ thiết kế tinh giản.
+            thời gian bằng ngôn ngữ thiết kế tinh giản
           </p>
           <div className="certs">
             <span>
@@ -49,28 +49,28 @@ export default function Footer() {
         </div>
         <div>
           <b>TUYỆT TÁC KIM HOÀN</b>
-          <a href="/products">Tất cả sản phẩm</a>
-          <a href="/shop">Nhẫn & trang sức vàng</a>
-          <a href="/shop">Trang sức cưới</a>
-          <a href="/shop?collection=bac">Trang sức bạc 925</a>
-          <a href="/shop?collection=ngoc-trai">Trang sức ngọc trai</a>
+          <Link to="/products">Tất cả sản phẩm</Link>
+          <Link to="/shop?collection=vang">Nhẫn & trang sức vàng</Link>
+          <Link to="/shop?collection=cuoi">Trang sức cưới</Link>
+          <Link to="/shop?collection=bac">Trang sức bạc 925</Link>
+          <Link to="/shop?collection=ngoc-trai">Trang sức ngọc trai</Link>
         </div>
         <div>
           <b>DỊCH VỤ & ĐẶC QUYỀN</b>
-          <span>Dịch vụ chế tác riêng</span>
-          <span>Bảo dưỡng trang sức</span>
-          <span>Chính sách thu đổi</span>
+          <Link to="/services/bespoke">Dịch vụ chế tác riêng</Link>
+          <Link to="/services/maintenance">Bảo dưỡng trang sức</Link>
+          <Link to="/policies/exchange">Chính sách thu đổi</Link>
           <Link to="/appointments">Đặt lịch tại salon</Link>
           <Link to="/support">Liên hệ hỗ trợ</Link>
         </div>
         <div>
           <b>KHÁM PHÁ MIRA</b>
-          <p>Khám phá các thiết kế trong bộ sưu tập hiện tại.</p>
+          <p>Khám phá các thiết kế trong bộ sưu tập hiện tại</p>
           <a href="/shop">Xem bộ sưu tập →</a>
         </div>
       </footer>
       <div className="footer-bottom">
-        <span>© 2026 MIRA Fine Jewelry & Atelier.</span>
+        <span>© 2026 MIRA Fine Jewelry & Atelier</span>
         <span>
           <LockKeyhole size={13} /> THANH TOÁN BẢO MẬT SSL 256-BIT
         </span>

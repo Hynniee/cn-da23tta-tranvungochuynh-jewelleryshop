@@ -18,7 +18,7 @@ export default function OrderCancellationNotice({
       <Link className="order-cancellation-support" to="/support">
         liên hệ MIRA
       </Link>{" "}
-      để được hỗ trợ.
+      để được hỗ trợ
     </p>
   );
 }

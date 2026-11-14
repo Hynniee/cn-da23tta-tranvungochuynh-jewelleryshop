@@ -109,7 +109,7 @@ export default function Checkout() {
       })
       .catch(() => {
         if (active)
-          setError("Không kiểm tra được giỏ hàng. Vui lòng tải lại trang.");
+          setError("Không kiểm tra được giỏ hàng. Vui lòng tải lại trang");
       })
       .finally(() => {
         if (active) setCheckingCart(false);
@@ -174,7 +174,7 @@ export default function Checkout() {
       : form;
     const destination = selectedAddress || delivery;
     if (!recipient.name.trim() || !recipient.phone.trim()) {
-      setError("Vui lòng nhập họ tên và số điện thoại người nhận.");
+      setError("Vui lòng nhập họ tên và số điện thoại người nhận");
       return;
     }
     if (
@@ -182,7 +182,7 @@ export default function Checkout() {
       !destination.wardCode ||
       !destination.addressLine.trim()
     ) {
-      setError("Vui lòng chọn tỉnh/thành, phường/xã và nhập địa chỉ cụ thể.");
+      setError("Vui lòng chọn tỉnh/thành, phường/xã và nhập địa chỉ cụ thể");
       return;
     }
     setSubmitting(true);
@@ -231,7 +231,7 @@ export default function Checkout() {
         });
         return;
       }
-      notify("Đã đặt hàng thành công.");
+      notify("Đã đặt hàng thành công");
       navigate("/account");
     } catch (error) {
       if (
@@ -241,7 +241,7 @@ export default function Checkout() {
         error.status === 409
       )
         promotion.refresh();
-      setError(error instanceof Error ? error.message : "Không thể đặt hàng.");
+      setError(error instanceof Error ? error.message : "Không thể đặt hàng");
     } finally {
       setSubmitting(false);
     }
@@ -286,7 +286,7 @@ export default function Checkout() {
         <h1>Thông tin giao hàng</h1>
         <p>
           MIRA bảo mật thông tin và xác nhận đơn hàng riêng với từng thượng
-          khách.
+          khách
         </p>
       </div>
       <div className="checkout-grid-lux">
@@ -295,7 +295,7 @@ export default function Checkout() {
           {addressBook.loading && <p role="status">Đang tải địa chỉ đã lưu…</p>}
           {addressBook.error && (
             <div className="saved-address-error">
-              <p>{addressBook.error} Bạn vẫn có thể nhập địa chỉ mới.</p>
+              <p>{addressBook.error} Bạn vẫn có thể nhập địa chỉ mới</p>
               <button
                 type="button"
                 className="ui-secondary"
@@ -421,13 +421,13 @@ export default function Checkout() {
           )}
           {!cartHasStock(cart) && (
             <p role="alert">
-              Sản phẩm đã hết hàng hoặc vượt tồn kho.{" "}
+              Sản phẩm đã hết hàng hoặc vượt tồn kho{" "}
               <Link to="/cart">Cập nhật giỏ hàng</Link>
             </p>
           )}
           {!validSizes && (
             <p className="pd-size-error" role="alert">
-              Vui lòng chọn kích cỡ sản phẩm trước khi đặt hàng.{" "}
+              Vui lòng chọn kích cỡ sản phẩm trước khi đặt hàng{" "}
               <Link
                 to={
                   buyNow
@@ -456,7 +456,7 @@ export default function Checkout() {
           </button>
           <p className="checkout-security">
             <LockKeyhole size={13} /> Thông tin thanh toán được mã hóa và bảo
-            mật.
+            mật
           </p>
         </form>
         <aside className="checkout-order-lux">

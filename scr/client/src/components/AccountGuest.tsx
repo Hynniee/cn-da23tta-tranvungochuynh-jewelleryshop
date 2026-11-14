@@ -11,9 +11,9 @@ export default function AccountGuest() {
         </div>
         <h1 id="account-guest-title">Bạn chưa đăng nhập</h1>
         <p className="account-guest-description">
-          Đăng nhập để quản lý hồ sơ và đơn hàng MIRA.
+          Đăng nhập để quản lý hồ sơ và đơn hàng MIRA
           <br />
-          Mọi thông tin của bạn, trong một không gian riêng.
+          Mọi thông tin của bạn, trong một không gian riêng
         </p>
         <div className="account-guest-actions">
           <Link className="account-guest-login" to="/login?next=/account">
@@ -24,7 +24,7 @@ export default function AccountGuest() {
           </Link>
         </div>
         <p className="account-guest-note">
-          Sau khi đăng nhập, bạn sẽ trở lại trang tài khoản.
+          Sau khi đăng nhập, bạn sẽ trở lại trang tài khoản
         </p>
         <div className="account-guest-benefits">
           <div>

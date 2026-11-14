@@ -100,7 +100,7 @@ export default function SupportThread({
       } catch (error) {
         if (!controller.signal.aborted)
           setError(
-            error instanceof Error ? error.message : "Chưa tải được tin nhắn.",
+            error instanceof Error ? error.message : "Chưa tải được tin nhắn",
           );
       } finally {
         busy = false;
@@ -165,7 +165,7 @@ export default function SupportThread({
       setError("");
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : "Chưa tải được tin nhắn cũ.",
+        error instanceof Error ? error.message : "Chưa tải được tin nhắn cũ",
       );
     } finally {
       setOlderBusy(false);
@@ -212,7 +212,7 @@ export default function SupportThread({
       setError(
         error instanceof Error
           ? error.message
-          : "Chưa gửi được tin nhắn. Nội dung vẫn được giữ để bạn thử lại.",
+          : "Chưa gửi được tin nhắn. Nội dung vẫn được giữ để bạn thử lại",
       );
     } finally {
       setSending(false);
@@ -274,7 +274,7 @@ export default function SupportThread({
             <h3>Bạn cần MIRA hỗ trợ điều gì?</h3>
             <p>
               Gửi câu hỏi về đơn hàng, thanh toán hoặc sản phẩm. Nhân viên cửa
-              hàng sẽ phản hồi tại đây khi có thể.
+              hàng sẽ phản hồi tại đây khi có thể
             </p>
           </div>
         )}
@@ -310,7 +310,7 @@ export default function SupportThread({
       <form className="support-composer" onSubmit={send}>
         {orderId && (
           <p className="support-context">
-            Tin nhắn này sẽ kèm thông tin đơn hàng bạn đang cần hỗ trợ.
+            Tin nhắn này sẽ kèm thông tin đơn hàng bạn đang cần hỗ trợ
           </p>
         )}
         <label htmlFor="support-draft">

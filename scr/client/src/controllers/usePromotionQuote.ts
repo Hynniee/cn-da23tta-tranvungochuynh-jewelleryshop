@@ -60,7 +60,7 @@ export default function usePromotionQuote(cart: CartItem[], enabled = true) {
       })
       .catch((e) => {
         if (!controller.signal.aborted)
-          setError(e instanceof Error ? e.message : "Không tính được ưu đãi.");
+          setError(e instanceof Error ? e.message : "Không tính được ưu đãi");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);

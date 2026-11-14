@@ -55,7 +55,7 @@ export default function ProductBuyButton({ product }: { product: BuyProduct }) {
       navigate(BUY_NOW_CHECKOUT);
     } catch {
       notify(
-        "Chưa thể bắt đầu mua ngay. Vui lòng cho phép lưu dữ liệu trên trình duyệt rồi thử lại.",
+        "Chưa thể bắt đầu mua ngay. Vui lòng cho phép lưu dữ liệu trên trình duyệt rồi thử lại",
         "info",
       );
     }

@@ -35,7 +35,7 @@ export default function Home() {
       })
       .catch(() => {
         if (!controller.signal.aborted)
-          setError("Chưa thể tải bộ sưu tập. Vui lòng thử lại sau ít phút.");
+          setError("Chưa thể tải bộ sưu tập. Vui lòng thử lại sau ít phút");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -73,7 +73,7 @@ export default function Home() {
           </h1>
           <p>
             Trang sức vàng, bạc, ngọc trai và đá màu — những thiết kế giúp bạn
-            thể hiện phong cách riêng mỗi ngày.
+            thể hiện phong cách riêng mỗi ngày
           </p>
           <div>
             <Link to="/products" className="gold-btn">
@@ -108,7 +108,7 @@ export default function Home() {
           <h2>Danh mục trang sức</h2>
           <p>
             Những thiết kế vượt thời gian dành cho những khoảnh khắc đáng nhớ
-            nhất.
+            nhất
           </p>
         </div>
         <div className="category-grid">
@@ -135,7 +135,7 @@ export default function Home() {
         <div className="center-title">
           <span>CHỌN THEO CHẤT LIỆU</span>
           <h2>Trang sức cho mọi phong cách</h2>
-          <p>Từ thiết kế bạc dễ đeo đến vàng, ngọc trai và sắc màu đá quý.</p>
+          <p>Từ thiết kế bạc dễ đeo đến vàng, ngọc trai và sắc màu đá quý</p>
         </div>
         <div className="collection-links">
           {[
@@ -187,7 +187,7 @@ export default function Home() {
         {!loading && !error && !best.length && (
           <p role="status">
             Bộ sưu tập đang được cập nhật. Mời bạn khám phá các dịch vụ tư vấn
-            bên dưới.
+            bên dưới
           </p>
         )}
       </section>
@@ -216,20 +216,20 @@ export default function Home() {
               <Award />
               <b>Đá quý tuyển chọn</b>
               <small>
-                Tiêu chuẩn khắt khe về màu sắc, độ tinh khiết và giác cắt.
+                Tiêu chuẩn khắt khe về màu sắc, độ tinh khiết và giác cắt
               </small>
             </div>
             <div>
               <Gem />
               <b>Hoàn thiện thủ công</b>
               <small>
-                Kiểm tra từng chi tiết dưới kính phóng đại trước khi bàn giao.
+                Kiểm tra từng chi tiết dưới kính phóng đại trước khi bàn giao
               </small>
             </div>
             <div>
               <ShieldCheck />
               <b>Minh bạch nguồn gốc</b>
-              <small>Hồ sơ giám định và thông tin sản phẩm rõ ràng.</small>
+              <small>Hồ sơ giám định và thông tin sản phẩm rõ ràng</small>
             </div>
           </div>
           <a href="/about">
@@ -249,7 +249,7 @@ export default function Home() {
             <h3>Tìm size nhẫn phù hợp</h3>
             <p>
               Ước tính kích thước nhẫn bằng hướng dẫn trực quan, sau đó đặt lịch
-              để chuyên viên MIRA xác nhận chính xác.
+              để chuyên viên MIRA xác nhận chính xác
             </p>
             <div className="tool-preview">
               <Ruler size={20} />
@@ -281,7 +281,7 @@ export default function Home() {
             <h3>Trao đổi với nhân viên</h3>
             <p>
               Trao đổi với nhân viên về sản phẩm, đơn hàng hoặc thanh toán trong
-              hộp thư hỗ trợ.
+              hộp thư hỗ trợ
             </p>
             <div className="tool-preview">
               <MessageCircle size={20} />

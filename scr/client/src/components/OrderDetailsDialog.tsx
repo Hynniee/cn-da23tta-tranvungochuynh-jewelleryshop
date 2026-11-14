@@ -122,12 +122,12 @@ export default function OrderDetailsDialog({
           {waiting && (
             <p>
               {transferSubmitted
-                ? "Nếu bạn đã chuyển khoản thành công, vui lòng không chuyển lại. Trạng thái sẽ tự cập nhật khi MIRA xác nhận giao dịch."
-                : "Trạng thái sẽ tự cập nhật khi MIRA xác nhận giao dịch."}
+                ? "Nếu bạn đã chuyển khoản thành công, vui lòng không chuyển lại. Trạng thái sẽ tự cập nhật khi MIRA xác nhận giao dịch"
+                : "Trạng thái sẽ tự cập nhật khi MIRA xác nhận giao dịch"}
             </p>
           )}
           {needsReview && !cancelled && (
-            <p>Vui lòng liên hệ MIRA để đối soát trước khi chuyển thêm tiền.</p>
+            <p>Vui lòng liên hệ MIRA để đối soát trước khi chuyển thêm tiền</p>
           )}
           {cancelled && (
             <OrderCancellationNotice

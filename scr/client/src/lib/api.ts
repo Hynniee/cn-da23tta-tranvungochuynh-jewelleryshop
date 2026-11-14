@@ -55,7 +55,7 @@ export async function request(path: string, options: RequestInit = {}) {
     }
     throw Object.assign(
       new Error(
-        error?.message || `Không thể xử lý yêu cầu (${response.status}).`,
+        error?.message || `Không thể xử lý yêu cầu (${response.status})`,
       ),
       { status: response.status, code: error?.code },
     );

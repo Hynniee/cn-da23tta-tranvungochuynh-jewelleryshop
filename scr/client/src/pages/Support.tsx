@@ -20,7 +20,7 @@ export default function Support() {
           <h1>Liên hệ hỗ trợ</h1>
           <p>
             Trò chuyện trực tiếp với nhân viên cửa hàng. Lịch sử được lưu trong
-            tài khoản của bạn.
+            tài khoản của bạn
           </p>
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function Support() {
           <h2>Đăng nhập để nhắn với MIRA</h2>
           <p>
             Tài khoản giúp bạn nhận phản hồi và xem lại cuộc trò chuyện trên các
-            thiết bị.
+            thiết bị
           </p>
           <Link className="gold-btn" to={`/login?next=${next}`}>
             Đăng nhập

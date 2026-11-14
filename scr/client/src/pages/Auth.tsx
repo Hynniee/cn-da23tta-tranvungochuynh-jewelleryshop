@@ -47,7 +47,7 @@ export default function Auth({ register = false }: AuthProps) {
             : "/account"),
       );
     } catch (err: any) {
-      setError(err.message || "Không thể đăng nhập. Vui lòng thử lại.");
+      setError(err.message || "Không thể đăng nhập. Vui lòng thử lại");
     } finally {
       setLoading(false);
     }
@@ -62,11 +62,11 @@ export default function Auth({ register = false }: AuthProps) {
           <h1>
             Mỗi tuyệt tác,
             <br />
-            <em>một câu chuyện riêng.</em>
+            <em>một câu chuyện riêng</em>
           </h1>
           <p>
             Không gian dành cho những dấu ấn được chế tác để lưu giữ qua nhiều
-            thế hệ.
+            thế hệ
           </p>
         </div>
         <div className="auth-promise">
@@ -90,8 +90,8 @@ export default function Auth({ register = false }: AuthProps) {
             <h2>{register ? "Tạo tài khoản MIRA" : "Chào mừng trở lại"}</h2>
             <p>
               {register
-                ? "Tạo hồ sơ để lưu sản phẩm yêu thích, theo dõi đơn hàng và nhận đặc quyền riêng."
-                : "Đăng nhập để tiếp tục trải nghiệm dịch vụ cá nhân hóa của MIRA."}
+                ? "Tạo hồ sơ để lưu sản phẩm yêu thích, theo dõi đơn hàng và nhận đặc quyền riêng"
+                : "Đăng nhập để tiếp tục trải nghiệm dịch vụ cá nhân hóa của MIRA"}
             </p>
           </div>
 
@@ -148,7 +148,7 @@ export default function Auth({ register = false }: AuthProps) {
 
             {!register && (
               <div className="auth-options">
-                <span>Liên hệ MIRA để được hỗ trợ tài khoản.</span>
+                <span>Liên hệ MIRA để được hỗ trợ tài khoản</span>
               </div>
             )}
             {error && (
@@ -176,7 +176,7 @@ export default function Auth({ register = false }: AuthProps) {
           {!register && (
             <div className="auth-admin-note">
               Quản trị viên sử dụng cùng trang đăng nhập. Hệ thống sẽ tự chuyển
-              đến Dashboard theo quyền tài khoản.
+              đến Dashboard theo quyền tài khoản
             </div>
           )}
         </div>

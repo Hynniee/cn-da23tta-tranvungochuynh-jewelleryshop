@@ -22,7 +22,7 @@ export function isDatabaseConnectionError(error: {
 export const requireDatabase: RequestHandler = (_req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
     res.status(503).json({
-      message: "Chưa kết nối được MongoDB. Vui lòng thử lại sau.",
+      message: "Chưa kết nối được MongoDB. Vui lòng thử lại sau",
     });
     return;
   }
@@ -39,7 +39,7 @@ export const requireWritableDatabase: RequestHandler = async (
     res.status(503).json({
       code: "DATABASE_READ_ONLY",
       message:
-        "Chưa kết nối được cơ sở dữ liệu để lưu thay đổi. Vui lòng thử lại sau.",
+        "Chưa kết nối được cơ sở dữ liệu để lưu thay đổi. Vui lòng thử lại sau",
     });
     return;
   }

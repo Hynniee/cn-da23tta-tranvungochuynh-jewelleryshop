@@ -82,7 +82,7 @@ export const createAppointment: RequestHandler = async (req, res) => {
   const token = req.body.bookingToken;
   if (!validToken(token)) {
     res.status(400).json({
-      message: "Phiên đặt lịch không hợp lệ. Vui lòng tải lại trang.",
+      message: "Phiên đặt lịch không hợp lệ. Vui lòng tải lại trang",
     });
     return;
   }
@@ -107,7 +107,7 @@ export const createAppointment: RequestHandler = async (req, res) => {
     })) >= 5
   ) {
     res.status(429).json({
-      message: "Bạn đã đặt nhiều lịch gần đây. Vui lòng thử lại sau một giờ.",
+      message: "Bạn đã đặt nhiều lịch gần đây. Vui lòng thử lại sau một giờ",
     });
     return;
   }
@@ -143,7 +143,7 @@ export const getAppointment: RequestHandler = async (req, res) => {
   if (!booking) {
     res
       .status(404)
-      .json({ message: "Không tìm thấy lịch hẹn trên phiên đặt lịch này." });
+      .json({ message: "Không tìm thấy lịch hẹn trên phiên đặt lịch này" });
     return;
   }
   res.json(publicBooking(booking));
@@ -160,7 +160,7 @@ export const resendConfirmation: RequestHandler = async (req, res) => {
   if (!booking) {
     res
       .status(404)
-      .json({ message: "Không tìm thấy lịch hẹn trên phiên đặt lịch này." });
+      .json({ message: "Không tìm thấy lịch hẹn trên phiên đặt lịch này" });
     return;
   }
   if (booking.emailStatus === "sent") {
@@ -170,7 +170,7 @@ export const resendConfirmation: RequestHandler = async (req, res) => {
   if (!mailConfigured()) {
     res.status(503).json({
       message:
-        "Lịch hẹn đã được lưu. Dịch vụ email chưa được cấu hình, vui lòng giữ mã hẹn.",
+        "Lịch hẹn đã được lưu. Dịch vụ email chưa được cấu hình, vui lòng giữ mã hẹn",
     });
     return;
   }
@@ -181,7 +181,7 @@ export const resendConfirmation: RequestHandler = async (req, res) => {
   ) {
     res.status(429).json({
       message:
-        "Vui lòng chờ ít nhất một phút giữa các lần gửi, tối đa 5 lần cho một lịch hẹn.",
+        "Vui lòng chờ ít nhất một phút giữa các lần gửi, tối đa 5 lần cho một lịch hẹn",
     });
     return;
   }
