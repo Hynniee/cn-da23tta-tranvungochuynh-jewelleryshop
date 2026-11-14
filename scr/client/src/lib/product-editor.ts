@@ -1,3 +1,4 @@
+import { isGenericSize, productSizes } from "./product-sizes";
 export type EditableProduct = {
   name: string;
   slug: string;
@@ -34,7 +35,7 @@ export function productForm(product: EditableProduct): ProductForm {
     stock: String(product.stock),
     image: product.images?.[0] || "",
     stone: product.stone || "Không đính đá",
-    sizes: product.sizes?.join(", ") || "Tiêu chuẩn",
+    sizes: productSizes(product).join(", "),
     description: product.description || "",
     engravingAllowed: Boolean(product.engravingAllowed),
   };
@@ -58,6 +59,10 @@ function serialize(form: ProductForm) {
   };
 }
 export function productChanges(form: ProductForm, original?: ProductForm) {
+  if (form.sizes.split(",").some((value) => isGenericSize(value.trim())))
+    throw new Error(
+      "Nhập kích cỡ cụ thể, ví dụ 12, 14 hoặc 40 cm, 45 cm; không dùng size tiêu chuẩn.",
+    );
   const values = serialize(form);
   if (
     !form.stock.trim() ||

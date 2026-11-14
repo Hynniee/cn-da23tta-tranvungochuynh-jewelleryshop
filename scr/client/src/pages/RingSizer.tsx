@@ -1,11 +1,9 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { Ruler, ArrowRight } from "lucide-react";
-import {
-  estimateRingSize,
-  ringSizeChart,
-  type MeasureMethod,
-} from "../lib/personal-tools";
+import { estimateRingSize, type MeasureMethod } from "../lib/personal-tools";
+import RingSizeTable from "../components/RingSizeTable";
+import "../components/ring-size-guide.css";
 
 export default function RingSizer() {
   const [method, setMethod] = useState<MeasureMethod>("circumference");
@@ -27,11 +25,11 @@ export default function RingSizer() {
   return (
     <main className="personal-tool-page">
       <Link className="tool-back" to="/#personal-tools">
-        ← Công cụ dành riêng cho bạn
+        ← Tiện ích & dịch vụ
       </Link>
       <div className="personal-tool-heading">
         <Ruler size={30} />
-        <span>SMART RING SIZER</span>
+        <span>HƯỚNG DẪN ĐO SIZE</span>
         <h1>Tìm size nhẫn của bạn</h1>
         <p>Đo bằng thước thật, nhập số đo và xem size tham khảo.</p>
       </div>
@@ -160,24 +158,7 @@ export default function RingSizer() {
           </p>
           <details>
             <summary>Bảng size tham khảo</summary>
-                    <table>
-              <thead>
-                <tr>
-                  <th>Size</th>
-                  <th>Đường kính (mm)</th>
-                  <th>Chu vi (mm)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ringSizeChart.map((row) => (
-                  <tr key={row.size}>
-                    <td>{row.size}</td>
-                    <td>{row.diameter}</td>
-                    <td>{row.circumference.toFixed(1)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <RingSizeTable />
           </details>
           <Link className="tool-text-link" to="/shop?category=Nhẫn">
             Khám phá bộ sưu tập nhẫn →

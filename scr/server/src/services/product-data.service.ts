@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { productSizes } from "./product-sizes.js";
 
 // Adapt existing catalog documents without rewriting the database.
 export function catalogProduct(product: any) {
@@ -14,7 +15,7 @@ export function catalogProduct(product: any) {
       : product.imageUrl
         ? [product.imageUrl]
         : [],
-    sizes: product.sizes || [],
+    sizes: productSizes(product),
   };
 }
 

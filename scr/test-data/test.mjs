@@ -616,7 +616,7 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:5187/products");
   await expect(
-    page.getByRole("heading", { name: "Tất Cả Sản Phẩm", exact: true }),
+    page.getByRole("heading", { name: "Tất cả sản phẩm", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".shop-card")).toHaveCount(9);
   check(true, "dedicated Products page opens the full jewelry catalog");
@@ -658,7 +658,7 @@ try {
   await page.getByRole("checkbox", { name: "Nhẫn", exact: true }).click();
   await expect(page.locator(".shop-card")).toHaveCount(2);
   await expect(
-    page.getByRole("heading", { name: "Tất Cả Sản Phẩm", exact: true }),
+    page.getByRole("heading", { name: "Tất cả sản phẩm", exact: true }),
   ).toBeVisible();
   await page.reload();
   await expect(page.locator(".shop-card")).toHaveCount(2);
@@ -780,15 +780,15 @@ try {
     { token, user: login.user },
   );
   await page.goto("http://127.0.0.1:5187/checkout?buyNow=1");
-  await page.getByLabel("HỌ VÀ TÊN", { exact: true }).fill(customer.name);
-  await page.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill(customer.phone);
-  const checkoutEmail = page.getByLabel("EMAIL (KHÔNG BẮT BUỘC)", {
+  await page.getByLabel("Họ và tên", { exact: true }).fill(customer.name);
+  await page.getByLabel("Số điện thoại", { exact: true }).fill(customer.phone);
+  const checkoutEmail = page.getByLabel("Email (không bắt buộc)", {
     exact: true,
   });
   await expect(checkoutEmail).not.toHaveAttribute("required");
   await checkoutEmail.fill("");
-  const provinceSelect = page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true });
-  const wardSelect = page.getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true });
+  const provinceSelect = page.getByLabel("Tỉnh / thành phố", { exact: true });
+  const wardSelect = page.getByLabel("Phường / xã / đặc khu", { exact: true });
   await expect(provinceSelect.locator("option")).toHaveCount(35);
   await expect(wardSelect).toBeDisabled();
   await provinceSelect.selectOption("79");
@@ -802,13 +802,13 @@ try {
     "changing province resets ward and loads matching post-merger wards",
   );
   await page
-    .getByLabel("TỈNH / THÀNH PHỐ", { exact: true })
+    .getByLabel("Tỉnh / thành phố", { exact: true })
     .selectOption(customer.provinceCode);
   await page
-    .getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true })
+    .getByLabel("Phường / xã / đặc khu", { exact: true })
     .selectOption(customer.wardCode);
   await page
-    .getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })
+    .getByLabel("Địa chỉ cụ thể", { exact: true })
     .fill(customer.addressLine);
   await page.getByRole("button", { name: /XÁC NHẬN ĐƠN HÀNG/ }).click();
   await page.waitForURL("**/account");
@@ -818,7 +818,7 @@ try {
   );
   await page.goto("http://127.0.0.1:5187/shop?collection=bac");
   await page
-    .getByRole("heading", { name: "Trang Sức Bạc", exact: true })
+    .getByRole("heading", { name: "Trang sức bạc", exact: true })
     .waitFor();
   await page.locator(".shop-card").first().waitFor();
   check(true, "silver jewelry collection opens");
@@ -863,28 +863,28 @@ try {
     localStorage.removeItem("mira_user");
   });
   await page.goto("http://127.0.0.1:5187/checkout?buyNow=1");
-  await page.getByRole("link", { name: "ĐĂNG NHẬP", exact: true }).click();
+  await page.getByRole("link", { name: "Đăng nhập", exact: true }).click();
   await page.locator(".auth-form input[type=email]").fill("other@example.com");
   await page
     .locator(".auth-form input[type=password]")
     .fill(credentials.password);
-  await page.getByRole("button", { name: "ĐĂNG NHẬP", exact: true }).click();
+  await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
   await page.waitForURL("**/checkout?buyNow=1");
   await expect(page.locator(".checkout-mini")).toHaveCount(1);
   check(true, "login returns to checkout with pearl item preserved");
-  await page.getByLabel("HỌ VÀ TÊN", { exact: true }).fill(customer.name);
-  await page.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill(customer.phone);
+  await page.getByLabel("Họ và tên", { exact: true }).fill(customer.name);
+  await page.getByLabel("Số điện thoại", { exact: true }).fill(customer.phone);
   await page
-    .getByLabel("EMAIL (KHÔNG BẮT BUỘC)", { exact: true })
+    .getByLabel("Email (không bắt buộc)", { exact: true })
     .fill(customer.email);
   await page
-    .getByLabel("TỈNH / THÀNH PHỐ", { exact: true })
+    .getByLabel("Tỉnh / thành phố", { exact: true })
     .selectOption(customer.provinceCode);
   await page
-    .getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true })
+    .getByLabel("Phường / xã / đặc khu", { exact: true })
     .selectOption(customer.wardCode);
   await page
-    .getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })
+    .getByLabel("Địa chỉ cụ thể", { exact: true })
     .fill(customer.addressLine);
   await page.getByRole("button", { name: /XÁC NHẬN ĐƠN HÀNG/ }).click();
   await page.waitForURL("**/account");

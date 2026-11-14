@@ -12,6 +12,10 @@ import { rankDiamonds, diamondCriteria } from "../services/diamond.service.js";
 import AIConversation from "../models/AIConversation.js";
 import AdvisorSession from "../models/AdvisorSession.js";
 import { resolveWeights } from "../services/dss.service.js";
+import {
+  classifyAdvisorMessage,
+  freshAdvisorAnswer,
+} from "../services/advisor-message.js";
 
 export const chat: RequestHandler = async (req: AuthRequest, res, next) => {
   const started = Date.now();
@@ -40,11 +44,56 @@ export const chat: RequestHandler = async (req: AuthRequest, res, next) => {
         message:
           "Phiên tư vấn hết hạn hoặc không thuộc tài khoản này. Hãy bắt đầu hội thoại mới.",
       });
+    const messageType = classifyAdvisorMessage(message);
     session ||= new AdvisorSession({
       sessionId: randomUUID(),
       user: req.user?.id || null,
       expiresAt: new Date(Date.now() + 30 * 86400000),
     });
+    if (!messageType.hasRequest) {
+      const answer = freshAdvisorAnswer(message);
+      session.turns.push(
+        { role: "user", text: message },
+        { role: "assistant", text: answer },
+      );
+      session.expiresAt = new Date(Date.now() + 30 * 86400000);
+      await session.save();
+      if (req.user?.id)
+        await AIConversation.create({
+          user: req.user.id,
+          sessionId: session.sessionId,
+          message,
+          intent: session.intent || {},
+          answer,
+          recommendedProducts: [],
+          latencyMs: Date.now() - started,
+        });
+      return res.json({
+        conversationId: session.sessionId,
+        conversationReset: false,
+        mode: session.mode,
+        intent: session.intent || {},
+        missingCriteria: [
+          ...(session.mode === "diamond"
+            ? !session.intent?.targetCarat
+              ? ["targetCarat"]
+              : []
+            : !session.intent?.category
+              ? ["category"]
+              : []),
+          ...(!session.intent?.budgetMax ? ["budgetMax"] : []),
+        ],
+        optionalCriteria:
+          session.mode === "diamond"
+            ? []
+            : ["material", "style", "occasion"].filter(
+                (key) => !session.intent?.[key],
+              ),
+        answer,
+        products: [],
+        diamonds: [],
+      });
+    }
     const previous: any = session.intent || {};
     const context = JSON.stringify({
       criteria: previous,
@@ -117,7 +166,6 @@ export const chat: RequestHandler = async (req: AuthRequest, res, next) => {
       { role: "user", text: message },
       { role: "assistant", text: answer },
     );
-    session.turns = session.turns.slice(-24) as typeof session.turns;
     session.expiresAt = new Date(Date.now() + 30 * 86400000);
     await session.save();
     if (req.user?.id)
@@ -135,6 +183,7 @@ export const chat: RequestHandler = async (req: AuthRequest, res, next) => {
       : [];
     res.json({
       conversationId: session.sessionId,
+      conversationReset: false,
       mode,
       intent,
       missingCriteria,

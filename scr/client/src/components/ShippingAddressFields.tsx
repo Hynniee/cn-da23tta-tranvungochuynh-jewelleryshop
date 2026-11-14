@@ -67,10 +67,10 @@ export default function ShippingAddressFields({
       </p>
       <div className="field-grid">
         <label>
-          TỈNH / THÀNH PHỐ
+          Tỉnh / thành phố
           <select
             required
-            aria-label="TỈNH / THÀNH PHỐ"
+            aria-label="Tỉnh / thành phố"
             autoComplete="address-level1"
             value={value.provinceCode}
             disabled={loading}
@@ -94,10 +94,10 @@ export default function ShippingAddressFields({
           </select>
         </label>
         <label>
-          PHƯỜNG / XÃ / ĐẶC KHU
+          Phường / xã / đặc khu
           <select
             required
-            aria-label="PHƯỜNG / XÃ / ĐẶC KHU"
+            aria-label="Phường / xã / đặc khu"
             autoComplete="address-level2"
             value={value.wardCode}
             disabled={!value.provinceCode || loadingWards || !wards.length}
@@ -119,7 +119,7 @@ export default function ShippingAddressFields({
         </label>
       </div>
       <label>
-        ĐỊA CHỈ CỤ THỂ
+        Địa chỉ cụ thể
         <input
           required
           autoComplete="address-line1"

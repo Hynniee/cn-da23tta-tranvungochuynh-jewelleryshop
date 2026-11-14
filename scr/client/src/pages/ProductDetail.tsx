@@ -9,6 +9,9 @@ import { addCart } from "../store/cart";
 import { BUY_NOW_CHECKOUT, saveBuyNow } from "../store/buy-now";
 import { notify } from "../lib/notifications";
 import { trackBehavior } from "../lib/behavior";
+import { productSizes } from "../lib/product-sizes";
+import RingSizeGuide from "../components/RingSizeGuide";
+import ProductFitGuide from "../components/ProductFitGuide";
 
 type Product = {
   _id: string;
@@ -36,6 +39,7 @@ export default function ProductDetail() {
   const [error, setError] = useState("");
   const [activeImage, setActiveImage] = useState(0);
   const [size, setSize] = useState("");
+  const [sizeError, setSizeError] = useState("");
   const [engraving, setEngraving] = useState("");
   const productSection = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
@@ -55,11 +59,12 @@ export default function ProductDetail() {
     setProduct(null);
     setError("");
     setEngraving("");
+    setSizeError("");
     setActiveImage(0);
     const show = (data: Product) => {
       if (active) {
         setProduct(data);
-        setSize(data.sizes?.[0] || "Tiêu chuẩn");
+        setSize("");
       }
     };
     request(`/products/${encodeURIComponent(slug || "")}`)
@@ -101,7 +106,7 @@ export default function ProductDetail() {
       </div>
     );
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
-  const sizes = product.sizes?.length ? product.sizes : ["Tiêu chuẩn"];
+  const sizes = productSizes(product);
   const price = product.salePrice ?? product.price;
   const soldOut = product.stock <= 0;
   const matches = related
@@ -113,6 +118,13 @@ export default function ProductDetail() {
     .slice(0, 4);
   function add(buyNow = false) {
     if (!product || soldOut) return;
+    if (sizes.length && !sizes.includes(size)) {
+      setSizeError("Vui lòng chọn kích cỡ trước khi mua sản phẩm.");
+      document
+        .getElementById("product-size-options")
+        ?.focus({ preventScroll: true });
+      return;
+    }
     const selection = {
       _id: product._id,
       slug: product.slug,
@@ -120,6 +132,7 @@ export default function ProductDetail() {
       price,
       image: images[activeImage],
       size,
+      sizeOptions: sizes,
       quantity: 1,
       material: product.material,
       stone: product.stone,
@@ -217,37 +230,73 @@ export default function ProductDetail() {
               </dd>
             </div>
           </dl>
-          <OptionTitle
-            title="KÍCH CỠ / CHIỀU DÀI"
-            value={
-              product.category === "Nhẫn"
-                ? "Chọn theo kích cỡ nhẫn của bạn"
-                : "Chọn kích thước phù hợp"
-            }
-          />
-          <div className="pd-sizes">
-            {sizes.map((value) => (
-              <button
-                key={value}
-                aria-pressed={size === value}
-                className={size === value ? "active" : ""}
-                onClick={() => {
-                  setSize(value);
-                }}
+          {sizes.length > 0 ? (
+            <>
+              {product.category === "Nhẫn" ||
+              product.category === "Nhẫn cưới" ? (
+                <div className="pd-option-title">
+                  <b>Chọn size nhẫn (ni Việt Nam)</b>
+                  <RingSizeGuide selectedSize={size} />
+                </div>
+              ) : (
+                <OptionTitle
+                  title="Chọn kích cỡ / chiều dài"
+                  value="Chọn kích thước phù hợp"
+                />
+              )}
+              <div
+                className="pd-sizes"
+                id="product-size-options"
+                role="group"
+                aria-label="Chọn kích cỡ sản phẩm"
+                aria-describedby={
+                  sizeError ? "product-size-error" : "product-size-help"
+                }
+                tabIndex={-1}
               >
-                {value}
-              </button>
-            ))}
-          </div>
-          <p className="pd-size-note">
-            {product.category === "Nhẫn"
-              ? "Chưa rõ size? Liên hệ tư vấn trước khi đặt hàng."
-              : product.category === "Bông tai"
+                {sizes.map((value) => (
+                  <button
+                    key={value}
+                    aria-pressed={size === value}
+                    className={size === value ? "active" : ""}
+                    onClick={() => {
+                      setSize(value);
+                      setSizeError("");
+                    }}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+              {sizeError && (
+                <p
+                  id="product-size-error"
+                  className="pd-size-error"
+                  role="alert"
+                >
+                  {sizeError}
+                </p>
+              )}
+              <p id="product-size-help" className="pd-size-note">
+                {product.category === "Nhẫn" ||
+                product.category === "Nhẫn cưới" ? (
+                  <Link to="/ring-sizer">
+                    Chưa rõ size? Xem hướng dẫn đo size nhẫn →
+                  </Link>
+                ) : (
+                  "Chọn chiều dài phù hợp với số đo của bạn."
+                )}
+              </p>
+            </>
+          ) : (
+            <p className="pd-size-note">
+              {product.category === "Bông tai"
                 ? "Bông tai được bán theo đôi."
                 : product.category === "Charm"
                   ? "Charm được bán riêng; chưa bao gồm dây hoặc vòng."
-                  : "Kiểm tra chiều dài và kích cỡ trước khi đặt hàng."}
-          </p>
+                  : "Sản phẩm theo kích thước thiết kế, không cần chọn size."}
+            </p>
+          )}
           {product.engravingAllowed && (
             <div className="pd-engraving">
               <div>
@@ -279,9 +328,14 @@ export default function ProductDetail() {
               MUA NGAY
             </button>
           </div>
-          <button className="pd-salon" onClick={() => navigate("/advisor")}>
-            TƯ VẤN CHẤT LIỆU & KÍCH CỠ
-          </button>
+          <ProductFitGuide
+            name={product.name}
+            material={product.material}
+            stone={product.stone}
+            category={product.category}
+            sizes={sizes}
+            selectedSize={size}
+          />
           <div className="pd-trust">
             <Trust
               icon="◇"

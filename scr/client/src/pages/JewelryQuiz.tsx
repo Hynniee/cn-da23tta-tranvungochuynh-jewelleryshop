@@ -98,7 +98,7 @@ export default function JewelryQuiz() {
   return (
     <main className="personal-tool-page">
       <Link className="tool-back" to="/#personal-tools">
-        ← Công cụ dành riêng cho bạn
+        ← Tiện ích & dịch vụ
       </Link>
       <div className="personal-tool-heading">
         <Gem size={30} />

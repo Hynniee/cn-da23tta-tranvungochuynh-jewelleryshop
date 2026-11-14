@@ -38,6 +38,14 @@ export function useCartController() {
     saveCart(next);
     setCart(next);
   };
+  const updateSize = (index: number, size: string) => {
+    if (!cart[index]?.sizeOptions?.includes(size)) return;
+    const next = cart.map((item, row) =>
+      row === index ? { ...item, size } : item,
+    );
+    saveCart(next);
+    setCart(next);
+  };
 
   return {
     cart,
@@ -46,6 +54,7 @@ export function useCartController() {
     inStock: cartHasStock(cart),
     ...calculateCartTotals(cart),
     updateQuantity,
+    updateSize,
     canIncrease: (index: number) => canIncreaseQuantity(cart, index),
   };
 }

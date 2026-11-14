@@ -1,5 +1,5 @@
 import Image from "../components/Image";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bot, Sparkles } from "lucide-react";
 import { useAdvisorConversation } from "../controllers/useAdvisorConversation";
@@ -10,6 +10,12 @@ export default function Advisor() {
   const [manual, setManual] = useState(false),
     [weights, setWeights] = useState<Record<string, number>>(defaultWeights);
   const { messages, data, busy, error, send, reset } = useAdvisorConversation();
+  useEffect(() => {
+    if (!data || data.conversationReset) {
+      setManual(false);
+      setWeights({ ...defaultWeights });
+    }
+  }, [data?.conversationId, data?.conversationReset]);
   async function submit(event: FormEvent) {
     event.preventDefault();
     try {
@@ -23,7 +29,7 @@ export default function Advisor() {
     <main className="smart-page advisor-page">
       <header>
         <Bot />
-        <span>MIRA JEWELRY ADVISOR</span>
+        <span>TƯ VẤN TRANG SỨC MIRA</span>
         <h1>Tìm thiết kế dành riêng cho bạn</h1>
         <p>
           Chia sẻ nhu cầu, bổ sung hoặc thay đổi tiêu chí trong cùng cuộc trò
@@ -54,7 +60,7 @@ export default function Advisor() {
           </article>
         ))}
       </section>
-      {data?.intent && (
+      {data?.intent && Object.keys(data.intent).length > 0 && (
         <section className="advisor-criteria">
           <h2>Nhu cầu đã ghi nhận</h2>
           <p>

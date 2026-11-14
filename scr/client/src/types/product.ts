@@ -14,6 +14,7 @@ export type Product = {
   promotion?: { id: string; name: string; type: string; endsAt: string };
   images: string[];
   stock: number;
+  sizes?: string[];
   featured?: boolean;
   rating?: number;
 };

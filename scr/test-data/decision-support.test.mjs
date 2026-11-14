@@ -620,9 +620,15 @@ try {
   ]);
   await Promise.all([
     tracked("ADD_CART"),
-    page
-      .getByRole("button", { name: "THÊM VÀO GIỎ HÀNG", exact: true })
-      .click(),
+    (async () => {
+      await page
+        .locator(".pd-sizes")
+        .getByRole("button", { name: "12", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "THÊM VÀO GIỎ HÀNG", exact: true })
+        .click();
+    })(),
   ]);
   check(
     true,

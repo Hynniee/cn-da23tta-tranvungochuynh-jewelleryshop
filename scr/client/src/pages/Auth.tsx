@@ -86,13 +86,11 @@ export default function Auth({ register = false }: AuthProps) {
             MIRA<span>FINE JEWELRY</span>
           </Link>
           <div className="auth-heading">
-            <span>
-              {register ? "TRỞ THÀNH THƯỢNG KHÁCH" : "PRIVATE CLIENT ACCESS"}
-            </span>
-            <h2>{register ? "Tạo Tài Khoản MIRA" : "Chào Mừng Trở Lại"}</h2>
+            <span>{register ? "TẠO TÀI KHOẢN" : "TÀI KHOẢN MIRA"}</span>
+            <h2>{register ? "Tạo tài khoản MIRA" : "Chào mừng trở lại"}</h2>
             <p>
               {register
-                ? "Tạo hồ sơ để lưu wishlist, theo dõi đơn hàng và nhận đặc quyền riêng."
+                ? "Tạo hồ sơ để lưu sản phẩm yêu thích, theo dõi đơn hàng và nhận đặc quyền riêng."
                 : "Đăng nhập để tiếp tục trải nghiệm dịch vụ cá nhân hóa của MIRA."}
             </p>
           </div>
@@ -100,7 +98,7 @@ export default function Auth({ register = false }: AuthProps) {
           <form onSubmit={handleSubmit} className="auth-form">
             {register && (
               <label>
-                <span>HỌ VÀ TÊN</span>
+                <span>Họ và tên</span>
                 <input
                   autoComplete="name"
                   value={form.name}
@@ -111,7 +109,7 @@ export default function Auth({ register = false }: AuthProps) {
               </label>
             )}
             <label>
-              <span>EMAIL</span>
+              <span>Email</span>
               <div className="auth-input">
                 <Mail size={16} />
                 <input
@@ -125,7 +123,7 @@ export default function Auth({ register = false }: AuthProps) {
               </div>
             </label>
             <label>
-              <span>MẬT KHẨU</span>
+              <span>Mật khẩu</span>
               <div className="auth-input">
                 <LockKeyhole size={16} />
                 <input
@@ -160,10 +158,10 @@ export default function Auth({ register = false }: AuthProps) {
             )}
             <button className="auth-submit" disabled={loading}>
               {loading
-                ? "ĐANG XỬ LÝ..."
+                ? "Đang xử lý…"
                 : register
                   ? "TẠO TÀI KHOẢN"
-                  : "ĐĂNG NHẬP"}
+                  : "Đăng nhập"}
             </button>
           </form>
 

@@ -1,10 +1,12 @@
 import { trackBehavior } from "../lib/behavior";
+import { productSizes } from "../lib/product-sizes";
 export type CartItem = {
   _id: string;
   name: string;
   price: number;
   image: string;
   size: string;
+  sizeOptions?: string[];
   quantity: number;
   material?: string;
   carat?: string;
@@ -75,6 +77,7 @@ export function reconcileItems(
     stone?: string;
     images?: string[];
     sizes?: string[];
+    category?: string;
   }[],
 ): CartItem[] {
   return selectedItems.map((item) => {
@@ -84,11 +87,18 @@ export function reconcileItems(
         (item.slug ? p.slug === item.slug : p.name === item.name),
     );
     if (!product) return { ...item, stock: 0 };
+    const sizeOptions = productSizes(product);
     return {
       ...item,
       _id: product._id,
       slug: product.slug,
       name: product.name,
+      sizeOptions,
+      size: sizeOptions.length
+        ? sizeOptions.includes(item.size)
+          ? item.size
+          : ""
+        : "",
       price: product.salePrice ?? product.price,
       stock: product.stock,
       material: product.material,
@@ -111,5 +121,10 @@ export function cartHasStock(items: CartItem[]): boolean {
   return items.every(
     (item) =>
       item.stock === undefined || item.stock >= (totals.get(item._id) || 0),
+  );
+}
+export function cartHasValidSizes(items: CartItem[]): boolean {
+  return items.every(
+    (item) => !item.sizeOptions?.length || item.sizeOptions.includes(item.size),
   );
 }

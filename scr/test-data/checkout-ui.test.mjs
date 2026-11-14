@@ -22,7 +22,7 @@ const product = {
   price: 650000,
   stock: 8,
   images: ["/editorial/rings.jpg"],
-  sizes: ["Tiêu chuẩn"],
+  sizes: ["12"],
   featured: true,
 };
 const optionsProduct = {
@@ -207,7 +207,7 @@ await page.addInitScript(
             ...product,
             image: product.images[0],
             quantity: 1,
-            size: "Tiêu chuẩn",
+            size: "12",
           },
         ]),
       );
@@ -346,7 +346,7 @@ try {
   await expect(dialog).toHaveCount(0);
   await expect(page).toHaveURL(/\/account\?tab=orders$/);
   await expect(
-    page.getByRole("heading", { name: "Đơn Hàng Của Tôi", exact: true }),
+    page.getByRole("heading", { name: "Đơn hàng của tôi", exact: true }),
   ).toBeVisible();
   assert.equal(await page.evaluate(() => document.body.style.overflow), "");
   await page
@@ -442,7 +442,7 @@ try {
       page
         .locator(".thankyou-payment")
         .getByRole("link", { name: "liên hệ MIRA", exact: true }),
-    ).toHaveAttribute("href", "/advisor");
+    ).toHaveAttribute("href", "/support");
     await page
       .getByRole("link", { name: "Xem chi tiết đơn hàng", exact: true })
       .click();
@@ -456,7 +456,7 @@ try {
       dialog
         .locator(".order-payment-state")
         .getByRole("link", { name: "liên hệ MIRA", exact: true }),
-    ).toHaveAttribute("href", "/advisor");
+    ).toHaveAttribute("href", "/support");
   }
   fixtureOrder.paymentMethod = "BANK_QR";
   paymentStatus = "UNPAID";
@@ -562,11 +562,16 @@ try {
     localStorage.getItem("mira_cart"),
   );
   await page
-    .getByRole("button", { name: `Mua ngay ${product.name}`, exact: true })
+    .getByRole("link", { name: `Mua ngay ${product.name}`, exact: true })
     .click();
+  await page
+    .locator(".pd-sizes")
+    .getByRole("button", { name: "12", exact: true })
+    .click();
+  await page.locator(".pd-buy").click();
   await expect(page).toHaveURL(/\/checkout\?buyNow=1$/);
   await expect(
-    page.getByRole("heading", { name: "Thông Tin Bàn Giao" }),
+    page.getByRole("heading", { name: "Thông tin giao hàng" }),
   ).toBeVisible();
   await expect(page.locator(".checkout-mini")).toHaveCount(1);
   assert.equal(
@@ -601,7 +606,7 @@ try {
   await expect(page.locator(".checkout-mini")).toContainText(
     optionsProduct.name,
   );
-  await expect(page.locator(".checkout-mini")).toContainText("Size 14");
+  await expect(page.locator(".checkout-mini")).toContainText("Kích cỡ 14");
   assert.equal(
     orderRequests.length,
     0,
@@ -612,17 +617,17 @@ try {
   );
 
   async function fillCheckout() {
-    await page.getByLabel("HỌ VÀ TÊN", { exact: true }).fill(user.name);
-    await page.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill(user.phone);
-    await page.getByLabel("EMAIL (KHÔNG BẮT BUỘC)", { exact: true }).fill("");
+    await page.getByLabel("Họ và tên", { exact: true }).fill(user.name);
+    await page.getByLabel("Số điện thoại", { exact: true }).fill(user.phone);
+    await page.getByLabel("Email (không bắt buộc)", { exact: true }).fill("");
     await page
-      .getByLabel("TỈNH / THÀNH PHỐ", { exact: true })
+      .getByLabel("Tỉnh / thành phố", { exact: true })
       .selectOption("79");
     await page
-      .getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true })
+      .getByLabel("Phường / xã / đặc khu", { exact: true })
       .selectOption("25747");
     await page
-      .getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })
+      .getByLabel("Địa chỉ cụ thể", { exact: true })
       .fill("123 Nguyễn Trãi");
   }
   await fillCheckout();
@@ -661,8 +666,13 @@ try {
 
   await page.goto(`${base}/products`);
   await page
-    .getByRole("button", { name: `Mua ngay ${product.name}`, exact: true })
+    .getByRole("link", { name: `Mua ngay ${product.name}`, exact: true })
     .click();
+  await page
+    .locator(".pd-sizes")
+    .getByRole("button", { name: "12", exact: true })
+    .click();
+  await page.locator(".pd-buy").click();
   await fillCheckout();
   await page.getByRole("button", { name: /Chuyển khoản QR/ }).click();
   await page.getByRole("button", { name: /XÁC NHẬN ĐƠN HÀNG/ }).click();

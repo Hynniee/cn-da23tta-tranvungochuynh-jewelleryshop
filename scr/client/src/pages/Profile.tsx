@@ -106,7 +106,7 @@ export default function Profile() {
             </div>
             <form className="profile-form" onSubmit={save}>
               <label>
-                <span>HỌ VÀ TÊN</span>
+                <span>Họ và tên</span>
                 <input
                   value={name}
                   onChange={(e) => {
@@ -129,7 +129,7 @@ export default function Profile() {
                 />
               </label>
               <label>
-                <span>SỐ ĐIỆN THOẠI</span>
+                <span>Số điện thoại</span>
                 <input
                   value={phone}
                   onChange={(e) => {

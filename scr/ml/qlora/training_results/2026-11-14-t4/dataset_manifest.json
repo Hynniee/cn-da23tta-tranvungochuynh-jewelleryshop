@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "seed": 20261114,
+  "synthetic": true,
+  "expert_reviewed": false,
+  "unique_scenarios": 50,
+  "variants_per_scenario": 9,
+  "split_unit": "scenario family, not random rows",
+  "counts": {
+    "train": 360,
+    "validation": 45,
+    "test": 45
+  },
+  "sha256": {
+    "train.jsonl": "6dc14e70165c83aab9a4505b55d25ccfb4ed21b6e8200348cb10d7716ab5fa6e",
+    "validation.jsonl": "351b27e38105181d3a0c27032df9ae70d0ddc5634f10a97fc48db79cfa3202c3",
+    "test.jsonl": "d2fbaf83b98ba42004751d9a8a61bf947ef0691dff6e3f42650eca4fb4b54cf9"
+  },
+  "topics": {
+    "train": {
+      "size": 45,
+      "material": 36,
+      "grounding": 18,
+      "context": 36,
+      "policy": 54,
+      "clarify": 45,
+      "diamond": 27,
+      "service": 27,
+      "chat": 36,
+      "care": 36
+    },
+    "validation": {
+      "diamond": 9,
+      "grounding": 18,
+      "clarify": 9,
+      "chat": 9
+    },
+    "test": {
+      "grounding": 18,
+      "context": 9,
+      "material": 9,
+      "chat": 9
+    }
+  }
+}

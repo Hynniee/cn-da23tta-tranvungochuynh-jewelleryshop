@@ -43,7 +43,7 @@ export default function DiamondDSS() {
   return (
     <main className="smart-page">
       <header>
-        <span>DIAMOND DECISION SUPPORT</span>
+        <span>SO SÁNH KIM CƯƠNG</span>
         <h1>Chọn kim cương theo 4Cs</h1>
         <p>
           Điều chỉnh mức ưu tiên 4Cs và so sánh các lựa chọn trong ngân sách của

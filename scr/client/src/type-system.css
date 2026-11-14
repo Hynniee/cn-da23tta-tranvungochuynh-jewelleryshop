@@ -1,0 +1,523 @@
+/* Shared type scale, loaded after component styles. Brand marks and count badges
+   retain their own proportions; reading text follows the scale below. */
+:root {
+  /* Hide browsing carets on static content throughout storefront and admin. */
+  caret-color: transparent;
+  --size-error: #923d32;
+  --text-body: 15px;
+  --text-small: 13px;
+  --text-caption: 12px;
+  --text-label: 14px;
+  --text-title: clamp(28px, 3vw, 40px);
+  --text-section: clamp(24px, 2.5vw, 32px);
+  --text-card: clamp(20px, 1.8vw, 24px);
+  --text-display: clamp(36px, 4.4vw, 60px);
+}
+/* Text entry keeps its caret, including nested rich-text editor content. */
+input,
+textarea,
+[contenteditable]:not([contenteditable="false"]) {
+  caret-color: currentColor;
+}
+[contenteditable="false"] {
+  caret-color: transparent;
+}
+.pd-size-error {
+  color: var(--size-error);
+  font-size: var(--text-small);
+  line-height: 1.65;
+}
+.pd-size-error a,
+.pd-size-note a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pd-sizes:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 6px;
+}
+.cart-size-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: var(--text-small);
+}
+.cart-size-picker select {
+  min-width: 120px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: white;
+  font-size: var(--text-small);
+}
+@media (max-width: 760px) {
+  .cart-size-picker select {
+    font-size: 16px;
+  }
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: 1.7;
+}
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-ui);
+  line-height: 1.5;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-ui);
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.shop-intro h1,
+.pd-config h1,
+.checkout-heading h1,
+.account-banner h1,
+.support-page-heading h1,
+.personal-tool-heading h1,
+.smart-page > header h1,
+.appointment-intro h1,
+.transfer-heading h1,
+.thankyou-heading h1,
+.cart-heading h1,
+.cart-title-row h1,
+.thankyou-hero h1,
+.simple h1,
+.admin-top h1 {
+  font-size: var(--text-title);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+}
+.hero-copy h1 {
+  font-size: var(--text-display);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+.center-title h2,
+.split-title h2,
+.craft-copy h2,
+.salon-strip h2,
+.auth-heading h2 {
+  font-size: var(--text-section);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+.tool-card h3,
+.lux-summary h2,
+.checkout-order-lux h2,
+.checkout-form-lux h2,
+.collection-links h3,
+.personal-tool-panel h2,
+.appointment-card h2,
+.appointment-aside h2,
+.account-card > header h2,
+.support-signin h2,
+.order-dialog-heading h2 {
+  font-size: var(--text-card);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+}
+.support-customer-heading h2,
+.care-guide-note h2,
+.account-perks h3,
+.admin-card-title h2,
+.promotion-card h3,
+.address-book-form h3,
+.support-empty h2,
+.support-empty h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.figma-home p,
+.shop-intro p,
+.pd-description p,
+.personal-tool-heading p,
+.personal-tool-panel p,
+.care-guide-note p,
+.care-guide-list li,
+.support-page-heading p,
+.support-message p,
+.support-empty p,
+.support-signin p,
+.appointment-intro p,
+.appointment-aside p,
+.appointment-hint,
+.auth-heading p,
+.account-banner > span,
+.simple p,
+.advisor-turn p,
+.mira-bubble,
+.promotion-intro p,
+.transfer-support {
+  font-size: var(--text-body);
+  line-height: 1.75;
+}
+.shop-card h3,
+.product-card h3 {
+  font-size: var(--text-body);
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+.shop-card > small,
+.product-card > small,
+.pd-size-note,
+.product-specs,
+.pd-price-box p,
+.pd-rating,
+.pd-meta,
+.pd-ship,
+.pd-trust small,
+.account-card p,
+.account-perks p,
+.address-book-help,
+.address-book-legacy,
+.support-customer-heading p,
+.support-conversations p,
+.support-error,
+.promotion-rule,
+.promotion-card p,
+.catalog-notice,
+.form-error,
+.auth-switch,
+.auth-remember,
+.reviews-summary,
+.appointment-aside-note {
+  font-size: var(--text-small);
+  line-height: 1.7;
+  letter-spacing: 0;
+}
+.care-guide-list summary small {
+  font-size: var(--text-small);
+  line-height: 1.65;
+}
+.care-guide-list summary span {
+  font-size: 20px;
+  line-height: 1.5;
+}
+.lux-footer p,
+.lux-footer a,
+.lux-footer span {
+  font-size: var(--text-small);
+  line-height: 1.85;
+}
+.lux-footer > div > b {
+  font-size: var(--text-label);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.footer-bottom,
+.footer-bottom span {
+  font-size: var(--text-caption);
+  line-height: 1.7;
+}
+
+.page-kicker,
+.eyebrow,
+.pd-eyebrow,
+.center-title > span,
+.split-title > div > span,
+.hero-copy > span,
+.craft-copy > span,
+.tool-card > span,
+.personal-tool-heading > span,
+.support-page-heading span,
+.shop-intro > span,
+.auth-heading > span,
+.account-banner > p,
+.account-card > header p,
+.admin-top > div > span {
+  font-size: var(--text-caption);
+  line-height: 1.6;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.hero-values > span > b,
+.hero-values > span > small,
+.cat-card b,
+.craft-list small,
+.collection-links span,
+.support-thread-status > small,
+.support-message > b,
+.support-message time,
+.support-composer small,
+.support-conversations small,
+.support-conversations span,
+.support-conversations time,
+.support-state,
+.support-context,
+.support-order,
+.support-load-older,
+.care-guide-sources,
+.appointment-counter,
+.appointment-fields small,
+.mira-ai-brand small,
+.mira-ai-modes span {
+  font-size: var(--text-caption);
+  line-height: 1.65;
+  letter-spacing: 0;
+}
+.hero-values > span > b {
+  font-weight: 600;
+}
+.cat-card p {
+  font-size: var(--text-small);
+}
+.tool-preview {
+  font-size: var(--text-small);
+  line-height: 1.7;
+}
+
+.lux-nav a {
+  font-size: var(--text-small);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.65;
+}
+.lux-topbar,
+.lux-topbar > span:first-child {
+  font-size: var(--text-caption);
+  line-height: 1.6;
+}
+.lux-search input {
+  font-size: var(--text-small);
+}
+.shop-breadcrumb,
+.product-breadcrumb,
+.account-crumb,
+.tool-back {
+  font-size: var(--text-small);
+  line-height: 1.7;
+}
+.checkout-form-lux label,
+.dss-form label,
+.personal-tool-panel label,
+.appointment-fields label,
+.form-grid label,
+.profile-form label,
+.account-form label,
+.address-book-form label,
+.support-composer > label,
+.auth-form label > span {
+  font-size: var(--text-label);
+  line-height: 1.6;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.auth-input input,
+.auth-form > label > input,
+.checkout-form-lux input,
+.checkout-form-lux select,
+.checkout-form-lux textarea,
+.appointment-fields input,
+.appointment-fields select,
+.appointment-fields textarea,
+.account-form input,
+.account-form select,
+.account-form textarea,
+.address-book-form input:not([type="checkbox"]),
+.address-book-form select,
+.form-grid input,
+.form-grid select,
+.form-grid textarea,
+.support-composer textarea {
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+.gold-btn,
+.black-btn,
+.ghost-btn,
+.ui-primary,
+.ui-secondary,
+.auth-submit,
+.place-order,
+.summary-checkout,
+.pd-actions button,
+.pd-salon,
+.support-composer button,
+.support-customer-heading button,
+.support-pagination button,
+.account-menu button,
+.account-menu > a,
+.account-orders-table .account-order-actions button,
+.account-orders-table .account-order-actions a,
+.product-categories button,
+.decision-actions button,
+.decision-actions a {
+  font-size: var(--text-small);
+  line-height: 1.6;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.account-orders-table th,
+.account-orders-table td,
+.decision-table th,
+.decision-table td {
+  font-size: var(--text-small);
+  line-height: 1.65;
+}
+.account-orders-table th {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.account-orders-table .account-status,
+.account-orders-table .order-details-button,
+.account-orders-table .cancel-order {
+  font-size: var(--text-caption);
+  line-height: 1.65;
+}
+.card-bottom strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+.pd-price-box h2 {
+  font-size: clamp(24px, 2.2vw, 30px);
+  line-height: 1.4;
+  font-weight: 600;
+}
+.admin-stat small,
+.admin-stat p,
+.admin-order-help,
+.admin-user small,
+.admin-section-notice p,
+.table-head,
+.table-row,
+.admin-order-table,
+.admin-product-table {
+  font-size: var(--text-small);
+  line-height: 1.65;
+  letter-spacing: 0;
+}
+.admin-stat small {
+  text-transform: none;
+}
+.admin-nav-label {
+  font-size: var(--text-small);
+  line-height: 1.6;
+}
+.admin-stat strong {
+  font-size: 28px;
+  line-height: 1.35;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.support-conversations > button {
+  padding-block: 18px;
+}
+.support-conversations time {
+  float: none;
+  display: block;
+  margin-top: 4px;
+}
+.support-inbox-filters input,
+.support-inbox-filters select {
+  font-size: var(--text-small);
+}
+.mira-ai-panel,
+.mira-chat-product-main b {
+  font-size: var(--text-small);
+  line-height: 1.7;
+}
+.checkout-progress {
+  font-size: var(--text-caption);
+  letter-spacing: 0;
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.cart-title-row p,
+.thankyou-hero p {
+  font-size: var(--text-body);
+  line-height: 1.75;
+}
+.press-grid article {
+  min-width: 0;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+.press-grid article > svg {
+  color: var(--gold);
+}
+.press-grid article h3 {
+  font-size: 18px;
+  margin: 16px 0 10px;
+}
+.press-grid article p {
+  font-size: var(--text-small);
+  margin: 0 0 18px;
+}
+.press-grid article a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea,
+  .auth-input input,
+  .auth-form > label > input,
+  .checkout-form-lux input,
+  .checkout-form-lux select,
+  .checkout-form-lux textarea,
+  .appointment-fields input,
+  .appointment-fields select,
+  .appointment-fields textarea,
+  .account-form input,
+  .account-form select,
+  .account-form textarea,
+  .address-book-form input:not([type="checkbox"]),
+  .address-book-form select,
+  .form-grid input,
+  .form-grid select,
+  .form-grid textarea,
+  .support-composer textarea,
+  .support-inbox-filters input,
+  .support-inbox-filters select {
+    font-size: 16px;
+  }
+  .hero-values {
+    gap: 14px;
+  }
+  .hero-values > span {
+    min-width: 0;
+  }
+  .hero-values > span > b {
+    overflow-wrap: anywhere;
+  }
+  .cat-card > div {
+    padding: 18px 14px;
+  }
+  .admin-nav-label {
+    font-size: var(--text-caption);
+  }
+}

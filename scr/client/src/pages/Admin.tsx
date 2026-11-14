@@ -2,6 +2,8 @@ import { categories, orderLabels, orderTransitions } from "../lib/commerce";
 import Image from "../components/Image";
 import AdminPromotions from "../components/AdminPromotions";
 import AdminCustomers from "../components/AdminCustomers";
+import AdminMessages from "../components/AdminMessages";
+import { defaultProductSizes } from "../lib/product-sizes";
 import { readStoredObject } from "../lib/storage";
 import { notify } from "../lib/notifications";
 import {
@@ -12,7 +14,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   BarChart3,
   Boxes,
@@ -20,6 +22,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageCircle,
   PackageCheck,
   Plus,
   Search,
@@ -37,7 +40,13 @@ import {
 } from "../lib/product-editor";
 
 type Tab =
-  "overview" | "products" | "orders" | "analytics" | "promotions" | "customers";
+  | "overview"
+  | "products"
+  | "orders"
+  | "analytics"
+  | "promotions"
+  | "customers"
+  | "messages";
 type Product = {
   _id: string;
   name: string;
@@ -66,7 +75,7 @@ type Order = {
 };
 const EMPTY_PRODUCT: ProductForm = {
   stone: "Không đính đá",
-  sizes: "Tiêu chuẩn",
+  sizes: defaultProductSizes("Nhẫn").join(", "),
   description: "",
   engravingAllowed: false,
   name: "",
@@ -93,6 +102,7 @@ const slugify = (value: string) =>
 
 export default function Admin() {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const user = readStoredObject<{
     role?: string;
     name?: string;
@@ -101,6 +111,53 @@ export default function Admin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
+  useEffect(() => {
+    const requested = params.get("tab");
+    if (
+      [
+        "overview",
+        "products",
+        "orders",
+        "analytics",
+        "promotions",
+        "customers",
+        "messages",
+      ].includes(requested || "")
+    )
+      setTab(requested as Tab);
+  }, [params]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  useEffect(() => {
+    if (!token() || !["admin", "manager"].includes(user.role || "")) return;
+    const controller = new AbortController();
+    let busy = false;
+    const refresh = async () => {
+      if (busy || document.hidden) return;
+      busy = true;
+      try {
+        const data = await request("/support/admin/unread", {
+          signal: controller.signal,
+        });
+        if (!controller.signal.aborted) setUnreadMessages(data.count);
+      } catch {
+        /* The inbox shows connection errors when opened. */
+      } finally {
+        busy = false;
+      }
+    };
+    void refresh();
+    const timer = setInterval(refresh, 10000);
+    window.addEventListener("supportchange", refresh);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+      window.removeEventListener("supportchange", refresh);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [user.role]);
   const [notifications, setNotifications] = useState<
     Partial<Record<Tab, { count: number; message: string }>>
   >({});
@@ -414,7 +471,7 @@ export default function Admin() {
         <Gem size={38} />
         <h1>Khu Vực Quản Trị MIRA</h1>
         <p>Vui lòng đăng nhập bằng tài khoản quản trị để tiếp tục.</p>
-        <Link to="/login">ĐĂNG NHẬP ADMIN</Link>
+        <Link to="/login">Đăng nhập ADMIN</Link>
       </section>
     );
   }
@@ -423,7 +480,7 @@ export default function Admin() {
     <main className="admin-shell">
       <aside className="admin-sidebar">
         <Link to="/" className="admin-logo">
-          MIRA<span>ADMIN CONSOLE</span>
+          MIRA<span>QUẢN TRỊ CỬA HÀNG</span>
         </Link>
         <nav className="admin-nav">
           {(
@@ -445,6 +502,11 @@ export default function Admin() {
                 icon: <Users size={17} />,
               },
               {
+                id: "messages",
+                label: "Tin nhắn",
+                icon: <MessageCircle size={17} />,
+              },
+              {
                 id: "promotions",
                 label: "Khuyến mãi",
                 icon: <Tags size={17} />,
@@ -457,12 +519,22 @@ export default function Admin() {
             ] as { id: Tab; label: string; icon: ReactNode }[]
           ).map((item) => {
             const notice =
-              item.id === "overview" ? undefined : notifications[item.id];
+              item.id === "messages"
+                ? {
+                    count: unreadMessages,
+                    message: `${unreadMessages} tin nhắn khách hàng chưa đọc.`,
+                  }
+                : item.id === "overview"
+                  ? undefined
+                  : notifications[item.id];
             return (
               <button
                 key={item.id}
                 className={tab === item.id ? "active" : ""}
-                onClick={() => setTab(item.id)}
+                onClick={() => {
+                  setTab(item.id);
+                  setParams({ tab: item.id });
+                }}
                 aria-label={item.label}
                 aria-current={tab === item.id ? "page" : undefined}
                 aria-describedby={
@@ -519,16 +591,18 @@ export default function Admin() {
             <span>MIRA JEWELRY / ADMIN</span>
             <h1>
               {tab === "overview"
-                ? "Tổng Quan Cửa Hàng"
+                ? "Tổng quan cửa hàng"
                 : tab === "products"
-                  ? "Quản Lý Sản Phẩm"
+                  ? "Quản lý sản phẩm"
                   : tab === "orders"
-                    ? "Quản Lý Đơn Hàng"
+                    ? "Quản lý đơn hàng"
                     : tab === "customers"
-                      ? "Quản Lý Khách Hàng"
-                      : tab === "promotions"
-                        ? "Voucher, Giảm Giá & Flash Sale"
-                        : "Phân Tích AI & Gợi Ý"}
+                      ? "Quản lý khách hàng"
+                      : tab === "messages"
+                        ? "Tin nhắn khách hàng"
+                        : tab === "promotions"
+                          ? "Khuyến mãi & mã giảm giá"
+                          : "Phân tích AI & gợi ý"}
             </h1>
           </div>
           <Link to="/">XEM CỬA HÀNG ↗</Link>
@@ -553,6 +627,7 @@ export default function Admin() {
           </div>
         )}
         {tab === "promotions" && <AdminPromotions products={products} />}
+        {tab === "messages" && <AdminMessages />}
         {tab === "customers" && (
           <AdminCustomers
             onViewed={readCustomerNotifications}
@@ -721,10 +796,19 @@ export default function Admin() {
               xác nhận.
             </p>
             <OrderTable
-              orders={orders}
+              orders={
+                params.get("order")
+                  ? orders.filter((order) => order._id === params.get("order"))
+                  : orders
+              }
               onStatus={updateOrder}
               updatingOrders={updatingOrders}
             />
+            {params.get("order") && (
+              <Link className="tool-back" to="/admin?tab=orders">
+                Xem tất cả đơn hàng →
+              </Link>
+            )}
           </section>
         )}
         {tab === "analytics" && (
@@ -733,25 +817,25 @@ export default function Admin() {
             <div className="admin-stats">
               <Stat
                 icon={<BarChart3 />}
-                label="Behavior events"
+                label="Lượt tương tác"
                 value={String(analytics?.events || 0)}
                 note="Dữ liệu hành vi đã ghi nhận"
               />
               <Stat
                 icon={<Gem />}
-                label="Recommendation sessions"
+                label="Lượt gợi ý sản phẩm"
                 value={String(analytics?.recommendations || 0)}
                 note={`CTR ${((analytics?.recommendationCTR || 0) * 100).toFixed(1)}%`}
               />
               <Stat
                 icon={<Users />}
-                label="AI conversations"
+                label="Lượt tư vấn AI"
                 value={String(analytics?.aiConversations || 0)}
                 note="Lượt tư vấn Gemini"
               />
               <Stat
                 icon={<PackageCheck />}
-                label="Paid orders"
+                label="Đơn đã thanh toán"
                 value={String(analytics?.paidOrders || 0)}
                 note={`${analytics?.paymentMismatches || 0} giao dịch cần đối soát`}
               />
@@ -817,7 +901,11 @@ export default function Admin() {
                   aria-label="Danh mục"
                   value={form.category}
                   onChange={(e) =>
-                    setForm({ ...form, category: e.target.value })
+                    setForm({
+                      ...form,
+                      category: e.target.value,
+                      sizes: defaultProductSizes(e.target.value).join(", "),
+                    })
                   }
                 >
                   {categories.map((v) => (
@@ -882,13 +970,17 @@ export default function Admin() {
                 </select>
               </label>
               <label>
-                Kích cỡ (cách nhau bằng dấu phẩy)
+                Size đang bán (cách nhau bằng dấu phẩy)
                 <input
-                  required
+                  required={defaultProductSizes(form.category).length > 0}
                   value={form.sizes}
                   onChange={(e) => setForm({ ...form, sizes: e.target.value })}
-                  placeholder="10, 11, 12 hoặc 40cm, 45cm"
+                  placeholder="Ví dụ: 10, 12, 14 hoặc 40 cm, 45 cm"
                 />
+                <small>
+                  Nhập số size hoặc số đo cụ thể. Phụ kiện không phân size có
+                  thể để trống.
+                </small>
               </label>
               <label className="form-wide">
                 Mô tả

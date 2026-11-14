@@ -1,0 +1,25 @@
+{
+  "model_id": "Qwen/Qwen2.5-3B-Instruct",
+  "model_commit": "aa8e72537993ba99e69dfaafa59ed015b17504d1",
+  "seed": 42,
+  "max_length": 768,
+  "lora_r": 8,
+  "epochs": 3,
+  "gradient_accumulation": 16,
+  "learning_rate": 0.0002,
+  "gpu": "Tesla T4",
+  "versions": {
+    "torch": "2.14.1+cu130",
+    "transformers": "4.57.1",
+    "peft": "0.17.1",
+    "accelerate": "1.10.1",
+    "bitsandbytes": "0.48.1",
+    "datasets": "4.2.0"
+  },
+  "smoke_test_only": false,
+  "dataset_sha256": {
+    "train.jsonl": "6dc14e70165c83aab9a4505b55d25ccfb4ed21b6e8200348cb10d7716ab5fa6e",
+    "validation.jsonl": "351b27e38105181d3a0c27032df9ae70d0ddc5634f10a97fc48db79cfa3202c3",
+    "test.jsonl": "d2fbaf83b98ba42004751d9a8a61bf947ef0691dff6e3f42650eca4fb4b54cf9"
+  }
+}

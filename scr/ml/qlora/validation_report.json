@@ -1,0 +1,18 @@
+{
+  "synthetic": true,
+  "expert_reviewed": false,
+  "counts": {
+    "train": 360,
+    "validation": 45,
+    "test": 45
+  },
+  "notebook_code_cells": 12,
+  "gpu_training_executed": false,
+  "tokenizer_checked": true,
+  "tokenizer_probe": "native tokenizers + inspected no-tools Qwen2.5 ChatML renderer",
+  "model_revision": "aa8e72537993ba99e69dfaafa59ed015b17504d1",
+  "max_tokens": 480,
+  "min_tokens": 303,
+  "max_length": 768,
+  "min_supervised_tokens": 29
+}

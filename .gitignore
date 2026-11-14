@@ -15,3 +15,6 @@ playwright-report/
 
 .local-data/
 scr/server/uploads/
+
+# Downloaded QLoRA weights stay local; commit training code and reports.
+scr/ml/qlora/mira_qlora_adapter.zip

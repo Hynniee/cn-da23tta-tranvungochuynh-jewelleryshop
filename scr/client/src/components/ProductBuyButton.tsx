@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { BUY_NOW_CHECKOUT, saveBuyNow } from "../store/buy-now";
 import { notify } from "../lib/notifications";
+import { productSizes } from "../lib/product-sizes";
 
 type BuyProduct = {
   _id: string;
@@ -11,6 +12,7 @@ type BuyProduct = {
   salePrice?: number;
   images?: string[];
   sizes?: string[];
+  category?: string;
   material?: string;
   stone?: string;
   stock: number;
@@ -25,7 +27,7 @@ export default function ProductBuyButton({ product }: { product: BuyProduct }) {
         Tạm hết hàng
       </button>
     );
-  if ((product.sizes?.length || 0) > 1 || product.engravingAllowed)
+  if (productSizes(product).length || product.engravingAllowed)
     return (
       <Link
         className="product-buy-button"
@@ -43,7 +45,8 @@ export default function ProductBuyButton({ product }: { product: BuyProduct }) {
         name: product.name,
         price: product.salePrice ?? product.price,
         image: product.images?.[0] || "/placeholder.svg",
-        size: product.sizes?.[0] || "Tiêu chuẩn",
+        size: "",
+        sizeOptions: [],
         quantity: 1,
         material: product.material,
         stone: product.stone,

@@ -4,6 +4,7 @@ import { ArrowLeft, LockKeyhole, ShieldCheck, Trash2 } from "lucide-react";
 import { useCartController } from "../controllers/useCartController";
 import usePromotionQuote from "../controllers/usePromotionQuote";
 import VoucherField from "../components/VoucherField";
+import { cartHasValidSizes } from "../store/cart";
 
 const money = (value: number) => `${value.toLocaleString("vi-VN")}₫`;
 
@@ -17,19 +18,21 @@ export default function Cart() {
     shipping: cartShipping,
     total: cartTotal,
     updateQuantity,
+    updateSize,
     canIncrease,
   } = useCartController();
-  const promotion = usePromotionQuote(cart);
+  const validSizes = cartHasValidSizes(cart);
+  const promotion = usePromotionQuote(cart, !checking && validSizes);
   const subtotal = promotion.quote?.subtotal ?? cartSubtotal;
   const shipping = promotion.quote?.shippingFee ?? cartShipping;
   const total = promotion.quote?.total ?? cartTotal;
 
   return (
     <main className="lux-cart-page">
-      <div className="page-kicker">MIRA PRIVATE PURCHASE</div>
+      <div className="page-kicker">GIỎ HÀNG MIRA</div>
       <div className="cart-title-row">
         <div>
-          <h1>Giỏ Hàng Của Bạn</h1>
+          <h1>Giỏ hàng của bạn</h1>
           <p>{cart.length} tuyệt tác đang chờ được sở hữu.</p>
         </div>
         <Link to="/products">
@@ -38,6 +41,12 @@ export default function Cart() {
       </div>
 
       {notice && <p role="alert">{notice}</p>}
+      {!checking && !validSizes && (
+        <p className="pd-size-error" role="alert">
+          Vui lòng chọn lại kích cỡ cho các sản phẩm trong giỏ trước khi thanh
+          toán.
+        </p>
+      )}
       {!inStock && (
         <p role="alert">
           Một số sản phẩm đã hết hàng hoặc vượt tồn kho. Vui lòng giảm số lượng
@@ -66,9 +75,35 @@ export default function Cart() {
                   <small>MIRA · FINE JEWELRY</small>
                   <h3>{item.name}</h3>
                   <p>
-                    {item.material || "Trang sức MIRA"} · {item.stone || ""} ·{" "}
-                    {item.carat ? `${item.carat} ct · ` : ""}Size {item.size}
+                    {[
+                      item.material || "Trang sức MIRA",
+                      item.stone,
+                      item.carat ? `${item.carat} ct` : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
+                  {!!item.sizeOptions?.length && (
+                    <label className="cart-size-picker">
+                      Kích cỡ
+                      <select
+                        aria-label={`Kích cỡ ${item.name}`}
+                        value={item.size}
+                        onChange={(event) =>
+                          updateSize(index, event.target.value)
+                        }
+                      >
+                        <option value="" disabled>
+                          Chọn kích cỡ
+                        </option>
+                        {item.sizeOptions.map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   {item.engraving && <em>Khắc: “{item.engraving}”</em>}
                   <strong>
                     {money(promotion.quote?.items[index]?.price ?? item.price)}
@@ -100,8 +135,8 @@ export default function Cart() {
           </section>
 
           <aside className="lux-summary">
-            <span className="page-kicker">ORDER SUMMARY</span>
-            <h2>Tóm Tắt Đơn Hàng</h2>
+            <span className="page-kicker">THÔNG TIN ĐƠN HÀNG</span>
+            <h2>Tóm tắt đơn hàng</h2>
             <div>
               <span>Tạm tính</span>
               <b>{money(subtotal)}</b>
@@ -127,17 +162,22 @@ export default function Cart() {
               <b>{money(total)}</b>
             </div>
             <small>Đã bao gồm VAT và hồ sơ giám định đi kèm sản phẩm.</small>
-            {inStock &&
+            {validSizes &&
+            inStock &&
             !checking &&
             !notice &&
             promotion.quote &&
             !promotion.loading ? (
               <Link to="/checkout" className="summary-checkout">
-                TIẾN HÀNH THANH TOÁN
+                Tiến hành thanh toán
               </Link>
             ) : (
               <button className="summary-checkout" disabled>
-                {checking ? "ĐANG KIỂM TRA..." : "KIỂM TRA GIỎ HÀNG"}
+                {checking
+                  ? "Đang kiểm tra…"
+                  : !validSizes
+                    ? "Chọn kích cỡ để tiếp tục"
+                    : "Kiểm tra giỏ hàng"}
               </button>
             )}
             <p className="secure-line">

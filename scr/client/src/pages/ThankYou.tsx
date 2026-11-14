@@ -228,7 +228,16 @@ export default function ThankYou() {
         Được chọn bởi bạn. Được trân trọng bởi MIRA.
       </p>
       <p className="transfer-support">
-        Cần hỗ trợ? <Link to="/advisor">Liên hệ tư vấn MIRA</Link>
+        Cần hỗ trợ?{" "}
+        <Link
+          to={
+            order?._id
+              ? `/support?order=${encodeURIComponent(order._id)}`
+              : "/support"
+          }
+        >
+          Liên hệ nhân viên MIRA
+        </Link>
       </p>
     </main>
   );

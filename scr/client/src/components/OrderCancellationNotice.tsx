@@ -15,7 +15,7 @@ export default function OrderCancellationNotice({
           ? "Vui lòng chờ chúng tôi rà soát giao dịch và xử lý hoàn tiền nếu đã nhận được thanh toán. "
           : "Đơn hàng của bạn đã được hủy. "}
       Mọi chi tiết, vui lòng{" "}
-      <Link className="order-cancellation-support" to="/advisor">
+      <Link className="order-cancellation-support" to="/support">
         liên hệ MIRA
       </Link>{" "}
       để được hỗ trợ.

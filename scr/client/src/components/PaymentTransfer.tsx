@@ -202,7 +202,10 @@ export default function PaymentTransfer({
         </div>
       </section>
       <p className="transfer-support">
-        Cần hỗ trợ? <Link to="/advisor">Liên hệ tư vấn MIRA</Link>
+        Cần hỗ trợ?{" "}
+        <Link to={`/support?order=${encodeURIComponent(details.orderId)}`}>
+          Liên hệ nhân viên MIRA
+        </Link>
       </p>
     </main>
   );

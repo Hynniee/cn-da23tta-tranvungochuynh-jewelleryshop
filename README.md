@@ -73,7 +73,7 @@ Không đưa file `.env`, mật khẩu hoặc API key lên GitHub.
 
 ## Chức năng
 
-Giao diện dùng chung tông nền kem, chữ đậm và điểm nhấn vàng; biểu mẫu, nút và thẻ nội dung thống nhất trên desktop/mobile. Thông báo yêu thích, giỏ hàng, lưu sản phẩm/tồn kho và khuyến mãi tự ẩn sau 3 giây. **Mua ngay** mở phần chọn size/khắc tên nếu cần; sản phẩm một lựa chọn và nút Mua ngay ở chi tiết chuyển tới thanh toán.
+Giao diện dùng chung tông nền kem, chữ đậm và điểm nhấn vàng; biểu mẫu, nút và thẻ nội dung thống nhất trên desktop/mobile. Thông báo yêu thích, giỏ hàng, lưu sản phẩm/tồn kho và khuyến mãi tự ẩn sau 3 giây. **Mua ngay** mở phần chọn size/khắc tên cho sản phẩm có kích cỡ; khách phải chọn trước khi thêm giỏ hoặc thanh toán, kể cả mẫu chỉ có một size. Nhẫn chọn số size, dây chuyền và vòng/lắc chọn chiều dài. Các lựa chọn của từng sản phẩm được ưu tiên; danh mục cũ thiếu size dùng cấu hình trong `scr/server/src/services/product-sizes.ts`. Phụ kiện không phân size không hiển thị “Tiêu chuẩn”. Có thể đổi size trong giỏ; máy chủ kiểm tra lại và lưu đúng lựa chọn vào đơn. Chạy `npm run test:sizes` sau `npm run build` để kiểm tra trên database riêng.
 
 Thanh toán QR có vùng hiển thị riêng, thông tin ngân hàng/nội dung chuyển khoản kèm nút sao chép và xử lý lỗi tải ảnh. Nút **Tôi đã chuyển khoản** mở trang cảm ơn `/thank-you?order=...`, hiển thị thông tin đơn và tự cập nhật trạng thái từ máy chủ; chỉ luồng đối soát mới xác nhận đã thanh toán. Từ trang này có thể mở chi tiết đúng đơn trong tài khoản.
 
@@ -93,6 +93,8 @@ ML Logistic Regression cung cấp tín hiệu quan tâm tham khảo; DSS quyết
 AI Advisor lưu ngữ cảnh nhiều lượt theo phiên, hỏi thêm loại trang sức/ngân sách còn thiếu; kim cương hỏi thêm carat. Trang `/advisor` và khung Hỏi MIRA dùng chung hội thoại trong tab. Có thể bắt đầu hội thoại mới, điều chỉnh trọng số và chọn 2–4 sản phẩm để so sánh. `/diamond-dss` hỗ trợ chỉnh trọng số 4Cs và Top-K. Admin → Khách hàng hỗ trợ tìm kiếm, xem lịch sử đơn và sửa tên/số điện thoại, có phân quyền và nhật ký thay đổi.
 
 Quản trị: Tổng quan đứng đầu menu. Huy hiệu số tròn màu hồng pastel hiển thị các việc cần chú ý ở từng mục, tự cập nhật mỗi 15 giây khi trang đang mở và khi quay lại cửa sổ. Admin/manager đổi trạng thái đơn qua danh sách chọn; hệ thống lưu thay đổi, ghi nhật ký và cập nhật huy hiệu. Xem [hướng dẫn quản trị và thông báo](setup/admin.md).
+
+**Liên hệ hỗ trợ** (`/support`): khách đăng nhập nhắn trực tiếp với nhân viên, lịch sử lưu trong MongoDB theo tài khoản và tự cập nhật mỗi 5 giây khi trang hiển thị. Liên hệ từ chi tiết đơn hàng sẽ đính kèm đúng đơn của khách. **Admin → Tin nhắn** hỗ trợ tìm theo tên/email, xem tin chưa đọc, trả lời, lọc hội thoại đang hỗ trợ/đã xử lý và mở đơn liên quan. Tin mới mở lại hội thoại đã xử lý; gửi lại cùng mã không tạo tin trùng. Kiểm tra luồng API, phân quyền và giao diện với `npm run build` rồi `npm run test:support` trên database kiểm thử riêng.
 
 ## Phát triển và kiểm thử local
 

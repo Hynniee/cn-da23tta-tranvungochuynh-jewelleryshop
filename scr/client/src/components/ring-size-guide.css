@@ -1,0 +1,95 @@
+.ring-size-trigger {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #806021;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.ring-size-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100dvh - 40px);
+  box-sizing: border-box;
+  margin: auto;
+  padding: 24px;
+  border: 1px solid #d8c9ab;
+  border-radius: 12px;
+  color: #302b25;
+  background: #fffdf8;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.ring-size-dialog::backdrop {
+  background: rgb(25 21 15 / 55%);
+}
+body:has(.ring-size-dialog[open]) {
+  overflow: hidden;
+}
+.ring-size-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ring-size-heading h2 {
+  margin: 0;
+  font-size: 24px;
+}
+.ring-size-heading button {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #d8c9ab;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+}
+.ring-size-dialog p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.ring-size-dialog a,
+.ring-size-source a {
+  color: #806021;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ring-size-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ring-size-table caption {
+  text-align: left;
+  padding: 12px 0;
+  font-weight: 600;
+}
+.ring-size-table th,
+.ring-size-table td {
+  padding: 9px 8px;
+  border-bottom: 1px solid #e6ddcf;
+  text-align: center;
+}
+.ring-size-table thead {
+  background: #f2ecdf;
+}
+.ring-size-table tr[aria-current="true"] {
+  background: #f3e4c1;
+  font-weight: 600;
+}
+.ring-size-source {
+  font-size: 12px;
+  line-height: 1.7;
+}
+@media (max-width: 480px) {
+  .ring-size-dialog {
+    padding: 16px;
+  }
+  .pd-option-title:has(.ring-size-trigger) {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

@@ -23,6 +23,10 @@ export default function MiraAIChat() {
     reset,
   } = useAdvisorConversation();
   const messageList = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (open) inputRef.current?.focus({ preventScroll: true });
+  }, [open]);
   useEffect(() => {
     const list = messageList.current;
     if (open && list)
@@ -53,7 +57,7 @@ export default function MiraAIChat() {
               </span>
               <div>
                 <b>MIRA AI</b>
-                <small>JEWELRY ASSISTANT</small>
+                <small>TRỢ LÝ TRANG SỨC</small>
               </div>
             </div>
             <button onClick={() => setOpen(false)} aria-label="Đóng">
@@ -61,9 +65,9 @@ export default function MiraAIChat() {
             </button>
           </header>
           <div className="mira-ai-modes">
-            <span>AI Advisor</span>
+            <span>Tư vấn AI</span>
             <span>Dành cho bạn</span>
-            <span>4Cs DSS</span>
+            <span>Kim cương 4Cs</span>
           </div>
           <div className="decision-actions chat-actions">
             <button disabled={busy} onClick={reset}>
@@ -166,6 +170,8 @@ export default function MiraAIChat() {
           </div>
           <form onSubmit={submit}>
             <input
+              ref={inputRef}
+              aria-label="Tin nhắn cho MIRA AI"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Nhập nhu cầu của bạn..."

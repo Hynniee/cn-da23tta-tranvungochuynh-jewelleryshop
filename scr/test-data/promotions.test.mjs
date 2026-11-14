@@ -480,18 +480,18 @@ try {
   await checkout.getByRole("button", { name: "Áp dụng", exact: true }).click();
   await expect(checkout.locator(".lux-total")).toContainText("580.000₫");
   await checkout
-    .getByRole("link", { name: "TIẾN HÀNH THANH TOÁN", exact: true })
+    .getByRole("link", { name: "Tiến hành thanh toán", exact: true })
     .click();
   await expect(checkout.locator(".checkout-total")).toContainText("580.000₫");
-  await checkout.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill(buyer.phone);
+  await checkout.getByLabel("Số điện thoại", { exact: true }).fill(buyer.phone);
   await checkout
-    .getByLabel("TỈNH / THÀNH PHỐ", { exact: true })
+    .getByLabel("Tỉnh / thành phố", { exact: true })
     .selectOption("79");
   await checkout
-    .getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true })
+    .getByLabel("Phường / xã / đặc khu", { exact: true })
     .selectOption("25747");
   await checkout
-    .getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })
+    .getByLabel("Địa chỉ cụ thể", { exact: true })
     .fill(buyer.addressLine);
   await checkout.screenshot({
     path: "scr/test-data/results/checkout-voucher-mobile.png",

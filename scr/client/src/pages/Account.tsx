@@ -152,7 +152,7 @@ export default function Account() {
       </div>
       <section className="account-banner">
         <p>MIRA PRIVATE CLIENT</p>
-        <h1>Tài Khoản Của Tôi</h1>
+        <h1>Tài khoản của tôi</h1>
         <span>
           Quản lý hồ sơ, đơn hàng và những đặc quyền dành riêng cho bạn.
         </span>
@@ -191,6 +191,7 @@ export default function Account() {
             >
               Danh sách yêu thích
             </button>
+            <Link to="/support">Liên hệ hỗ trợ</Link>
             <button onClick={logout}>Đăng xuất</button>
           </nav>
           <div className="account-tier">
@@ -211,13 +212,13 @@ export default function Account() {
               <header>
                 <div>
                   <p>HỒ SƠ KHÁCH HÀNG</p>
-                  <h2>Thông Tin Cá Nhân</h2>
+                  <h2>Thông tin cá nhân</h2>
                 </div>
                 <span>Thông tin của bạn được MIRA bảo mật</span>
               </header>
               <form className="account-form" onSubmit={save}>
                 <label>
-                  <span>HỌ VÀ TÊN</span>
+                  <span>Họ và tên</span>
                   <input
                     value={form.name || ""}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -237,7 +238,7 @@ export default function Account() {
                   />
                 </label>
                 <label>
-                  <span>SỐ ĐIỆN THOẠI</span>
+                  <span>Số điện thoại</span>
                   <input
                     value={form.phone || ""}
                     onChange={(e) =>
@@ -288,7 +289,7 @@ export default function Account() {
               <header>
                 <div>
                   <p>LỊCH SỬ MUA SẮM</p>
-                  <h2>Đơn Hàng Của Tôi</h2>
+                  <h2>Đơn hàng của tôi</h2>
                 </div>
               </header>
               {ordersLoading ? (
@@ -383,13 +384,6 @@ export default function Account() {
                                     : "Hủy đơn"}
                                 </button>
                               )}
-                              {o.status === "pending_payment" && (
-                                <Link
-                                  to={`/checkout?order=${encodeURIComponent(o._id)}`}
-                                >
-                                  Thanh toán chuyển khoản
-                                </Link>
-                              )}
                             </div>
                           </td>
                         </tr>
@@ -422,7 +416,7 @@ export default function Account() {
               <header>
                 <div>
                   <p>BỘ SƯU TẬP CỦA BẠN</p>
-                  <h2>Danh Sách Yêu Thích</h2>
+                  <h2>Danh sách yêu thích</h2>
                 </div>
               </header>
               <WishlistProducts />
@@ -432,18 +426,18 @@ export default function Account() {
           <div className="account-perks">
             <article>
               <b>01</b>
-              <h3>Private Salon Priority</h3>
-              <p>Ưu tiên lịch hẹn riêng cùng chuyên gia MIRA.</p>
+              <h3>Hẹn gặp tại salon</h3>
+              <p>Chọn địa điểm và thời gian tư vấn phù hợp.</p>
             </article>
             <article>
               <b>02</b>
-              <h3>Lifetime Jewelry Spa</h3>
-              <p>Chăm sóc và vệ sinh trang sức định kỳ.</p>
+              <h3>Chăm sóc trang sức</h3>
+              <p>Xem hướng dẫn vệ sinh và bảo quản theo chất liệu.</p>
             </article>
             <article>
               <b>03</b>
-              <h3>Birthday Privilege</h3>
-              <p>Đặc quyền cá nhân hóa trong tháng sinh nhật.</p>
+              <h3>Hỗ trợ từ nhân viên</h3>
+              <p>Nhắn cho MIRA khi cần hỗ trợ về đơn hàng.</p>
             </article>
           </div>
         </section>

@@ -288,30 +288,30 @@ try {
   await expect(
     page
       .locator(".account-form")
-      .getByLabel("ĐỊA CHỈ GIAO HÀNG", { exact: true }),
+      .getByLabel("Địa chỉ giao hàng", { exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Sổ địa chỉ", exact: true }).click();
   await expect(
-    page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true }),
+    page.getByLabel("Tỉnh / thành phố", { exact: true }),
   ).toHaveCount(0);
   async function fillAddress(line) {
     await page
-      .getByLabel("HỌ VÀ TÊN NGƯỜI NHẬN", { exact: true })
+      .getByLabel("Họ và tên người nhận", { exact: true })
       .fill("Khách hàng MIRA");
     await page
-      .getByLabel("SỐ ĐIỆN THOẠI NGƯỜI NHẬN", { exact: true })
+      .getByLabel("Số điện thoại NGƯỜI NHẬN", { exact: true })
       .fill("0901234567");
     await page
-      .getByLabel("TỈNH / THÀNH PHỐ", { exact: true })
+      .getByLabel("Tỉnh / thành phố", { exact: true })
       .selectOption("79");
     await page
-      .getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true })
+      .getByLabel("Phường / xã / đặc khu", { exact: true })
       .selectOption("25747");
-    await page.getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true }).fill(line);
+    await page.getByLabel("Địa chỉ cụ thể", { exact: true }).fill(line);
   }
   await page.getByRole("button", { name: "Thêm địa chỉ", exact: true }).click();
   await expect(
-    page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true }).locator("option"),
+    page.getByLabel("Tỉnh / thành phố", { exact: true }).locator("option"),
   ).toHaveCount(35);
   await fillAddress("10 Đường Nhà Riêng");
   await page.getByRole("button", { name: "Lưu địa chỉ", exact: true }).click();
@@ -322,7 +322,7 @@ try {
   );
   await page.getByRole("button", { name: "Chỉnh sửa", exact: true }).click();
   await page
-    .getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })
+    .getByLabel("Địa chỉ cụ thể", { exact: true })
     .fill("12 Đường Nhà Riêng");
   await page.getByRole("button", { name: "Lưu địa chỉ", exact: true }).click();
   await expect(page.locator(".saved-address-card")).toContainText(
@@ -378,9 +378,9 @@ try {
     page.getByRole("combobox", { name: "Chọn địa chỉ giao hàng", exact: true }),
   ).toHaveValue("new");
   await expect(
-    page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true }),
+    page.getByLabel("Tỉnh / thành phố", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("Địa chỉ cụ thể", { exact: true })).toHaveValue(
     "",
   );
   await expect(page.locator(".checkout-saved-address")).toHaveCount(0);
@@ -394,7 +394,7 @@ try {
   await expect(page.locator(".checkout-saved-address")).toContainText(
     "12 Đường Nhà Riêng",
   );
-  await page.getByLabel("EMAIL (KHÔNG BẮT BUỘC)", { exact: true }).fill("");
+  await page.getByLabel("Email (không bắt buộc)", { exact: true }).fill("");
   await page.getByRole("button", { name: /XÁC NHẬN ĐƠN HÀNG/ }).click();
   await expect(page).toHaveURL(/\/account$/);
   const uiOrders = await api("/orders/mine", { token: ui.token });
@@ -405,16 +405,16 @@ try {
     .getByRole("combobox", { name: "Chọn địa chỉ giao hàng", exact: true })
     .selectOption("new");
   await expect(
-    page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true }),
+    page.getByLabel("Tỉnh / thành phố", { exact: true }),
   ).toBeVisible();
-  await page.getByLabel("HỌ VÀ TÊN", { exact: true }).fill("Người nhận mới");
-  await page.getByLabel("SỐ ĐIỆN THOẠI", { exact: true }).fill("0907654321");
-  await page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true }).selectOption("79");
+  await page.getByLabel("Họ và tên", { exact: true }).fill("Người nhận mới");
+  await page.getByLabel("Số điện thoại", { exact: true }).fill("0907654321");
+  await page.getByLabel("Tỉnh / thành phố", { exact: true }).selectOption("79");
   await page
-    .getByLabel("PHƯỜNG / XÃ / ĐẶC KHU", { exact: true })
+    .getByLabel("Phường / xã / đặc khu", { exact: true })
     .selectOption("25747");
   await page
-    .getByLabel("ĐỊA CHỈ CỤ THỂ", { exact: true })
+    .getByLabel("Địa chỉ cụ thể", { exact: true })
     .fill("99 Địa Chỉ Mới");
   await page.getByRole("button", { name: /XÁC NHẬN ĐƠN HÀNG/ }).click();
   await expect(page).toHaveURL(/\/account$/);
@@ -523,7 +523,7 @@ try {
   await page.getByRole("button", { name: "Sổ địa chỉ", exact: true }).click();
   await page.getByRole("button", { name: "Thêm địa chỉ", exact: true }).click();
   await expect(
-    page.getByLabel("TỈNH / THÀNH PHỐ", { exact: true }),
+    page.getByLabel("Tỉnh / thành phố", { exact: true }),
   ).toBeVisible();
   await page.screenshot({
     path: "scr/test-data/results/account-checkout/address-form-mobile.png",

@@ -2,8 +2,10 @@ import Image from "../components/Image";
 import {
   ArrowRight,
   Award,
+  BookOpen,
   Diamond,
   Gem,
+  MessageCircle,
   Ruler,
   ShieldCheck,
   Sparkles,
@@ -13,10 +15,10 @@ import { useEffect, useState } from "react";
 import { request } from "../lib/api";
 import ProductCard from "../components/ProductCard";
 const cats = [
-  ["NHẪN", "Biểu tượng của lời hứa vĩnh cửu", "/editorial/rings.jpg"],
-  ["DÂY CHUYỀN", "Ánh sáng chạm gần trái tim", "/editorial/necklaces.jpg"],
-  ["BÔNG TAI", "Điểm sáng của khí chất", "/editorial/earrings.jpg"],
-  ["LẮC & VÒNG TAY", "Nhịp điệu của sự thanh lịch", "/editorial/bracelets.jpg"],
+  ["Nhẫn", "Biểu tượng của lời hứa vĩnh cửu", "/editorial/rings.jpg"],
+  ["Dây chuyền", "Ánh sáng chạm gần trái tim", "/editorial/necklaces.jpg"],
+  ["Bông tai", "Điểm sáng của khí chất", "/editorial/earrings.jpg"],
+  ["Lắc & vòng tay", "Nhịp điệu của sự thanh lịch", "/editorial/bracelets.jpg"],
 ];
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
@@ -65,9 +67,9 @@ export default function Home() {
         <div className="hero-copy">
           <span>MAISON MIRA · FINE JEWELRY</span>
           <h1>
-            Kiệt Tác Kim Hoàn
+            Kiệt tác kim hoàn
             <br />
-            <i>Nơi Ánh Sáng Hội Tụ</i>
+            <i>Nơi ánh sáng hội tụ</i>
           </h1>
           <p>
             Trang sức vàng, bạc, ngọc trai và đá màu — những thiết kế giúp bạn
@@ -75,10 +77,10 @@ export default function Home() {
           </p>
           <div>
             <Link to="/products" className="gold-btn">
-              KHÁM PHÁ BỘ SƯU TẬP <ArrowRight size={15} />
+              Khám phá bộ sưu tập <ArrowRight size={15} />
             </Link>
             <a href="#atelier" className="ghost-btn">
-              BESPOKE ATELIER
+              Về MIRA
             </a>
           </div>
         </div>
@@ -102,8 +104,8 @@ export default function Home() {
       </section>
       <section className="home-section">
         <div className="center-title">
-          <span>THE MIRA ICONS</span>
-          <h2>Danh Mục Biểu Tượng</h2>
+          <span>DANH MỤC SẢN PHẨM</span>
+          <h2>Danh mục trang sức</h2>
           <p>
             Những thiết kế vượt thời gian dành cho những khoảnh khắc đáng nhớ
             nhất.
@@ -131,8 +133,8 @@ export default function Home() {
       </section>
       <section className="jewelry-collections home-section">
         <div className="center-title">
-          <span>FIND YOUR EVERYDAY SPARKLE</span>
-          <h2>Trang Sức Cho Mọi Phong Cách</h2>
+          <span>CHỌN THEO CHẤT LIỆU</span>
+          <h2>Trang sức cho mọi phong cách</h2>
           <p>Từ thiết kế bạc dễ đeo đến vàng, ngọc trai và sắc màu đá quý.</p>
         </div>
         <div className="collection-links">
@@ -153,11 +155,11 @@ export default function Home() {
       <section className="best-section">
         <div className="split-title">
           <div>
-            <span>THE HOUSE SELECTION</span>
-            <h2>Thiết Kế Được Tuyển Chọn</h2>
+            <span>GỢI Ý TỪ MIRA</span>
+            <h2>Thiết kế được tuyển chọn</h2>
           </div>
           <Link to="/products">
-            XEM TẤT CẢ <ArrowRight size={14} />
+            Xem tất cả <ArrowRight size={14} />
           </Link>
         </div>
         <div className="best-grid">
@@ -198,11 +200,11 @@ export default function Home() {
           />
         </div>
         <div className="craft-copy">
-          <span>THE ART OF MIRA</span>
+          <span>CHUYỆN CHẾ TÁC</span>
           <h2>
-            Nghệ Thuật Chế Tác
+            Nghệ thuật chế tác
             <br />
-            <i>Không Thỏa Hiệp</i>
+            <i>Tỉ mỉ trong từng chi tiết</i>
           </h2>
           <p>
             Từ tuyển chọn đá quý đến từng đường đánh bóng cuối cùng, mỗi tác
@@ -231,20 +233,20 @@ export default function Home() {
             </div>
           </div>
           <a href="/about">
-            KHÁM PHÁ BESPOKE ATELIER <ArrowRight size={14} />
+            Tìm hiểu về MIRA <ArrowRight size={14} />
           </a>
         </div>
       </section>
       <section className="tools-section" id="personal-tools">
         <div className="center-title">
-          <span>PERSONALIZED EXPERIENCE</span>
-          <h2>Công Cụ Dành Riêng Cho Bạn</h2>
+          <span>MUA SẮM CÙNG MIRA</span>
+          <h2>Tiện ích & dịch vụ</h2>
         </div>
         <div className="tools-grid">
           <div className="tool-card">
             <Ruler />
-            <span>SMART RING SIZER</span>
-            <h3>Tìm Size Nhẫn Hoàn Hảo</h3>
+            <span>HƯỚNG DẪN ĐO SIZE</span>
+            <h3>Tìm size nhẫn phù hợp</h3>
             <p>
               Ước tính kích thước nhẫn bằng hướng dẫn trực quan, sau đó đặt lịch
               để chuyên viên MIRA xác nhận chính xác.
@@ -254,46 +256,41 @@ export default function Home() {
               <span>Chu vi ngón tay · Đường kính lòng nhẫn</span>
             </div>
             <Link className="gold-btn" to="/ring-sizer">
-              TƯ VẤN SIZE NHẪN
+              Xem hướng dẫn đo size
             </Link>
           </div>
-          <div className="tool-card dark">
-            <Diamond />
-            <span>JEWELRY CONCIERGE</span>
-            <h3>Trang Sức Dành Cho Bạn</h3>
+          <div className="tool-card">
+            <BookOpen />
+            <span>CHĂM SÓC TRANG SỨC</span>
+            <h3>Cẩm nang bảo quản trang sức</h3>
             <p>
-              Trả lời vài câu hỏi về ngân sách, chất liệu và dịp sử dụng để nhận
-              gợi ý trang sức phù hợp.
+              Từ bạc 925 đến vàng, ngọc trai và đá quý: tìm cách vệ sinh, cất
+              giữ và chăm sóc phù hợp cho món trang sức của bạn.
             </p>
-            <div className="quiz-tags">
-              <Link to="/jewelry-quiz?occasion=Cầu%20hôn">CẦU HÔN</Link>
-              <Link to="/jewelry-quiz?occasion=Kỷ%20niệm">KỶ NIỆM</Link>
-              <Link to="/jewelry-quiz?occasion=Quà%20tặng">QUÀ TẶNG</Link>
+            <div className="tool-preview">
+              <ShieldCheck size={20} />
+              <span>Vệ sinh nhẹ nhàng · Cất giữ đúng cách</span>
             </div>
-            <Link className="gold-btn" to="/jewelry-quiz">
-              BẮT ĐẦU TƯ VẤN
+            <Link className="gold-btn" to="/jewelry-care">
+              Xem hướng dẫn <ArrowRight size={15} />
             </Link>
           </div>
-        </div>
-      </section>
-      <section className="press">
-        <div className="center-title">
-          <span>AS SEEN & FELT</span>
-          <h2>Tiếng Vang Di Sản</h2>
-        </div>
-        <div className="press-grid">
-          <blockquote>
-            “Một ngôn ngữ thiết kế thanh lịch, nơi kỹ nghệ kim hoàn gặp tinh
-            thần đương đại.”<b>— THE LUXURY EDIT</b>
-          </blockquote>
-          <blockquote>
-            “Trải nghiệm Private Salon khiến việc lựa chọn nhẫn trở thành một
-            nghi thức thực sự riêng tư.”<b>— MODERN BRIDE</b>
-          </blockquote>
-          <blockquote>
-            “Sự minh bạch về kim cương và tiêu chuẩn hoàn thiện là điểm nổi bật
-            của MIRA.”<b>— STYLE JOURNAL</b>
-          </blockquote>
+          <div className="tool-card">
+            <MessageCircle />
+            <span>HỖ TRỢ KHÁCH HÀNG</span>
+            <h3>Trao đổi với nhân viên</h3>
+            <p>
+              Trao đổi với nhân viên về sản phẩm, đơn hàng hoặc thanh toán trong
+              hộp thư hỗ trợ.
+            </p>
+            <div className="tool-preview">
+              <MessageCircle size={20} />
+              <span>Sản phẩm · Đơn hàng · Thanh toán</span>
+            </div>
+            <Link className="gold-btn" to="/support">
+              Liên hệ hỗ trợ <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
       </section>
     </div>

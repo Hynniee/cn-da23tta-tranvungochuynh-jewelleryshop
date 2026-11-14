@@ -217,7 +217,7 @@ export default function OrderDetailsDialog({
         </div>
       </dl>
       <div className="order-dialog-actions">
-        <Link className="ui-secondary" to="/advisor">
+        <Link className="ui-secondary" to={`/support?order=${order._id}`}>
           Liên hệ hỗ trợ
         </Link>
         <button type="button" className="ui-primary" onClick={onClose}>

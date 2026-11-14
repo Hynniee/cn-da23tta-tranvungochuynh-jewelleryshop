@@ -1,5 +1,7 @@
 # Machine Learning cho MIRA Jewelry
 
+Bộ fine-tuning **chatbot tiếng Việt trên Colab bằng QLoRA** nằm ở [qlora/README.md](qlora/README.md), gồm dataset và notebook tải lên Colab. Bộ này độc lập với Logistic Regression bên dưới và chưa thay Gemini trong website.
+
 Mô hình **Logistic Regression tự huấn luyện bằng Python chuẩn** (không cần thư viện ngoài). Đầu vào: 5 đặc trưng trong khoảng 0–1 và nhãn `label` (1 = có tương tác tích cực; 0 = không tương tác). Dữ liệu phải có **cả mẫu dương và âm**, ưu tiên log thực tế và cách lấy mẫu âm có giải thích.
 
 ## Huấn luyện

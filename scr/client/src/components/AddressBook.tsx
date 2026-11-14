@@ -102,7 +102,7 @@ export default function AddressBook({
       <header>
         <div>
           <p>GIAO HÀNG</p>
-          <h2>Sổ Địa Chỉ</h2>
+          <h2>Sổ địa chỉ</h2>
         </div>
         {!editing && (
           <button
@@ -149,7 +149,7 @@ export default function AddressBook({
           <h3>{editing === "new" ? "Địa chỉ mới" : "Chỉnh sửa địa chỉ"}</h3>
           <div className="field-grid">
             <label>
-              HỌ VÀ TÊN NGƯỜI NHẬN
+              Họ và tên người nhận
               <input
                 required
                 maxLength={100}
@@ -160,7 +160,7 @@ export default function AddressBook({
               />
             </label>
             <label>
-              SỐ ĐIỆN THOẠI NGƯỜI NHẬN
+              Số điện thoại NGƯỜI NHẬN
               <input
                 required
                 type="tel"

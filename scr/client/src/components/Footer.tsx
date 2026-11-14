@@ -5,8 +5,8 @@ export default function Footer() {
     <>
       <section className="salon-strip">
         <div>
-          <span className="eyebrow">DỊCH VỤ KHÁCH HÀNG THƯỢNG LƯU</span>
-          <h2>Đặt Lịch Tư Vấn Riêng Tại Private Salon</h2>
+          <span className="eyebrow">TRẢI NGHIỆM TẠI SALON</span>
+          <h2>Đặt lịch tư vấn tại salon</h2>
           <p>
             Trải nghiệm trang sức MIRA trong không gian riêng tư và nhận tư vấn
             trực tiếp từ chuyên viên.
@@ -23,11 +23,11 @@ export default function Footer() {
         <div className="salon-consultation">
           <h3>Buổi hẹn dành riêng cho bạn</h3>
           <p>
-            Chọn Salon, thời gian và chia sẻ mong muốn của bạn. MIRA sẽ chuẩn bị
+            Chọn salon, thời gian và chia sẻ mong muốn của bạn. MIRA sẽ chuẩn bị
             buổi tư vấn và gửi thông tin lịch hẹn qua email.
           </p>
           <Link to="/appointments" className="gold-btn">
-            ĐẶT LỊCH TƯ VẤN
+            Đặt lịch tư vấn
           </Link>
         </div>
       </section>
@@ -49,23 +49,24 @@ export default function Footer() {
         </div>
         <div>
           <b>TUYỆT TÁC KIM HOÀN</b>
-          <a href="/products">Tất Cả Sản Phẩm</a>
-          <a href="/shop">Nhẫn & Trang Sức Vàng</a>
-          <a href="/shop">Trang Sức Cưới</a>
-          <a href="/shop?collection=bac">Trang Sức Bạc 925</a>
-          <a href="/shop?collection=ngoc-trai">Trang Sức Ngọc Trai</a>
+          <a href="/products">Tất cả sản phẩm</a>
+          <a href="/shop">Nhẫn & trang sức vàng</a>
+          <a href="/shop">Trang sức cưới</a>
+          <a href="/shop?collection=bac">Trang sức bạc 925</a>
+          <a href="/shop?collection=ngoc-trai">Trang sức ngọc trai</a>
         </div>
         <div>
           <b>DỊCH VỤ & ĐẶC QUYỀN</b>
-          <span>Dịch Vụ Chế Tác Bespoke</span>
-          <span>Bảo Dưỡng Trang Sức</span>
-          <span>Chính Sách Thu Đổi</span>
-          <Link to="/appointments">Đặt Lịch Private Salon</Link>
+          <span>Dịch vụ chế tác riêng</span>
+          <span>Bảo dưỡng trang sức</span>
+          <span>Chính sách thu đổi</span>
+          <Link to="/appointments">Đặt lịch tại salon</Link>
+          <Link to="/support">Liên hệ hỗ trợ</Link>
         </div>
         <div>
-          <b>PRIVATE PREVIEW</b>
+          <b>KHÁM PHÁ MIRA</b>
           <p>Khám phá các thiết kế trong bộ sưu tập hiện tại.</p>
-          <a href="/shop">XEM BỘ SƯU TẬP →</a>
+          <a href="/shop">Xem bộ sưu tập →</a>
         </div>
       </footer>
       <div className="footer-bottom">

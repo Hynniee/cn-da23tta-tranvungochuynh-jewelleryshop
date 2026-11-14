@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Promotion from "../models/Promotion.js";
 import Product from "../models/Product.js";
 import { catalogProduct } from "./product-data.service.js";
+import { isGenericSize } from "./product-sizes.js";
 import storeConfig from "../data/storeConfig.json" with { type: "json" };
 
 export class PromotionError extends Error {
@@ -204,13 +205,20 @@ export async function quoteOrder(
       fail("Giá sản phẩm không hợp lệ. Vui lòng liên hệ cửa hàng.");
     quantities.set(item.product, quantity);
     if (product.sizes?.length && !product.sizes.includes(item.size))
-      fail("Kích cỡ không hợp lệ.");
+      fail(`Vui lòng chọn kích cỡ hợp lệ cho ${product.name}.`);
+    if (
+      !product.sizes?.length &&
+      item.size != null &&
+      item.size !== "" &&
+      !isGenericSize(item.size)
+    )
+      fail(`Sản phẩm ${product.name} không có lựa chọn kích cỡ này.`);
     normalized.push({
       product: product._id,
       name: product.name,
       price: product.salePrice ?? product.price,
       quantity: item.quantity,
-      size: item.size,
+      size: product.sizes?.length ? item.size : "",
       image: product.images?.[0],
       material: product.material,
       originalPrice: product.price,

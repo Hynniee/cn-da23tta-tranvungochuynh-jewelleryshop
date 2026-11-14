@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { request } from "../lib/api";
 export type AdvisorReply = {
   conversationId: string;
+  conversationReset?: boolean;
   mode: string;
   intent: Record<string, any>;
   missingCriteria: string[];
@@ -23,14 +24,17 @@ const greeting: AdvisorMessage = {
 };
 function ownerKey() {
   try {
-    return `mira_advisor:${JSON.parse(localStorage.getItem("mira_user") || "{}").id || "guest"}`;
+    const user = JSON.parse(localStorage.getItem("mira_user") || "{}");
+    return `mira_advisor:${user.id || user._id || "guest"}`;
   } catch {
     return "mira_advisor:guest";
   }
 }
 function read(key: string): Conversation {
   try {
-    const value = JSON.parse(sessionStorage.getItem(key) || "null");
+    const value = JSON.parse(
+      localStorage.getItem(key) || sessionStorage.getItem(key) || "null",
+    );
     if (Array.isArray(value?.messages)) return value;
   } catch {
     /* Session storage may be unavailable. */
@@ -44,7 +48,8 @@ function current(key: string) {
 function publish(key: string, value: Conversation) {
   memory.set(key, value);
   try {
-    sessionStorage.setItem(key, JSON.stringify(value));
+    localStorage.setItem(key, JSON.stringify(value));
+    sessionStorage.removeItem(key);
   } catch {
     /* Keep this tab usable. */
   }
@@ -88,7 +93,7 @@ export function useAdvisorConversation() {
         messages: [
           ...messages,
           { from: "ai" as const, text: reply.answer, reply },
-        ].slice(-25),
+        ],
       });
       return reply;
     } catch (e: any) {

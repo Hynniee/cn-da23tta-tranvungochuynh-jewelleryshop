@@ -32,11 +32,12 @@ export default function Shop({
   const selectedMaterials = params.getAll("material");
   const stone = params.get("stone") || "";
   const collection = params.get("collection") || "";
+  const offersOnly = params.get("promotion") === "active";
   const collectionLabels: Record<string, string> = {
-    bac: "Trang Sức Bạc",
-    vang: "Trang Sức Vàng",
-    "ngoc-trai": "Trang Sức Ngọc Trai",
-    "da-mau": "Trang Sức Đá Màu",
+    bac: "Trang sức bạc",
+    vang: "Trang sức vàng",
+    "ngoc-trai": "Trang sức ngọc trai",
+    "da-mau": "Trang sức đá màu",
   };
   const materials = useMemo(
     () =>
@@ -134,6 +135,7 @@ export default function Shop({
         (!category || p.category === category) &&
         (!selectedMaterials.length || selectedMaterials.includes(p.material)) &&
         (!stone || (p.stone || "Không đính đá") === stone) &&
+        (!offersOnly || (p.salePrice != null && p.salePrice < p.price)) &&
         (!collection ||
           (collection === "bac"
             ? p.material === "Bạc 925"
@@ -187,22 +189,26 @@ export default function Shop({
         <b>{allProducts ? "Sản phẩm" : "Bộ sưu tập"}</b>
       </div>
       <section className="shop-intro">
-        <span>{allProducts ? "ALL MIRA JEWELRY" : "THE MIRA COLLECTION"}</span>
+        <span>{allProducts ? "SẢN PHẨM MIRA" : "BỘ SƯU TẬP MIRA"}</span>
         <h1>
-          {allProducts
-            ? "Tất Cả Sản Phẩm"
-            : category ||
-              collectionLabels[collection] ||
-              "Bộ Sưu Tập Trang Sức MIRA"}
+          {offersOnly
+            ? "Ưu đãi trang sức"
+            : allProducts
+              ? "Tất cả sản phẩm"
+              : category ||
+                collectionLabels[collection] ||
+                "Bộ sưu tập trang sức MIRA"}
         </h1>
         <p>
-          {allProducts
-            ? "Khám phá toàn bộ nhẫn, dây chuyền, bông tai, vòng tay, lắc chân, charm và bộ trang sức MIRA."
-            : "Chọn thiết kế theo danh mục, chất liệu và ngân sách của bạn."}
+          {offersOnly
+            ? "Khám phá các sản phẩm đang có giá ưu đãi tại MIRA. Giá hiển thị theo chương trình hiện hành của từng sản phẩm."
+            : allProducts
+              ? "Khám phá toàn bộ nhẫn, dây chuyền, bông tai, vòng tay, lắc chân, charm và bộ trang sức MIRA."
+              : "Chọn thiết kế theo danh mục, chất liệu và ngân sách của bạn."}
         </p>
         <div>
           <b>{filtered.length}</b>
-          <small>TÁC PHẨM</small>
+          <small>SẢN PHẨM</small>
         </div>
       </section>
       {allProducts && (
@@ -265,7 +271,8 @@ export default function Shop({
             maxPrice < MAX_BUDGET ||
             stone ||
             search ||
-            collection) && (
+            collection ||
+            offersOnly) && (
             <div className="active-filters">
               <span>
                 Đang lọc:{" "}
@@ -278,6 +285,7 @@ export default function Shop({
                   stone,
                   search,
                   collectionLabels[collection],
+                  offersOnly ? "Đang có ưu đãi" : "",
                 ]
                   .filter(Boolean)
                   .join(" · ")}

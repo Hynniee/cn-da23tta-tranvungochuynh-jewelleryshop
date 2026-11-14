@@ -12,6 +12,7 @@ import {
   reconcileCart,
   reconcileItems,
   cartHasStock,
+  cartHasValidSizes,
 } from "../store/cart";
 import { BUY_NOW_CHECKOUT, clearBuyNow, getBuyNow } from "../store/buy-now";
 import { request, token } from "../lib/api";
@@ -33,7 +34,11 @@ export default function Checkout() {
   const [cart, setCart] = useState(() => (buyNow ? getBuyNow() : getCart()));
   const [checkingCart, setCheckingCart] = useState(!orderId);
   const [cartReady, setCartReady] = useState(false);
-  const promotion = usePromotionQuote(cart, !orderId && cartReady);
+  const validSizes = cartHasValidSizes(cart);
+  const promotion = usePromotionQuote(
+    cart,
+    !orderId && cartReady && validSizes,
+  );
   const navigate = useNavigate();
   const addressBook = useAddressBook(!orderId && Boolean(token()));
   const [addressChoice, setAddressChoice] = useState("new");
@@ -144,7 +149,7 @@ export default function Checkout() {
           className="gold-btn"
           to={`/login?next=${encodeURIComponent(orderId ? `/checkout?order=${encodeURIComponent(orderId)}` : buyNow ? BUY_NOW_CHECKOUT : "/checkout")}`}
         >
-          ĐĂNG NHẬP
+          Đăng nhập
         </Link>
       </section>
     );
@@ -160,7 +165,8 @@ export default function Checkout() {
       !cartReady ||
       promotion.loading ||
       !promotion.quote ||
-      !cartHasStock(cart)
+      !cartHasStock(cart) ||
+      !validSizes
     )
       return;
     const recipient = selectedAddress
@@ -276,8 +282,8 @@ export default function Checkout() {
         <b>03 HOÀN TẤT</b>
       </div>
       <div className="checkout-heading">
-        <span className="page-kicker">SECURE CHECKOUT</span>
-        <h1>Thông Tin Bàn Giao</h1>
+        <span className="page-kicker">THANH TOÁN</span>
+        <h1>Thông tin giao hàng</h1>
         <p>
           MIRA bảo mật thông tin và xác nhận đơn hàng riêng với từng thượng
           khách.
@@ -302,7 +308,7 @@ export default function Checkout() {
           {!!addressBook.addresses.length && (
             <div className="checkout-address-picker">
               <label>
-                ĐỊA CHỈ GIAO HÀNG
+                Địa chỉ giao hàng
                 <select
                   aria-label="Chọn địa chỉ giao hàng"
                   value={selectedAddress?._id || "new"}
@@ -340,7 +346,7 @@ export default function Checkout() {
             <>
               <div className="field-grid">
                 <label>
-                  HỌ VÀ TÊN
+                  Họ và tên
                   <input
                     required
                     value={form.name}
@@ -349,7 +355,7 @@ export default function Checkout() {
                   />
                 </label>
                 <label>
-                  SỐ ĐIỆN THOẠI
+                  Số điện thoại
                   <input
                     required
                     value={form.phone}
@@ -364,7 +370,7 @@ export default function Checkout() {
             </>
           )}
           <label>
-            EMAIL (KHÔNG BẮT BUỘC)
+            Email (không bắt buộc)
             <input
               type="email"
               value={form.email}
@@ -373,7 +379,7 @@ export default function Checkout() {
             />
           </label>
           <label>
-            LỜI NHẮN CHO MIRA
+            Lời nhắn cho MIRA
             <textarea
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
@@ -419,6 +425,20 @@ export default function Checkout() {
               <Link to="/cart">Cập nhật giỏ hàng</Link>
             </p>
           )}
+          {!validSizes && (
+            <p className="pd-size-error" role="alert">
+              Vui lòng chọn kích cỡ sản phẩm trước khi đặt hàng.{" "}
+              <Link
+                to={
+                  buyNow
+                    ? `/product/${cart[0]?.slug || cart[0]?._id}#purchase`
+                    : "/cart"
+                }
+              >
+                Chọn lại kích cỡ →
+              </Link>
+            </p>
+          )}
           <button
             className="place-order"
             disabled={
@@ -427,13 +447,12 @@ export default function Checkout() {
               checkingCart ||
               !cartReady ||
               !cartHasStock(cart) ||
+              !validSizes ||
               promotion.loading ||
               !promotion.quote
             }
           >
-            {submitting
-              ? "ĐANG XỬ LÝ..."
-              : `XÁC NHẬN ĐƠN HÀNG · ${money(total)}`}
+            {submitting ? "Đang xử lý…" : `XÁC NHẬN ĐƠN HÀNG · ${money(total)}`}
           </button>
           <p className="checkout-security">
             <LockKeyhole size={13} /> Thông tin thanh toán được mã hóa và bảo
@@ -441,7 +460,7 @@ export default function Checkout() {
           </p>
         </form>
         <aside className="checkout-order-lux">
-          <span className="page-kicker">YOUR SELECTION</span>
+          <span className="page-kicker">SẢN PHẨM ĐÃ CHỌN</span>
           <h2>Đơn Hàng Của Bạn</h2>
           {cart.map((item, index) => (
             <div
@@ -452,7 +471,7 @@ export default function Checkout() {
               <div>
                 <b>{item.name}</b>
                 <small>
-                  Size {item.size} · SL {item.quantity}
+                  {item.size ? `Kích cỡ ${item.size} · ` : ""}SL {item.quantity}
                 </small>
               </div>
               <strong>

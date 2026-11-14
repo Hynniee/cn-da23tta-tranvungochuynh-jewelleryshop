@@ -1,0 +1,34 @@
+{
+  "dataset": "SYNTHETIC STARTER / NOT EXPERT REVIEWED",
+  "counts": {
+    "train": 360,
+    "validation": 45,
+    "test": 45
+  },
+  "baseline": {
+    "base_test_loss": 2.7213339805603027,
+    "base_test_model_preparation_time": 0.0116,
+    "base_test_runtime": 17.0242,
+    "base_test_samples_per_second": 2.643,
+    "base_test_steps_per_second": 2.643
+  },
+  "finetuned": {
+    "finetuned_test_loss": 1.56097412109375,
+    "finetuned_test_model_preparation_time": 0.0116,
+    "finetuned_test_runtime": 12.076,
+    "finetuned_test_samples_per_second": 3.726,
+    "finetuned_test_steps_per_second": 3.726,
+    "epoch": 3.0
+  },
+  "test_perplexity": 4.763459171878514,
+  "train": {
+    "train_runtime": 1017.1849,
+    "train_samples_per_second": 1.062,
+    "train_steps_per_second": 0.068,
+    "total_flos": 6348422853623808.0,
+    "train_loss": 0.765372738296139,
+    "epoch": 3.0
+  },
+  "smoke_test_only": false,
+  "note": "Loss/perplexity is not answer accuracy. Review factuality and unsupported product claims manually. Do not tune on test."
+}
