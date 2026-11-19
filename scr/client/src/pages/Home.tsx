@@ -1,6 +1,7 @@
 import Image from "../components/Image";
 import {
   ArrowRight,
+  ArrowUp,
   Award,
   BookOpen,
   Diamond,
@@ -25,6 +26,36 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [highlights, setHighlights] = useState<{
+    sales: { product: string; quantity: number }[];
+    reviews: {
+      id: string;
+      name: string;
+      rating: number;
+      comment: string;
+      product: { name: string; slug: string } | null;
+    }[];
+  } | null>(null);
+  const [highlightsError, setHighlightsError] = useState(false);
+  const [showTop, setShowTop] = useState(false);
+  useEffect(() => {
+    const update = () => setShowTop(window.scrollY > 200);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    setHighlightsError(false);
+    request("/products/home-highlights", { signal: controller.signal })
+      .then((data) => {
+        if (!controller.signal.aborted) setHighlights(data);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setHighlightsError(true);
+      });
+    return () => controller.abort();
+  }, [attempt]);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -55,6 +86,20 @@ export default function Home() {
   const best = (
     curated.length ? curated : featured.length ? featured : products
   ).slice(0, 4);
+  const bestSellers = (highlights?.sales || [])
+    .map((sale) => ({
+      product: products.find((p) => p._id === sale.product),
+      quantity: sale.quantity,
+    }))
+    .filter((entry) => entry.product)
+    .slice(0, 4);
+  const deals = products
+    .filter((p) => p.salePrice != null && p.salePrice < p.price)
+    .sort(
+      (a, b) =>
+        (b.price - b.salePrice) / b.price - (a.price - a.salePrice) / a.price,
+    )
+    .slice(0, 4);
   return (
     <div className="figma-home">
       <section className="hero-lux">
@@ -191,6 +236,69 @@ export default function Home() {
           </p>
         )}
       </section>
+      <section className="best-section home-highlights">
+        <div className="split-title">
+          <div>
+            <span>ĐƯỢC YÊU THÍCH</span>
+            <h2>Best seller</h2>
+            <p>Xếp hạng theo số lượng đã mua trong các đơn hàng hoàn tất</p>
+          </div>
+          <Link to="/products">
+            Xem tất cả <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="best-grid">
+          {bestSellers.map(({ product, quantity }) => (
+            <div key={product._id}>
+              <ProductCard p={product} />
+              <p className="home-sold">
+                Đã mua {quantity.toLocaleString("vi-VN")}
+              </p>
+            </div>
+          ))}
+        </div>
+        {highlightsError ? (
+          <p role="status">
+            Chưa thể tải sản phẩm bán chạy.{" "}
+            <button
+              type="button"
+              onClick={() => setAttempt((value) => value + 1)}
+            >
+              Thử lại
+            </button>
+          </p>
+        ) : !highlights || loading ? (
+          <p role="status">Đang tải sản phẩm bán chạy...</p>
+        ) : (
+          !bestSellers.length && <p>Chưa có sản phẩm bán chạy để hiển thị.</p>
+        )}
+      </section>
+      <section className="best-section home-highlights home-deals">
+        <div className="split-title">
+          <div>
+            <span>ƯU ĐÃI DÀNH CHO BẠN</span>
+            <h2>Deal hot</h2>
+            <p>Những thiết kế đang có giá ưu đãi tại MIRA</p>
+          </div>
+          <Link to="/products">
+            Khám phá thêm <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="best-grid">
+          {deals.map((product) => (
+            <ProductCard key={product._id} p={product} />
+          ))}
+        </div>
+        {loading ? (
+          <p role="status">Đang tải ưu đãi...</p>
+        ) : error ? (
+          <p>Chưa thể tải ưu đãi. Vui lòng thử lại ở mục bộ sưu tập.</p>
+        ) : (
+          !deals.length && (
+            <p>Hiện chưa có sản phẩm ưu đãi. Mời bạn quay lại sau.</p>
+          )
+        )}
+      </section>
       <section id="atelier" className="craft">
         <div className="craft-photo">
           <Image
@@ -236,6 +344,47 @@ export default function Home() {
             Tìm hiểu về MIRA <ArrowRight size={14} />
           </a>
         </div>
+      </section>
+      <section className="home-testimonials home-section">
+        <div className="center-title">
+          <span>CHIA SẺ TỪ KHÁCH HÀNG</span>
+          <h2>KHÁCH HÀNG NÓI GÌ?</h2>
+          <p>Một số phản hồi khách hàng sau khi mua sắm tại MIRA</p>
+        </div>
+        <div className="home-testimonial-grid">
+          {highlights?.reviews.map((review) => (
+            <article key={review.id}>
+              <div
+                className="home-review-stars"
+                aria-label={`${review.rating} trên 5 sao`}
+              >
+                {"★".repeat(review.rating)}
+                {"☆".repeat(5 - review.rating)}
+              </div>
+              <blockquote>“{review.comment}”</blockquote>
+              <strong>{review.name}</strong>
+              {review.product && (
+                <Link
+                  to={`/product/${encodeURIComponent(review.product.slug)}#reviews`}
+                >
+                  {review.product.name} <ArrowRight size={13} />
+                </Link>
+              )}
+            </article>
+          ))}
+        </div>
+        {highlightsError ? (
+          <p role="status">Chưa thể tải phản hồi khách hàng.</p>
+        ) : !highlights ? (
+          <p role="status">Đang tải phản hồi...</p>
+        ) : (
+          !highlights.reviews.length && (
+            <p>
+              Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ trải nghiệm
+              của bạn.
+            </p>
+          )
+        )}
       </section>
       <section className="tools-section" id="personal-tools">
         <div className="center-title">
@@ -293,6 +442,24 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {showTop && (
+        <button
+          type="button"
+          className="home-back-top"
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+                .matches
+                ? "instant"
+                : "smooth",
+            })
+          }
+          aria-label="Cuộn về đầu trang"
+        >
+          <ArrowUp size={20} />
+        </button>
+      )}
     </div>
   );
 }

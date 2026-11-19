@@ -22,6 +22,7 @@ import "./support.css";
 import "./type-system.css";
 import "./ui-consistency.css";
 import "./services.css";
+import "./home-highlights.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

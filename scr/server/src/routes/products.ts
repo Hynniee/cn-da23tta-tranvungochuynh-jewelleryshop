@@ -5,6 +5,7 @@ import { requireWritableDatabase } from "../middleware/database.js";
 
 const r = Router();
 r.get("/", controller.listProducts);
+r.get("/home-highlights", controller.homeHighlights);
 r.post("/write-status", auth, admin, requireWritableDatabase, (_req, res) =>
   res.json({ writable: true }),
 );

@@ -2,6 +2,8 @@ import { inventoryInput } from "../services/inventory.service.js";
 import type { RequestHandler } from "express";
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
+import Order from "../models/Order.js";
+import Review from "../models/Review.js";
 import {
   catalogProduct,
   productLookup,
@@ -24,6 +26,57 @@ const normalize = (value: string) =>
     .replace(/[đĐ]/g, "d")
     .toLowerCase()
     .trim();
+
+export const homeHighlights: RequestHandler = async (_req, res) => {
+  const [sales, reviews] = await Promise.all([
+    Order.aggregate([
+      { $match: { status: "completed", paymentStatus: { $ne: "REFUNDED" } } },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.product": { $ne: null },
+          "items.quantity": { $gt: 0 },
+        },
+      },
+      {
+        $group: {
+          _id: "$items.product",
+          quantity: { $sum: "$items.quantity" },
+        },
+      },
+      { $sort: { quantity: -1, _id: 1 } },
+    ]),
+    Review.find({})
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(3)
+      .populate("user", "name")
+      .populate("product", "name slug")
+      .lean(),
+  ]);
+  res.json({
+    sales: sales.map((item) => ({
+      product: String(item._id),
+      quantity: item.quantity,
+    })),
+    reviews: reviews.map((review) => ({
+      id: String(review._id),
+      name:
+        (review.user as unknown as { name?: string } | null)?.name ||
+        "Khách hàng MIRA",
+      product: review.product
+        ? {
+            name: (review.product as unknown as { name?: string }).name,
+            slug:
+              (review.product as unknown as { slug?: string; _id: unknown })
+                .slug ||
+              String((review.product as unknown as { _id: unknown })._id),
+          }
+        : null,
+      rating: review.rating,
+      comment: review.comment,
+    })),
+  });
+};
 
 export const listProducts: RequestHandler = async (req, res) => {
   const products = await Product.find({}).sort({ createdAt: -1 }).lean();
