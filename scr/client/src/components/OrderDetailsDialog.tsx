@@ -17,6 +17,7 @@ export type CustomerOrder = {
   shippingFee?: number;
   discountTotal?: number;
   items?: {
+    product?: string;
     name: string;
     price: number;
     quantity: number;
@@ -177,6 +178,23 @@ export default function OrderDetailsDialog({
               <span>
                 {item.quantity} × {money(item.price)}
               </span>
+              {item.product && (
+                <div className="order-item-actions">
+                  <Link
+                    to={`/product/${encodeURIComponent(item.product)}#purchase`}
+                  >
+                    Mua lại
+                  </Link>
+                  {order.status === "completed" &&
+                    order.paymentStatus !== "REFUNDED" && (
+                      <Link
+                        to={`/product/${encodeURIComponent(item.product)}#reviews`}
+                      >
+                        Viết đánh giá
+                      </Link>
+                    )}
+                </div>
+              )}
             </div>
             <b>{money(item.price * item.quantity)}</b>
           </article>

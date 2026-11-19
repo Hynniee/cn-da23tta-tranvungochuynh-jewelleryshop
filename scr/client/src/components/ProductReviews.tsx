@@ -69,7 +69,12 @@ export default function ProductReviews({ slug }: { slug: string }) {
     }
   }
   return (
-    <section className="product-reviews" aria-labelledby="reviews-title">
+    <section
+      id="reviews"
+      tabIndex={-1}
+      className="product-reviews"
+      aria-labelledby="reviews-title"
+    >
       <div className="reviews-heading">
         <div>
           <p className="pd-eyebrow">TRẢI NGHIỆM TỪ KHÁCH HÀNG</p>

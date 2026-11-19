@@ -47,9 +47,10 @@ export default function ProductDetail() {
   const productSection = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     if (!product?._id || !productSection.current) return;
+    const hash = window.location.hash;
     const target =
-      window.location.hash === "#purchase"
-        ? document.getElementById("purchase") || productSection.current
+      hash === "#purchase" || hash === "#reviews"
+        ? document.getElementById(hash.slice(1)) || productSection.current
         : productSection.current;
     target.scrollIntoView({
       block: "start",
