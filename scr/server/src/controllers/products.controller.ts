@@ -79,7 +79,9 @@ export const homeHighlights: RequestHandler = async (_req, res) => {
 };
 
 export const listProducts: RequestHandler = async (req, res) => {
-  const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+  const products = await Product.find({ visible: { $ne: false } })
+    .sort({ createdAt: -1 })
+    .lean();
   const now = new Date();
   const promotions = await activeProductPromotions(now);
   const search = normalize(String(req.query.search || ""));
@@ -102,10 +104,38 @@ export const listProducts: RequestHandler = async (req, res) => {
   );
 };
 
+export const listAdminProducts: RequestHandler = async (_req, res) => {
+  const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+  const now = new Date();
+  const promotions = await activeProductPromotions(now);
+  res.json(
+    products.map((product) => promotedProduct(product, promotions, now)),
+  );
+};
+
+export const featureAllProducts: RequestHandler = async (
+  req: AuthRequest,
+  res,
+) => {
+  const result = await Product.updateMany({}, { $set: { featured: true } });
+  await audit(
+    req.user?.id,
+    "FEATURE_ALL_PRODUCTS",
+    "Product",
+    "all",
+    null,
+    { matched: result.matchedCount, updated: result.modifiedCount },
+    req.ip,
+  );
+  res.json({ matched: result.matchedCount, updated: result.modifiedCount });
+};
+
 export const getProduct: RequestHandler = async (req, res, next) => {
   try {
     const slug = param(req.params.slug);
-    const p = await Product.findOne(productLookup(slug)).lean();
+    const p = await Product.findOne({
+      $and: [productLookup(slug), { visible: { $ne: false } }],
+    }).lean();
     return p
       ? res.json(promotedProduct(p, await activeProductPromotions()))
       : res.status(404).json({ message: "Không tìm thấy sản phẩm" });

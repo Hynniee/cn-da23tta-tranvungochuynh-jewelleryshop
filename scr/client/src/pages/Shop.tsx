@@ -25,6 +25,9 @@ export default function Shop({
     () => window.matchMedia("(min-width: 761px)").matches,
   );
   const [products, setProducts] = useState<Product[]>([]);
+  const [sales, setSales] = useState<Record<string, number>>({});
+  const [salesLoading, setSalesLoading] = useState(true);
+  const [salesError, setSalesError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -33,6 +36,15 @@ export default function Shop({
   const selectedMaterials = params.getAll("material");
   const stone = params.get("stone") || "";
   const collection = params.get("collection") || "";
+  const group = params.get("group");
+  const groupLabel =
+    group === "featured"
+      ? "Thiết kế nổi bật"
+      : group === "bestSeller"
+        ? "Best seller"
+        : group === "hotDeal"
+          ? "Deal hot"
+          : "";
   const offersOnly = params.get("promotion") === "active";
   const collectionInfo = collections[collection];
   const collectionLabels = Object.fromEntries(
@@ -94,6 +106,29 @@ export default function Shop({
       .finally(() => {
         if (active) setLoading(false);
       });
+    setSalesLoading(true);
+    setSalesError(false);
+    request("/products/home-highlights", { signal: controller.signal })
+      .then((data) => {
+        if (active)
+          setSales(
+            Object.fromEntries(
+              data.sales.map((sale: { product: string; quantity: number }) => [
+                sale.product,
+                sale.quantity,
+              ]),
+            ),
+          );
+      })
+      .catch(() => {
+        if (active) {
+          setSales({});
+          setSalesError(true);
+        }
+      })
+      .finally(() => {
+        if (active) setSalesLoading(false);
+      });
     const update = () => setWishlist(getWishlist());
     window.addEventListener("wishlistchange", update);
     return () => {
@@ -131,6 +166,12 @@ export default function Shop({
   const filtered = useMemo(() => {
     const result = products.filter(
       (p) =>
+        (!groupLabel ||
+          (group === "featured"
+            ? p.featured
+            : group === "bestSeller"
+              ? (sales[p._id] || 0) > 0
+              : p.salePrice != null && p.salePrice < p.price)) &&
         (!category || p.category === category) &&
         (!selectedMaterials.length || selectedMaterials.includes(p.material)) &&
         (!stone || (p.stone || "Không đính đá") === stone) &&
@@ -148,9 +189,9 @@ export default function Shop({
           ? price(b) - price(a)
           : sort === "name"
             ? a.name.localeCompare(b.name, "vi")
-            : Number(b.featured) - Number(a.featured) || price(a) - price(b),
+            : (sales[b._id] || 0) - (sales[a._id] || 0) || price(a) - price(b),
     );
-  }, [products, category, params.toString(), maxPrice, search, sort]);
+  }, [products, sales, category, params.toString(), maxPrice, search, sort]);
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(Math.floor(page), pages);
   const shown = filtered.slice(
@@ -179,21 +220,25 @@ export default function Shop({
       <section className="shop-intro">
         <span>{allProducts ? "SẢN PHẨM MIRA" : "BỘ SƯU TẬP MIRA"}</span>
         <h1>
-          {offersOnly
-            ? "Ưu đãi trang sức"
-            : allProducts
-              ? "Tất cả sản phẩm"
-              : category ||
-                collectionLabels[collection] ||
-                "Bộ sưu tập trang sức MIRA"}
+          {groupLabel
+            ? groupLabel
+            : offersOnly
+              ? "Ưu đãi trang sức"
+              : allProducts
+                ? "Tất cả sản phẩm"
+                : category ||
+                  collectionLabels[collection] ||
+                  "Bộ sưu tập trang sức MIRA"}
         </h1>
         <p>
-          {offersOnly
-            ? "Khám phá các sản phẩm đang có giá ưu đãi tại MIRA. Giá hiển thị theo chương trình hiện hành của từng sản phẩm"
-            : allProducts
-              ? "Khám phá toàn bộ nhẫn, dây chuyền, bông tai, vòng tay, lắc chân, charm và bộ trang sức MIRA"
-              : collectionInfo?.description ||
-                "Chọn thiết kế theo danh mục, chất liệu và ngân sách của bạn"}
+          {groupLabel
+            ? `Khám phá tất cả sản phẩm ${groupLabel} được MIRA chọn lọc`
+            : offersOnly
+              ? "Khám phá các sản phẩm đang có giá ưu đãi tại MIRA. Giá hiển thị theo chương trình hiện hành của từng sản phẩm"
+              : allProducts
+                ? "Khám phá toàn bộ nhẫn, dây chuyền, bông tai, vòng tay, lắc chân, charm và bộ trang sức MIRA"
+                : collectionInfo?.description ||
+                  "Chọn thiết kế theo danh mục, chất liệu và ngân sách của bạn"}
         </p>
         <div>
           <b>{filtered.length}</b>
@@ -280,7 +325,8 @@ export default function Shop({
             stone ||
             search ||
             collection ||
-            offersOnly) && (
+            offersOnly ||
+            groupLabel) && (
             <div className="active-filters">
               <span>
                 Đang lọc:{" "}
@@ -294,6 +340,7 @@ export default function Shop({
                   search,
                   collectionLabels[collection],
                   offersOnly ? "Đang có ưu đãi" : "",
+                  groupLabel,
                 ]
                   .filter(Boolean)
                   .join(" · ")}
@@ -327,8 +374,15 @@ export default function Shop({
               </select>
             </label>
           </div>
-          {loading ? (
+          {loading || (group === "bestSeller" && salesLoading) ? (
             <p role="status">Đang tải bộ sưu tập...</p>
+          ) : group === "bestSeller" && salesError ? (
+            <div className="catalog-notice" role="alert">
+              <p>Không tải được dữ liệu bán chạy.</p>
+              <button onClick={() => setAttempt((value) => value + 1)}>
+                Thử lại
+              </button>
+            </div>
           ) : notice ? null : !shown.length ? (
             <section className="lux-empty">
               <h2>Không có sản phẩm phù hợp</h2>
@@ -346,13 +400,11 @@ export default function Shop({
                         loading="lazy"
                       />
                     </Link>
-                    {(p.promotion || p.featured) && (
+                    {p.promotion && (
                       <span>
-                        {p.promotion
-                          ? p.promotion.type === "flash_sale"
-                            ? "FLASH SALE"
-                            : "ƯU ĐÃI"
-                          : "MIRA SELECTION"}
+                        {p.promotion.type === "flash_sale"
+                          ? "FLASH SALE"
+                          : "ƯU ĐÃI"}
                       </span>
                     )}
                     <button

@@ -17,5 +17,6 @@ export type Product = {
   sizeStocks?: { size: string; stock: number }[];
   sizes?: string[];
   featured?: boolean;
+  hotDeal?: boolean;
   rating?: number;
 };

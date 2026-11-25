@@ -62,6 +62,8 @@ type Product = {
   inventoryEstimated?: boolean;
   images?: string[];
   featured?: boolean;
+  hotDeal?: boolean;
+  visible?: boolean;
   stone?: string;
   sizes?: string[];
   description?: string;
@@ -75,8 +77,29 @@ type Order = {
   paymentMethod?: string;
   paymentStatus?: string;
   createdAt: string;
-  customer?: { name?: string; email?: string };
-  items?: unknown[];
+  customer?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    addressLine?: string;
+    wardName?: string;
+    provinceName?: string;
+    note?: string;
+  };
+  items?: {
+    name?: string;
+    price?: number;
+    quantity?: number;
+    size?: string;
+    material?: string;
+    engraving?: string;
+    image?: string;
+  }[];
+  subtotal?: number;
+  shippingFee?: number;
+  discountTotal?: number;
+  voucher?: { code?: string };
 };
 const EMPTY_PRODUCT: ProductForm = {
   stone: "Không đính đá",
@@ -185,6 +208,7 @@ export default function Admin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(EMPTY_PRODUCT);
   const [busy, setBusy] = useState(false);
+  const [updatingFlag, setUpdatingFlag] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -306,7 +330,7 @@ export default function Admin() {
     const version = orderVersion.current;
     try {
       const results = await Promise.allSettled([
-        request("/products").then(setProducts),
+        request("/products/admin/all").then(setProducts),
         request("/orders").then((nextOrders) => {
           if (version === orderVersion.current) setOrders(nextOrders);
         }),
@@ -439,6 +463,47 @@ export default function Admin() {
       setError(e instanceof Error ? e.message : "Không thể lưu sản phẩm");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function featureAllProducts() {
+    setUpdatingFlag("all");
+    setError("");
+    try {
+      await request("/products/admin/feature-all", { method: "POST" });
+      setProducts((current) =>
+        current.map((product) => ({ ...product, featured: true })),
+      );
+      notify("Đã bật Nổi bật cho tất cả sản phẩm");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể cập nhật sản phẩm");
+    } finally {
+      setUpdatingFlag(null);
+    }
+  }
+
+  async function toggleProductFlag(
+    product: Product,
+    flag: "featured" | "visible",
+  ) {
+    const enabled =
+      flag === "visible" ? product.visible !== false : Boolean(product[flag]);
+    setUpdatingFlag(product._id);
+    setError("");
+    try {
+      const saved: Product = await request(`/products/${product._id}`, {
+        method: "PUT",
+        body: JSON.stringify({ [flag]: !enabled }),
+      });
+      setProducts((current) =>
+        current.map((item) =>
+          item._id === saved._id ? { ...item, ...saved } : item,
+        ),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể cập nhật sản phẩm");
+    } finally {
+      setUpdatingFlag(null);
     }
   }
 
@@ -776,6 +841,15 @@ export default function Admin() {
             </div>
             <p className="admin-inventory-order">
               Ưu tiên sản phẩm hết hàng, sau đó đến tồn kho thấp
+              {" · "}
+              <button
+                type="button"
+                className="admin-feature-all"
+                disabled={updatingFlag !== null}
+                onClick={() => void featureAllProducts()}
+              >
+                Bật Nổi bật cho tất cả
+              </button>
             </p>
             <div className="product-admin-table">
               <div className="table-head">
@@ -783,7 +857,9 @@ export default function Admin() {
                 <span>Danh mục</span>
                 <span>Giá</span>
                 <span>Tồn kho</span>
-                <span></span>
+                <span>Nổi bật</span>
+                <span>Hiển thị</span>
+                <span>Thao tác</span>
               </div>
               {visibleProducts.map((p) => (
                 <Fragment key={p._id}>
@@ -821,6 +897,33 @@ export default function Admin() {
                         </button>
                       )}
                     </div>
+                    {(
+                      [
+                        ["featured", "Nổi bật"],
+                        ["visible", "Hiển thị"],
+                      ] as const
+                    ).map(([flag, label]) => {
+                      const enabled =
+                        flag === "visible"
+                          ? p.visible !== false
+                          : Boolean(p[flag]);
+                      return (
+                        <span className="product-flag" key={flag}>
+                          <span className="product-flag-label">{label}</span>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={enabled}
+                            aria-label={`${label}: ${p.name}`}
+                            className={`product-switch${enabled ? " is-on" : ""}`}
+                            disabled={updatingFlag !== null}
+                            onClick={() => void toggleProductFlag(p, flag)}
+                          >
+                            <span />
+                          </button>
+                        </span>
+                      );
+                    })}
                     <span className="row-actions">
                       <Link to={`/product/${p.slug}`}>Xem</Link>
                       <button
@@ -1393,40 +1496,224 @@ function OrderTable({
   onStatus: (id: string, status: string, confirmPayment?: boolean) => void;
   updatingOrders: string[];
 }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = orders.find((order) => order._id === selectedId);
+  useEffect(() => {
+    if (!selectedId) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedId(null);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [selectedId]);
   return (
-    <div className="order-admin-table">
-      <div className="table-head">
-        <span>Mã đơn</span>
-        <span>Khách hàng</span>
-        <span>Ngày</span>
-        <span>Tổng tiền</span>
-        <span>Trạng thái</span>
-      </div>
-      {orders.map((o) => (
-        <div className="table-row" key={o._id}>
-          <span className="admin-order-code">
-            <b title={o.orderCode || o._id}>
-              {o.orderCode || `#${o._id.slice(-6).toUpperCase()}`}
-            </b>
-          </span>
-          <span className="admin-order-customer">
-            <b>{o.customer?.name || "Khách hàng"}</b>
-            <small>{o.customer?.email || ""}</small>
-          </span>
-          <span className="admin-order-date">{date(o.createdAt)}</span>
-          <span className="admin-order-total">
-            <b>{money(o.total)}</b>
-          </span>
-          <span className="admin-order-actions">
-            <AdminOrderStatus
-              order={o}
-              busy={updatingOrders.includes(o._id)}
-              onSave={onStatus}
-            />
-          </span>
+    <>
+      <div className="order-admin-table">
+        <div className="table-head">
+          <span>Mã đơn</span>
+          <span>Khách hàng</span>
+          <span>Ngày</span>
+          <span>Tổng tiền</span>
+          <span>Trạng thái</span>
+          <span>Chi tiết</span>
         </div>
-      ))}
-      {orders.length === 0 && <p className="admin-empty">Chưa có đơn hàng</p>}
+        {orders.map((o) => (
+          <div className="table-row" key={o._id}>
+            <span className="admin-order-code">
+              <b title={o.orderCode || o._id}>
+                {o.orderCode || `#${o._id.slice(-6).toUpperCase()}`}
+              </b>
+            </span>
+            <span className="admin-order-customer">
+              <b>{o.customer?.name || "Khách hàng"}</b>
+              <small>{o.customer?.email || ""}</small>
+            </span>
+            <span className="admin-order-date">{date(o.createdAt)}</span>
+            <span className="admin-order-total">
+              <b>{money(o.total)}</b>
+            </span>
+            <span className="admin-order-actions">
+              <AdminOrderStatus
+                order={o}
+                busy={updatingOrders.includes(o._id)}
+                onSave={onStatus}
+              />
+            </span>
+            <span className="admin-order-detail-action">
+              <button
+                type="button"
+                onClick={() => setSelectedId(o._id)}
+                aria-label={`Xem chi tiết đơn ${o.orderCode || o._id}`}
+              >
+                Xem chi tiết
+              </button>
+            </span>
+          </div>
+        ))}
+        {orders.length === 0 && <p className="admin-empty">Chưa có đơn hàng</p>}
+      </div>
+      {selected && (
+        <OrderDetail order={selected} onClose={() => setSelectedId(null)} />
+      )}
+    </>
+  );
+}
+
+function OrderDetail({
+  order,
+  onClose,
+}: {
+  order: Order;
+  onClose: () => void;
+}) {
+  const customer = order.customer;
+  const address =
+    customer?.address ||
+    [customer?.addressLine, customer?.wardName, customer?.provinceName]
+      .filter(Boolean)
+      .join(", ");
+  const paymentLabels: Record<string, string> = {
+    UNPAID: "Chưa thanh toán",
+    PENDING: "Chờ thanh toán",
+    PAID: "Đã thanh toán",
+    MISMATCH: "Thanh toán chưa khớp",
+    REFUNDED: "Đã hoàn tiền",
+  };
+  return (
+    <div
+      className="admin-modal order-detail-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="order-detail-title"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="order-detail-dialog">
+        <div className="order-detail-header">
+          <div>
+            <span>ĐƠN HÀNG</span>
+            <h2 id="order-detail-title">
+              {order.orderCode || `#${order._id.slice(-6).toUpperCase()}`}
+            </h2>
+          </div>
+          <button
+            type="button"
+            aria-label="Đóng chi tiết đơn hàng"
+            onClick={onClose}
+            autoFocus
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="order-detail-content">
+          <section className="order-detail-box">
+            <h3>Thông tin đơn hàng</h3>
+            <dl>
+              <div>
+                <dt>Ngày đặt</dt>
+                <dd>{date(order.createdAt)}</dd>
+              </div>
+              <div>
+                <dt>Trạng thái</dt>
+                <dd>{ORDER_LABEL[order.status] || order.status}</dd>
+              </div>
+              <div>
+                <dt>Khách hàng</dt>
+                <dd>{customer?.name || "—"}</dd>
+              </div>
+              <div>
+                <dt>Số điện thoại</dt>
+                <dd>{customer?.phone || "—"}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{customer?.email || "—"}</dd>
+              </div>
+              <div>
+                <dt>Địa chỉ nhận hàng</dt>
+                <dd>{address || "—"}</dd>
+              </div>
+              <div>
+                <dt>Thanh toán</dt>
+                <dd>
+                  {order.paymentMethod === "BANK_QR"
+                    ? "Chuyển khoản"
+                    : order.paymentMethod === "COD"
+                      ? "Thanh toán khi nhận hàng"
+                      : order.paymentMethod || "—"}{" "}
+                  ·{" "}
+                  {paymentLabels[order.paymentStatus || ""] ||
+                    order.paymentStatus ||
+                    "—"}
+                </dd>
+              </div>
+              {customer?.note && (
+                <div>
+                  <dt>Ghi chú</dt>
+                  <dd>{customer.note}</dd>
+                </div>
+              )}
+            </dl>
+          </section>
+          <section className="order-detail-box">
+            <h3>Chi tiết đơn hàng</h3>
+            <div className="order-detail-items">
+              {order.items?.length ? (
+                order.items.map((item, index) => (
+                  <article className="order-detail-item" key={index}>
+                    <Image
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.name || "Sản phẩm"}
+                    />
+                    <div>
+                      <b>{item.name || "Sản phẩm"}</b>
+                      <small>
+                        {[
+                          item.size && `Size: ${item.size}`,
+                          item.material,
+                          item.engraving && `Khắc: ${item.engraving}`,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </small>
+                      <small>
+                        {money(item.price || 0)} × {item.quantity || 0}
+                      </small>
+                    </div>
+                    <strong>
+                      {money((item.price || 0) * (item.quantity || 0))}
+                    </strong>
+                  </article>
+                ))
+              ) : (
+                <p>Không có thông tin sản phẩm.</p>
+              )}
+            </div>
+            <dl className="order-detail-totals">
+              <div>
+                <dt>Tạm tính</dt>
+                <dd>{money(order.subtotal || 0)}</dd>
+              </div>
+              <div>
+                <dt>Phí giao hàng</dt>
+                <dd>{money(order.shippingFee || 0)}</dd>
+              </div>
+              <div>
+                <dt>
+                  Giảm giá
+                  {order.voucher?.code ? ` (${order.voucher.code})` : ""}
+                </dt>
+                <dd>−{money(order.discountTotal || 0)}</dd>
+              </div>
+              <div>
+                <dt>Tổng cộng</dt>
+                <dd>{money(order.total)}</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

@@ -76,7 +76,9 @@ const schema = new mongoose.Schema(
       },
     },
     images: [String],
-    featured: { type: Boolean, default: false },
+    featured: { type: Boolean, default: true },
+    hotDeal: { type: Boolean, default: false },
+    visible: { type: Boolean, default: true },
   },
   { timestamps: true },
 );

@@ -73,25 +73,10 @@ export default function Home() {
       });
     return () => controller.abort();
   }, [attempt]);
-  const featured = products.filter((p) => p.featured);
-  const curatedSlugs = [
-    "nhan-bac-flora",
-    "day-chuyen-ngoc-trai-clair",
-    "bong-tai-emerald-verde",
-    "solitaire-etoile-diamond-ring",
-  ];
-  const curated = curatedSlugs
-    .map((slug) => products.find((p) => p.slug === slug))
-    .filter(Boolean);
-  const best = (
-    curated.length ? curated : featured.length ? featured : products
-  ).slice(0, 4);
+  const best = products.filter((p) => p.featured).slice(0, 4);
   const bestSellers = (highlights?.sales || [])
-    .map((sale) => ({
-      product: products.find((p) => p._id === sale.product),
-      quantity: sale.quantity,
-    }))
-    .filter((entry) => entry.product)
+    .map((sale) => products.find((p) => p._id === sale.product))
+    .filter(Boolean)
     .slice(0, 4);
   const deals = products
     .filter((p) => p.salePrice != null && p.salePrice < p.price)
@@ -201,9 +186,10 @@ export default function Home() {
         <div className="split-title">
           <div>
             <span>GỢI Ý TỪ MIRA</span>
-            <h2>Thiết kế được tuyển chọn</h2>
+            <h2>Thiết kế nổi bật</h2>
+            <p>Những thiết kế nổi bật được MIRA chọn lọc</p>
           </div>
-          <Link to="/products">
+          <Link to="/products?group=featured">
             Xem tất cả <ArrowRight size={14} />
           </Link>
         </div>
@@ -230,10 +216,7 @@ export default function Home() {
           </div>
         )}
         {!loading && !error && !best.length && (
-          <p role="status">
-            Bộ sưu tập đang được cập nhật. Mời bạn khám phá các dịch vụ tư vấn
-            bên dưới
-          </p>
+          <p role="status">Chưa có sản phẩm nổi bật để hiển thị.</p>
         )}
       </section>
       <section className="best-section home-highlights">
@@ -241,34 +224,23 @@ export default function Home() {
           <div>
             <span>ĐƯỢC YÊU THÍCH</span>
             <h2>Best seller</h2>
-            <p>Xếp hạng theo số lượng đã mua trong các đơn hàng hoàn tất</p>
+            <p>Xếp hạng theo số lượng trong các đơn hàng hoàn tất</p>
           </div>
-          <Link to="/products">
+          <Link to="/products?group=bestSeller">
             Xem tất cả <ArrowRight size={14} />
           </Link>
         </div>
         <div className="best-grid">
-          {bestSellers.map(({ product, quantity }) => (
-            <div key={product._id}>
-              <ProductCard p={product} />
-              <p className="home-sold">
-                Đã mua {quantity.toLocaleString("vi-VN")}
-              </p>
-            </div>
+          {bestSellers.map((product) => (
+            <ProductCard key={product._id} p={product} />
           ))}
         </div>
-        {highlightsError ? (
-          <p role="status">
-            Chưa thể tải sản phẩm bán chạy.{" "}
-            <button
-              type="button"
-              onClick={() => setAttempt((value) => value + 1)}
-            >
-              Thử lại
-            </button>
-          </p>
-        ) : !highlights || loading ? (
+        {loading || (!highlights && !highlightsError) ? (
           <p role="status">Đang tải sản phẩm bán chạy...</p>
+        ) : error || highlightsError ? (
+          <p>
+            Chưa thể tải sản phẩm bán chạy. Vui lòng thử lại ở mục bộ sưu tập.
+          </p>
         ) : (
           !bestSellers.length && <p>Chưa có sản phẩm bán chạy để hiển thị.</p>
         )}
@@ -280,8 +252,8 @@ export default function Home() {
             <h2>Deal hot</h2>
             <p>Những thiết kế đang có giá ưu đãi tại MIRA</p>
           </div>
-          <Link to="/products">
-            Khám phá thêm <ArrowRight size={14} />
+          <Link to="/products?group=hotDeal">
+            Xem tất cả <ArrowRight size={14} />
           </Link>
         </div>
         <div className="best-grid">
